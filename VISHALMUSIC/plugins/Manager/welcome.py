@@ -8,7 +8,7 @@ from VISHALMUSIC.mongo.welcomedb import is_on, set_state, bump, cool, auto_on
 
 BG_PATH = "VISHALMUSIC/assets/VISHAL/welcome.png"
 FALLBACK_PIC = "VISHALMUSIC/assets/upic.png"
-FONT_PATH = "VISHALMUSIC/assets/vishal/Arimo.ttf"
+FONT_PATH = "VISHALMUSIC/assets/VISHAL/Arimo.ttf"
 BTN_VIEW = "ıll ᴠɪᴇᴡ ᴍᴇᴍʙᴇʀ llı"
 BTN_ADD = "ıll ᴀᴅᴅ ᴍᴇ llı"
 
