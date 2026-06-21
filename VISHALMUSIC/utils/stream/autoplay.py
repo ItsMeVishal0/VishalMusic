@@ -384,24 +384,45 @@ def normalize_title(title: str) -> str:
 def _same_song(stored: str, candidate: str) -> bool:
     """
     Fuzzy title match — handles cases where one has extra words.
-    e.g. stored="diwaniyat", candidate="diwaniyat ap dhillon shreya ghoshal"
-    Both start with "diwaniyat" so they match.
+    e.g. stored="bedardiya", candidate="bedardiya arijit singh shreya ghoshal"
+    Both start with "bedardiya" so they match.
 
-    BUG FIX: Old code used `short in long` which caused false positives for
-    common short phrases like "dil", "pyar", "rang" appearing as substrings
-    in completely different songs, blocking valid candidates from autoplay.
-    Now we only match when:
-      - The longer title STARTS WITH the shorter (very high confidence same song)
-      - AND the shorter title is at least 8 chars (prevents 4-7 char noise matches)
+    Three-tier matching:
+      1. Exact match (both are identical after normalization)
+      2. StartsWith — longer title starts with shorter (high confidence)
+      3. First-word match — if FIRST WORD is identical AND >= 7 chars,
+         it's almost certainly the same song from a different channel.
+         Examples: "bedardiya" vs "bedardiya arijit singh"
+                   "kesariya" vs "kesariya tera ishq hai"
+         This catches cases where separator splitting behaves differently.
+
+    Safety: short title must be >= 7 chars to prevent false positives
+    with common short words like "dil", "pyar", "rang", "tum", etc.
     """
     if not stored or not candidate:
         return False
     if len(stored) < 4 or len(candidate) < 4:
         return False
+
+    # Exact match
+    if stored == candidate:
+        return True
+
     short = stored if len(stored) <= len(candidate) else candidate
     long  = candidate if len(stored) <= len(candidate) else stored
-    # Only match if long starts with short AND short is long enough to be meaningful
-    return len(short) >= 8 and long.startswith(short)
+
+    # StartsWith check (original logic)
+    if len(short) >= 8 and long.startswith(short):
+        return True
+
+    # First-word match — catches "bedardiya" vs "bedardiya arijit singh"
+    # when one version has no separator and the other does
+    short_first = short.split()[0] if short else ""
+    long_first = long.split()[0] if long else ""
+    if short_first and short_first == long_first and len(short_first) >= 7:
+        return True
+
+    return False
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━
