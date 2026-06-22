@@ -42,7 +42,7 @@ random.shuffle(_ayu_order)
 
 
 async def start_search_animation(mystic, frames):
-    """Animate the searching message like start.py style - one shot animation."""
+    """Animate the searching message like start.py style - one shot fast animation."""
     try:
         for idx in range(1, len(frames)):
             await asyncio.sleep(0.3)
@@ -50,13 +50,12 @@ async def start_search_animation(mystic, frames):
                 await mystic.edit_text(frames[idx])
             except FloodWait as e:
                 await asyncio.sleep(e.value)
-                try:
-                    await mystic.edit_text(frames[idx])
-                except Exception:
-                    break
+                await mystic.edit_text(frames[idx])
             except Exception:
-                break
+                pass
     except asyncio.CancelledError:
+        pass
+    except Exception:
         pass
 
 
