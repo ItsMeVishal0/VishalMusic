@@ -88,13 +88,17 @@ async def stream(
             else:
                 if not forceplay:
                     db[chat_id] = []
+                # Start thumbnail download in parallel with song download
+                thumb_task = asyncio.create_task(get_thumb(vidid))
                 try:
                     file_path, direct = await YouTube.download(
                         vidid, mystic, video=is_video, videoid=vidid
                     )
                 except Exception:
+                    thumb_task.cancel()
                     raise AssistantErr(_["play_14"])
                 if not file_path:
+                    thumb_task.cancel()
                     raise AssistantErr(_["play_14"])
 
                 await VISHAL.join_call(
@@ -105,6 +109,7 @@ async def stream(
                     image=thumbnail,
                 )
                 if not await is_active_chat(chat_id):
+                    thumb_task.cancel()
                     raise AssistantErr(_["call_6"])
                 await put_queue(
                     chat_id,
@@ -118,7 +123,10 @@ async def stream(
                     "video" if is_video else "audio",
                     forceplay=forceplay,
                 )
-                img = await get_thumb(vidid)
+                try:
+                    img = await thumb_task
+                except Exception:
+                    img = await get_thumb(vidid)
                 ap_status = await is_autoplay_on(chat_id)
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
                 run = await app.send_photo(
@@ -163,16 +171,22 @@ async def stream(
         duration_min = result["duration_min"]
         thumbnail = result["thumb"]
 
+        # Start thumbnail download in parallel with song download
+        thumb_task = asyncio.create_task(get_thumb(vidid))
+
         try:
             file_path, direct = await YouTube.download(
                 vidid, mystic, video=is_video, videoid=vidid
             )
         except Exception:
+            thumb_task.cancel()
             raise AssistantErr(_["play_14"])
         if not file_path:
+            thumb_task.cancel()
             raise AssistantErr(_["play_14"])
 
         if await is_active_chat(chat_id):
+            thumb_task.cancel()
             await put_queue(
                 chat_id,
                 original_chat_id,
@@ -201,10 +215,8 @@ async def stream(
                 video=is_video,
                 image=thumbnail,
             )
-            # Guard: join_call() has @capture_internal_err — if it fails silently
-            # (returns None) is_active_chat stays False. Don't send "Now Playing"
-            # in that case, or the song appears in VC but nothing is actually playing.
             if not await is_active_chat(chat_id):
+                thumb_task.cancel()
                 raise AssistantErr(_["call_6"])
             await put_queue(
                 chat_id,
@@ -218,7 +230,11 @@ async def stream(
                 "video" if is_video else "audio",
                 forceplay=forceplay,
             )
-            img = await get_thumb(vidid)
+            # Get pre-fetched thumbnail (should be ready by now)
+            try:
+                img = await thumb_task
+            except Exception:
+                img = await get_thumb(vidid)
             ap_status = await is_autoplay_on(chat_id)
             button = stream_markup(_, chat_id, autoplay_status=ap_status)
             run = await app.send_photo(
@@ -379,10 +395,14 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
+            # Start thumbnail download in parallel
+            thumb_task = asyncio.create_task(get_thumb(vidid))
             n, file_path = await YouTube.video(link)
             if n == 0:
+                thumb_task.cancel()
                 raise AssistantErr(_["str_3"])
             if not file_path:
+                thumb_task.cancel()
                 raise AssistantErr(_["play_14"])
 
             await VISHAL.join_call(
@@ -404,7 +424,10 @@ async def stream(
                 "video" if is_video else "audio",
                 forceplay=forceplay,
             )
-            img = await get_thumb(vidid)
+            try:
+                img = await thumb_task
+            except Exception:
+                img = await get_thumb(vidid)
             ap_status = await is_autoplay_on(chat_id)
             button = stream_markup(_, chat_id, autoplay_status=ap_status)
             run = await app.send_photo(
