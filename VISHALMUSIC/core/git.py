@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎
 #   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
+#   Developer : @ItsMeVishalBots | Telegram 
 #   Module : Git Update & Repository Manager
 # ═══════════════════════════════════════════════════════════
 
