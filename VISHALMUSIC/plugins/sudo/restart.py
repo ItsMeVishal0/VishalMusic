@@ -69,6 +69,24 @@ async def update_(client, message, _):
     except InvalidGitRepositoryError:
         return await response.edit(_["server_5"])
 
+    # Ensure we're fetching from correct remote URL
+    try:
+        if config.GIT_TOKEN:
+            GIT_USERNAME = config.UPSTREAM_REPO.split("com/")[1].split("/")[0]
+            TEMP_REPO = config.UPSTREAM_REPO.split("https://")[1]
+            UPSTREAM_URL = f"https://{GIT_USERNAME}:{config.GIT_TOKEN}@{TEMP_REPO}"
+        else:
+            UPSTREAM_URL = config.UPSTREAM_REPO
+        if "origin" in repo.remotes:
+            origin = repo.remote("origin")
+            current_url = list(origin.urls)[0]
+            if current_url != UPSTREAM_URL:
+                origin.set_url(UPSTREAM_URL)
+        else:
+            repo.create_remote("origin", UPSTREAM_URL)
+    except Exception:
+        pass
+
     os.system(f"git fetch origin {config.UPSTREAM_BRANCH}")
     await asyncio.sleep(7)
 
@@ -110,7 +128,7 @@ async def update_(client, message, _):
         nrs = await response.edit(_final_updates_, disable_web_page_preview=True)
 
     os.system(f"git stash")
-    os.system(f"git pull origin {config.UPSTREAM_BRANCH}")
+    os.system(f"git reset --hard origin/{config.UPSTREAM_BRANCH}")
 
     # Install any new requirements after update
     os.system("pip3 install --no-cache-dir -r requirements.txt")
