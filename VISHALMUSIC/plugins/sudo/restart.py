@@ -87,8 +87,17 @@ async def update_(client, message, _):
     except Exception:
         pass
 
-    os.system(f"git fetch origin {config.UPSTREAM_BRANCH}")
-    await asyncio.sleep(7)
+    try:
+        repo.remotes.origin.fetch(config.UPSTREAM_BRANCH)
+    except GitCommandError as e:
+        # Retry once with force flag
+        try:
+            repo.git.fetch("origin", config.UPSTREAM_BRANCH, "--force")
+        except Exception:
+            return await response.edit(
+                f"<b>❌ ғᴇᴛᴄʜ ғᴀɪʟᴇᴅ!</b>\n\n<code>{e}</code>"
+            )
+    await asyncio.sleep(2)
 
     verification = ""
     REPO_ = repo.remotes.origin.url.split(".git")[0]
@@ -127,11 +136,42 @@ async def update_(client, message, _):
     else:
         nrs = await response.edit(_final_updates_, disable_web_page_preview=True)
 
-    os.system(f"git stash")
-    os.system(f"git reset --hard origin/{config.UPSTREAM_BRANCH}")
+    # Remove stale lock file if exists (prevents git failures after crash)
+    lock_path = os.path.join(repo.git_dir, "index.lock")
+    if os.path.exists(lock_path):
+        try:
+            os.remove(lock_path)
+        except Exception:
+            pass
+
+    # Force update files from upstream
+    try:
+        repo.git.stash()
+    except Exception:
+        pass
+
+    try:
+        repo.git.reset("--hard", f"origin/{config.UPSTREAM_BRANCH}")
+    except Exception as e:
+        return await response.edit(
+            f"<b>❌ ᴜᴩᴅᴀᴛᴇ ғᴀɪʟᴇᴅ!</b>\n\n<code>{e}</code>"
+        )
+
+    # Verify HEAD matches origin after reset
+    try:
+        local_head = repo.head.commit.hexsha
+        origin_head = repo.remotes.origin.refs[config.UPSTREAM_BRANCH].commit.hexsha
+        if local_head != origin_head:
+            return await response.edit(
+                "<b>❌ ᴜᴩᴅᴀᴛᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ғᴀɪʟᴇᴅ!</b>\n\n"
+                "<code>HEAD does not match origin after reset. Check git permissions.</code>"
+            )
+    except Exception:
+        pass
 
     # Install any new requirements after update
-    os.system("pip3 install --no-cache-dir -r requirements.txt")
+    if os.path.exists("requirements.txt"):
+        os.system("pip3 install --no-cache-dir -r requirements.txt")
 
     try:
         served_chats = await get_active_chats()
