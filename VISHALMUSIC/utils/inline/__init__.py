@@ -5,4 +5,3 @@ from .queue import *
 from .settings import *
 from .start import *
 from .speed import *
-from .botapi import *
