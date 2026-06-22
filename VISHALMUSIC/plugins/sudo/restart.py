@@ -69,7 +69,7 @@ async def update_(client, message, _):
     except InvalidGitRepositoryError:
         return await response.edit(_["server_5"])
 
-    os.system(f"git fetch origin {config.UPSTREAM_BRANCH} &> /dev/null")
+    os.system(f"git fetch origin {config.UPSTREAM_BRANCH}")
     await asyncio.sleep(7)
 
     verification = ""
@@ -109,7 +109,11 @@ async def update_(client, message, _):
     else:
         nrs = await response.edit(_final_updates_, disable_web_page_preview=True)
 
-    os.system(f"git stash &> /dev/null && git reset --hard origin/{config.UPSTREAM_BRANCH}")
+    os.system(f"git stash")
+    os.system(f"git pull origin {config.UPSTREAM_BRANCH}")
+
+    # Install any new requirements after update
+    os.system("pip3 install --no-cache-dir -r requirements.txt")
 
     try:
         served_chats = await get_active_chats()
