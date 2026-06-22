@@ -35,6 +35,42 @@ from VISHALMUSIC.utils.logger import play_logs
 from VISHALMUSIC.utils.stream.stream import stream
 
 
+# ── Animated searching message helper ──────────────────────────────────────
+_ayu_index = 0
+_ayu_order = list(range(len(AYU)))
+random.shuffle(_ayu_order)
+
+
+async def start_search_animation(mystic, frames):
+    """Animate the searching message like start.py style."""
+    try:
+        idx = 0
+        while True:
+            await asyncio.sleep(0.3)
+            idx = (idx + 1) % len(frames)
+            try:
+                await mystic.edit_text(frames[idx])
+            except Exception:
+                break
+    except asyncio.CancelledError:
+        pass
+
+
+def get_search_msg_and_frames(_, channel, user_name=""):
+    """Return initial message text and animation frames."""
+    global _ayu_index, _ayu_order
+    if channel:
+        text = _["play_2"].format(channel)
+        return text, None
+    frames = AYU[_ayu_order[_ayu_index]]
+    _ayu_index += 1
+    if _ayu_index >= len(_ayu_order):
+        _ayu_index = 0
+        random.shuffle(_ayu_order)
+    frames = [f.format(user_name) for f in frames]
+    return frames[0], frames
+
+
 @app.on_message(
     filters.command(
         [
@@ -64,20 +100,44 @@ async def play_command(
     url,
     fplay,
 ):
+    mystic_text, anim_frames = get_search_msg_and_frames(_, channel, message.from_user.mention)
     try:
-        mystic = await message.reply_text(
-            _["play_2"].format(channel) if channel else random.choice(AYU)
-        )
+        mystic = await message.reply_text(mystic_text)
     except FloodWait as e:
         await asyncio.sleep(e.value)
-        mystic = await message.reply_text(
-            _["play_2"].format(channel) if channel else random.choice(AYU)
-        )
+        mystic = await message.reply_text(mystic_text)
     except RandomIdDuplicate:
-        mystic = await app.send_message(
-            message.chat.id,
-            _["play_2"].format(channel) if channel else random.choice(AYU),
-        )
+        mystic = await app.send_message(message.chat.id, mystic_text)
+
+    # Start animation task if not a channel play
+    anim_task = None
+    if anim_frames:
+        anim_task = asyncio.create_task(start_search_animation(mystic, anim_frames))
+
+    # Wrap mystic.edit_text to auto-cancel animation before editing
+    _original_edit = mystic.edit_text
+    _original_delete = mystic.delete
+
+    async def _animated_edit(*args, **kwargs):
+        if anim_task and not anim_task.done():
+            anim_task.cancel()
+            try:
+                await anim_task
+            except asyncio.CancelledError:
+                pass
+        return await _original_edit(*args, **kwargs)
+
+    async def _animated_delete(*args, **kwargs):
+        if anim_task and not anim_task.done():
+            anim_task.cancel()
+            try:
+                await anim_task
+            except asyncio.CancelledError:
+                pass
+        return await _original_delete(*args, **kwargs)
+
+    mystic.edit_text = _animated_edit
+    mystic.delete = _animated_delete
 
     plist_id, plist_type, spotify, slider = None, None, None, None
     internal_type, log_label = None, None
@@ -563,19 +623,43 @@ async def play_music(client, CallbackQuery, _):
         await CallbackQuery.answer()
 
         try:
-            mystic = await CallbackQuery.message.reply_text(
-                _["play_2"].format(channel) if channel else random.choice(AYU)
-            )
+            mystic_text, anim_frames = get_search_msg_and_frames(_, channel, CallbackQuery.from_user.mention)
+            mystic = await CallbackQuery.message.reply_text(mystic_text)
         except FloodWait as e:
             await asyncio.sleep(e.value)
-            mystic = await CallbackQuery.message.reply_text(
-                _["play_2"].format(channel) if channel else random.choice(AYU)
-            )
+            mystic = await CallbackQuery.message.reply_text(mystic_text)
         except RandomIdDuplicate:
             mystic = await app.send_message(
-                CallbackQuery.message.chat.id,
-                _["play_2"].format(channel) if channel else random.choice(AYU),
+                CallbackQuery.message.chat.id, mystic_text
             )
+
+        # Start animation
+        anim_task = None
+        if anim_frames:
+            anim_task = asyncio.create_task(start_search_animation(mystic, anim_frames))
+        _original_edit = mystic.edit_text
+        _original_delete = mystic.delete
+
+        async def _animated_edit(*args, **kwargs):
+            if anim_task and not anim_task.done():
+                anim_task.cancel()
+                try:
+                    await anim_task
+                except asyncio.CancelledError:
+                    pass
+            return await _original_edit(*args, **kwargs)
+
+        async def _animated_delete(*args, **kwargs):
+            if anim_task and not anim_task.done():
+                anim_task.cancel()
+                try:
+                    await anim_task
+                except asyncio.CancelledError:
+                    pass
+            return await _original_delete(*args, **kwargs)
+
+        mystic.edit_text = _animated_edit
+        mystic.delete = _animated_delete
 
         details, track_id = await YouTube.track(vidid, videoid=vidid)
 
@@ -657,19 +741,43 @@ async def play_playlists_command(client, CallbackQuery, _):
         await CallbackQuery.answer()
 
         try:
-            mystic = await CallbackQuery.message.reply_text(
-                _["play_2"].format(channel) if channel else random.choice(AYU)
-            )
+            mystic_text, anim_frames = get_search_msg_and_frames(_, channel, CallbackQuery.from_user.mention)
+            mystic = await CallbackQuery.message.reply_text(mystic_text)
         except FloodWait as e:
             await asyncio.sleep(e.value)
-            mystic = await CallbackQuery.message.reply_text(
-                _["play_2"].format(channel) if channel else random.choice(AYU)
-            )
+            mystic = await CallbackQuery.message.reply_text(mystic_text)
         except RandomIdDuplicate:
             mystic = await app.send_message(
-                CallbackQuery.message.chat.id,
-                _["play_2"].format(channel) if channel else random.choice(AYU),
+                CallbackQuery.message.chat.id, mystic_text
             )
+
+        # Start animation
+        anim_task = None
+        if anim_frames:
+            anim_task = asyncio.create_task(start_search_animation(mystic, anim_frames))
+        _original_edit = mystic.edit_text
+        _original_delete = mystic.delete
+
+        async def _animated_edit(*args, **kwargs):
+            if anim_task and not anim_task.done():
+                anim_task.cancel()
+                try:
+                    await anim_task
+                except asyncio.CancelledError:
+                    pass
+            return await _original_edit(*args, **kwargs)
+
+        async def _animated_delete(*args, **kwargs):
+            if anim_task and not anim_task.done():
+                anim_task.cancel()
+                try:
+                    await anim_task
+                except asyncio.CancelledError:
+                    pass
+            return await _original_delete(*args, **kwargs)
+
+        mystic.edit_text = _animated_edit
+        mystic.delete = _animated_delete
 
         videoid = lyrical.get(videoid)
         video = mode == "v"
