@@ -11,10 +11,14 @@ from typing import Optional
 
 import aiofiles
 import aiohttp
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from config import YOUTUBE_IMG_URL
 from VISHALMUSIC.core.dir import CACHE_DIR
+
+# Branding font
+_FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "default.ttf")
+_BRAND_TEXT = "VishalMusic"
 
 # Shared persistent session — created once, reused forever
 _thumb_session: Optional[aiohttp.ClientSession] = None
@@ -64,7 +68,42 @@ async def get_thumb(videoid: str) -> str:
         return YOUTUBE_IMG_URL
 
     try:
-        img = Image.open(thumb_path)
+        img = Image.open(thumb_path).convert("RGBA")
+
+        # Add branding text on top-right corner
+        try:
+            draw = ImageDraw.Draw(img)
+            font_size = max(16, img.width // 30)
+            try:
+                font = ImageFont.truetype(_FONT_PATH, font_size)
+            except Exception:
+                font = ImageFont.load_default()
+
+            bbox = draw.textbbox((0, 0), _BRAND_TEXT, font=font)
+            text_w = bbox[2] - bbox[0]
+            text_h = bbox[3] - bbox[1]
+
+            padding = 8
+            x = img.width - text_w - padding - 10
+            y = padding + 5
+
+            # Semi-transparent background behind text
+            overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            overlay_draw = ImageDraw.Draw(overlay)
+            overlay_draw.rounded_rectangle(
+                [x - padding, y - padding // 2, x + text_w + padding, y + text_h + padding // 2],
+                radius=6,
+                fill=(0, 0, 0, 120),
+            )
+            img = Image.alpha_composite(img, overlay)
+
+            # Draw text
+            draw = ImageDraw.Draw(img)
+            draw.text((x, y), _BRAND_TEXT, fill=(255, 255, 255, 230), font=font)
+        except Exception:
+            pass
+
+        img = img.convert("RGB")
         img.save(cache_path)
     except Exception:
         return YOUTUBE_IMG_URL
