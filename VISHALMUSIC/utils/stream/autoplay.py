@@ -877,12 +877,16 @@ async def auto_play_next(
         if last_vidid:
             await add_recent(chat_id, last_vidid, last_title, artist)
 
+        # Load language strings
+        language = await get_lang(chat_id)
+        _ = get_string(language)
+
         indian_emoji = get_indian_emoji()
 
         try:
             msg = await app.send_message(
                 original_chat_id,
-                f"{indian_emoji} ᴀᴜᴛᴏᴘʟᴀʏ → ꜰᴇᴛᴄʜɪɴɢ ɴᴇxᴛ ꜱᴏɴɢ...........",
+                f"{indian_emoji} {_['autoplay_6']}",
             )
         except Exception:
             return False
@@ -1038,7 +1042,7 @@ async def auto_play_next(
         from VISHALMUSIC.utils.database import is_active_chat as _verify_stream_active
         if not await _verify_stream_active(chat_id):
             try:
-                await msg.edit_text("❌ ᴀᴜᴛᴏᴘʟᴀʏ ꜱᴛʀᴇᴀᴍ ꜰᴀɪʟᴇᴅ")
+                await msg.edit_text(_["autoplay_7"])
             except Exception:
                 pass
             return False

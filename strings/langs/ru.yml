@@ -382,3 +382,11 @@ song_8: "⤷ Загрузка начата\n\n⧗ Пожалуйста, подо
 song_9: "✗ Не удалось скачать песню с YT-DL\n\n❒ **Причина:** {0}"
 song_10: "✗ Не удалось загрузить на серверы Telegram."
 song_11: "➲ Загрузка начата, бейби\n\n⧗ Пожалуйста, подождите..."
+# Autoplay Messages
+autoplay_1: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
+autoplay_2: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
+autoplay_3: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅\n\nNext song will play automatically!"
+autoplay_4: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌\n\nAutoplay disabled."
+autoplay_5: "ᴇʀʀᴏʀ: ɪɴᴠᴀʟɪᴅ ᴄʜᴀᴛ."
+autoplay_6: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ → ꜰᴇᴛᴄʜɪɴɢ ɴᴇxᴛ ꜱᴏɴɢ..."
+autoplay_7: "❌ ᴀᴜᴛᴏᴘʟᴀʏ ꜱᴛʀᴇᴀᴍ ꜰᴀɪʟᴇᴅ"

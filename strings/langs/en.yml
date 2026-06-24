@@ -381,3 +381,12 @@ song_8: "⊹ ᴅᴏᴡɴʟᴏᴀᴅ sᴛᴀʀᴛᴇᴅ\n\n⌛ ᴘʟᴇᴀsᴇ ʜ
 song_9: "✘ ꜰᴀɪʟᴇᴅ ᴛᴏ ᴅᴏᴡɴʟᴏᴀᴅ sᴏɴɢ ꜰʀᴏᴍ ʏᴛ-ᴅʟ\n\n⌬ **ʀᴇᴀsᴏɴ:** {0}"
 song_10: "✘ ꜰᴀɪʟᴇᴅ ᴛᴏ ᴜᴘʟᴏᴀᴅ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ sᴇʀᴠᴇʀs."
 song_11: "⊹ ᴜᴘʟᴏᴀᴅɪɴɢ sᴛᴀʀᴛᴇᴅ ʙᴀʙʏ\n\n⌛ ᴘʟᴇᴀsᴇ ʜᴏʟᴅ ᴏɴ..."
+
+# 🔁 Autoplay Messages
+autoplay_1: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
+autoplay_2: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
+autoplay_3: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅\n\nNext song will play automatically!"
+autoplay_4: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌\n\nAutoplay disabled."
+autoplay_5: "ᴇʀʀᴏʀ: ɪɴᴠᴀʟɪᴅ ᴄʜᴀᴛ."
+autoplay_6: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ → ꜰᴇᴛᴄʜɪɴɢ ɴᴇxᴛ ꜱᴏɴɢ..."
+autoplay_7: "❌ ᴀᴜᴛᴏᴘʟᴀʏ ꜱᴛʀᴇᴀᴍ ꜰᴀɪʟᴇᴅ"

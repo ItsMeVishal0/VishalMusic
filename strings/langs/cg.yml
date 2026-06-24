@@ -377,3 +377,12 @@ song_8: "⤷ डाउनलोड शुरू होगे\n\n⧗ कुछ �
 song_9: "✗ yt-dl ले गाना डाउनलोड नइ हो पाइस\n\n❒ **कारण:** {0}"
 song_10: "✗ टेलीग्राम सर्वर मा अपलोड नइ हो पाइस."
 song_11: "➲ अपलोड शुरू होगे बेबी\n\n⧗ थोरकुन रुको..."
+
+# Autoplay Messages
+autoplay_1: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
+autoplay_2: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
+autoplay_3: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅\n\nNext song will play automatically!"
+autoplay_4: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌\n\nAutoplay disabled."
+autoplay_5: "ᴇʀʀᴏʀ: ɪɴᴠᴀʟɪᴅ ᴄʜᴀᴛ."
+autoplay_6: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ → ꜰᴇᴛᴄʜɪɴɢ ɴᴇxᴛ ꜱᴏɴɢ..."
+autoplay_7: "❌ ᴀᴜᴛᴏᴘʟᴀʏ ꜱᴛʀᴇᴀᴍ ꜰᴀɪʟᴇᴅ"
