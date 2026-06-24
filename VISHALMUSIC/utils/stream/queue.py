@@ -43,6 +43,8 @@ async def put_queue(
             db[chat_id] = []
             db[chat_id].append(put)
     else:
+        if chat_id not in db:
+            db[chat_id] = []
         db[chat_id].append(put)
     autoclean.append(file)
 

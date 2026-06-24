@@ -79,13 +79,17 @@ async def send_photo_colored(
             data.add_field("parse_mode", parse_mode)
             if markup_json:
                 data.add_field("reply_markup", markup_json)
-            data.add_field("photo", open(photo, "rb"), filename=os.path.basename(photo))
+            f = open(photo, "rb")
+            data.add_field("photo", f, filename=os.path.basename(photo))
 
-            async with session.post(f"{BOT_API_URL}/sendPhoto", data=data) as resp:
-                if resp.status == 200:
-                    result = await resp.json()
-                    return result.get("result")
-                return None
+            try:
+                async with session.post(f"{BOT_API_URL}/sendPhoto", data=data) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        return result.get("result")
+                    return None
+            finally:
+                f.close()
         except Exception:
             return None
     else:

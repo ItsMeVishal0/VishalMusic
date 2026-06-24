@@ -157,6 +157,8 @@ async def group_assistant(self, chat_id: int) -> int:
         return self.four
     elif int(assis) == 5:
         return self.five
+    else:
+        return self.one
 
 
 async def is_skipmode(chat_id: int) -> bool:
