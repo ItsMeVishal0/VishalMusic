@@ -46,7 +46,17 @@ from VISHALMUSIC.utils.pastebin import VISHALBIN
 autoend = {}
 counter = {}
 
+# Volume boost factor (1.0 = normal, 1.5 = 50% louder, 2.0 = double)
+VOLUME_BOOST = 1.5
+
 def dynamic_media_stream(path: str, video: bool = False, ffmpeg_params: str = None) -> MediaStream:
+    # Add volume boost to ffmpeg params
+    volume_filter = f"-filter:a volume={VOLUME_BOOST}"
+    if ffmpeg_params:
+        ffmpeg_params = f"{ffmpeg_params} {volume_filter}"
+    else:
+        ffmpeg_params = volume_filter
+
     return MediaStream(
         audio_path=path,
         media_path=path,
