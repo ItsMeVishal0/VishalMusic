@@ -381,8 +381,8 @@ song_11: "➲ আপলোড শুরু হয়েছে বেবি\n\n�
 # Autoplay Messages
 autoplay_1: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
 autoplay_2: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
-autoplay_3: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅\n\nNext song will play automatically!"
-autoplay_4: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌\n\nAutoplay disabled."
-autoplay_5: "ᴇʀʀᴏʀ: ɪɴᴠᴀʟɪᴅ ᴄʜᴀᴛ."
-autoplay_6: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ → ꜰᴇᴛᴄʜɪɴɢ ɴᴇxᴛ ꜱᴏɴɢ..."
-autoplay_7: "❌ ᴀᴜᴛᴏᴘʟᴀʏ ꜱᴛʀᴇᴀᴍ ꜰᴀɪʟᴇᴅ"
+autoplay_3: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅\n\nপরের গান স্বয়ংক্রিয়ভাবে চলবে!"
+autoplay_4: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌\n\nঅটোপ্লে বন্ধ করা হয়েছে।"
+autoplay_5: "ত্রুটি: অবৈধ চ্যাট।"
+autoplay_6: "🔁 ᴀᴜᴛᴏᴘʟᴀʏ → পরের গান খুঁজছি..."
+autoplay_7: "❌ ᴀᴜᴛᴏᴘʟᴀʏ স্ট্রীম ব্যর্থ"
