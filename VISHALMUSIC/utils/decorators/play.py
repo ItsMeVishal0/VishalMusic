@@ -31,7 +31,14 @@ links = {}
 
 def PlayWrapper(command):
     async def wrapper(client, message):
-        language = await get_lang(message.chat.id)
+        # ── Parallel DB lookups for speed ──
+        chat_id_raw = message.chat.id
+        lang_task = asyncio.create_task(get_lang(chat_id_raw))
+        maintenance_task = asyncio.create_task(is_maintenance())
+        playmode_task = asyncio.create_task(get_playmode(chat_id_raw))
+        playtype_task = asyncio.create_task(get_playtype(chat_id_raw))
+
+        language = await lang_task
         _ = get_string(language)
 
         if message.sender_chat:
@@ -47,7 +54,7 @@ def PlayWrapper(command):
             )
             return await message.reply_text(_["general_3"], reply_markup=upl)
 
-        if await is_maintenance() is False:
+        if await maintenance_task is False:
             if message.from_user.id not in SUDOERS:
                 return await message.reply_text(
                     text=f"{app.mention} ɪs ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ, ᴠɪsɪᴛ <a href={SUPPORT_CHAT}>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a> ғᴏʀ ᴋɴᴏᴡɪɴɢ ᴛʜᴇ ʀᴇᴀsᴏɴ.",
@@ -94,8 +101,8 @@ def PlayWrapper(command):
             chat_id = message.chat.id
             channel = None
 
-        playmode = await get_playmode(message.chat.id)
-        playty = await get_playtype(message.chat.id)
+        playmode = await playmode_task
+        playty = await playtype_task
         if playty != "Everyone":
             if message.from_user.id not in SUDOERS:
                 admins = adminlist.get(message.chat.id)
@@ -173,7 +180,6 @@ def PlayWrapper(command):
 
                 myu = await message.reply_text(_["call_4"].format(app.mention))
                 try:
-                    await asyncio.sleep(1)
                     await userbot.join_chat(invitelink)
                 except InviteHashExpired:
                     # Remove expired invite link from the cache.
@@ -202,7 +208,7 @@ def PlayWrapper(command):
                         return await message.reply_text(
                             _["call_3"].format(app.mention, type(e).__name__)
                         )
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(1)
                     await myu.edit(_["call_5"].format(app.mention))
                 except UserAlreadyParticipant:
                     pass

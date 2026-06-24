@@ -869,50 +869,46 @@ class YouTubeAPI:
                 return None, None
 
         else:
-            try:
-                audio_result = await download_audio(link)
-                if audio_result:
-                    print("✅ Audio downloaded successfully")
-                    if audio_result.endswith('.mp3') and common_file_path.endswith('.webm'):
-                        mp3_path = audio_result
-                        webm_path = common_file_path
-                        try:
-                            shutil.move(mp3_path, webm_path)
-                            return webm_path, True
-                        except Exception:
-                            return audio_result, True
-                    return audio_result, True
-            except Exception as e:
-                print(f"❌ Audio download error: {str(e)}")
-            
-            try:
-                p = await yt_dlp_download(link, type="audio")
-                if p and os.path.exists(p) and os.path.getsize(p) > 10240:
-                    print("✅ yt-dlp (original)")
-                    if p != common_file_path:
-                        try:
-                            shutil.move(p, common_file_path)
-                            return common_file_path, True
-                        except Exception:
-                            return p, True
-                    return p, True
-            except Exception as e:
-                print(f"❌ Original yt-dlp error: {str(e)}")
-            
-            try:
-                p = await download_audio_concurrent(link)
-                if p and os.path.exists(p) and os.path.getsize(p) > 10240:
-                    print("✅ concurrent")
-                    if p != common_file_path:
-                        try:
-                            shutil.move(p, common_file_path)
-                            return common_file_path, True
-                        except Exception:
-                            return p, True
-                    return p, True
-            except Exception as e:
-                print(f"❌ Concurrent download error: {str(e)}")
-            
+            # ── LIGHTNING FAST: Race all download methods concurrently ──
+            async def _try_primary():
+                return await download_audio(link)
+
+            async def _try_ytdlp():
+                return await yt_dlp_download(link, type="audio")
+
+            async def _try_concurrent():
+                return await download_audio_concurrent(link)
+
+            # Race: first successful result wins
+            tasks = [
+                asyncio.create_task(_try_primary()),
+                asyncio.create_task(_try_ytdlp()),
+                asyncio.create_task(_try_concurrent()),
+            ]
+
+            audio_result = None
+            for coro in asyncio.as_completed(tasks):
+                try:
+                    result = await coro
+                    if result and os.path.exists(result) and os.path.getsize(result) > 10240:
+                        audio_result = result
+                        # Cancel remaining tasks
+                        for t in tasks:
+                            t.cancel()
+                        break
+                except Exception:
+                    continue
+
+            if audio_result:
+                print("✅ Audio downloaded (race winner)")
+                if audio_result != common_file_path:
+                    try:
+                        shutil.move(audio_result, common_file_path)
+                        return common_file_path, True
+                    except Exception:
+                        return audio_result, True
+                return audio_result, True
+
             print("❌ All audio download methods failed")
             return None, None
 
