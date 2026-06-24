@@ -1,7 +1,6 @@
 import time
 from pyrogram.types import InlineKeyboardButton
 from VISHALMUSIC.utils.formatters import time_to_seconds
-from VISHALMUSIC.utils.colored_buttons import styled_button
 
 LAST_UPDATE_TIME = {}
 
@@ -167,51 +166,3 @@ def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
             ),
         ],
     ]
-
-
-# ═══════════════════════════════════════════════════════════
-#   COLORED BUTTON VARIANTS (Bot API HTTP - style support)
-# ═══════════════════════════════════════════════════════════
-
-def colored_control_buttons(_, chat_id):
-    """Control row with colored styles."""
-    return [[
-        styled_button("▷", callback_data=f"ADMIN Resume|{chat_id}", style="success"),
-        styled_button("II", callback_data=f"ADMIN Pause|{chat_id}", style="primary"),
-        styled_button("↻", callback_data=f"ADMIN Replay|{chat_id}", style="primary"),
-        styled_button("‣‣I", callback_data=f"ADMIN Skip|{chat_id}", style="primary"),
-        styled_button("▢", callback_data=f"ADMIN Stop|{chat_id}", style="danger"),
-    ]]
-
-
-def colored_autoplay_button(chat_id: int, status: bool) -> dict:
-    if status:
-        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="success")
-    else:
-        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="danger")
-
-
-def colored_stream_markup(_, chat_id, autoplay_status: bool = False):
-    """Stream 'Now Playing' buttons with colors."""
-    return (
-        colored_control_buttons(_, chat_id)
-        + [[colored_autoplay_button(chat_id, autoplay_status)]]
-        + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
-    )
-
-
-def colored_stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
-    """Stream buttons with progress bar and colors."""
-    if not should_update_progress(chat_id):
-        return None
-
-    played_sec = time_to_seconds(played)
-    duration_sec = time_to_seconds(dur)
-    bar = generate_progress_bar(played_sec, duration_sec)
-
-    return (
-        [[styled_button(f"{played} {bar} {dur}", callback_data="GetTimer")]]
-        + colored_control_buttons(_, chat_id)
-        + [[colored_autoplay_button(chat_id, autoplay_status)]]
-        + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
-    )
