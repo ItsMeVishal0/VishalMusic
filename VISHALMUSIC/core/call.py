@@ -50,12 +50,16 @@ counter = {}
 VOLUME_BOOST = 1.5
 
 def dynamic_media_stream(path: str, video: bool = False, ffmpeg_params: str = None) -> MediaStream:
-    # Add volume boost to ffmpeg params
-    volume_filter = f"-filter:a volume={VOLUME_BOOST}"
-    if ffmpeg_params:
-        ffmpeg_params = f"{ffmpeg_params} {volume_filter}"
+    # Add volume boost only when no other audio filters are present
+    if ffmpeg_params and ("-af" in ffmpeg_params or "-filter:a" in ffmpeg_params):
+        # Already has audio filter, don't add volume (conflicts)
+        pass
     else:
-        ffmpeg_params = volume_filter
+        volume_filter = f"-af volume={VOLUME_BOOST}"
+        if ffmpeg_params:
+            ffmpeg_params = f"{ffmpeg_params} {volume_filter}"
+        else:
+            ffmpeg_params = volume_filter
 
     return MediaStream(
         audio_path=path,
