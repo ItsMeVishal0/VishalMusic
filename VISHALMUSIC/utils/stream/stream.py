@@ -143,8 +143,12 @@ async def stream(
                     caption=caption,
                     reply_markup=colored_buttons,
                 )
-                if run_data:
-                    db[chat_id][0]["mystic"] = run_data
+                if run_data and run_data.get("message_id"):
+                    try:
+                        run = await app.get_messages(original_chat_id, run_data["message_id"])
+                        db[chat_id][0]["mystic"] = run
+                    except Exception:
+                        db[chat_id][0]["mystic"] = run_data
                     db[chat_id][0]["markup"] = "stream"
                 else:
                     button = stream_markup(_, chat_id, autoplay_status=ap_status)
@@ -263,9 +267,13 @@ async def stream(
                 caption=caption,
                 reply_markup=colored_buttons,
             )
-            if run_data:
-                # Store message_id for later edits
-                db[chat_id][0]["mystic"] = run_data
+            if run_data and run_data.get("message_id"):
+                # Fetch as Pyrogram Message so timer/callbacks work
+                try:
+                    run = await app.get_messages(original_chat_id, run_data["message_id"])
+                    db[chat_id][0]["mystic"] = run
+                except Exception:
+                    db[chat_id][0]["mystic"] = run_data
                 db[chat_id][0]["markup"] = "stream"
             else:
                 # Fallback to pyrogram if Bot API fails
@@ -470,8 +478,12 @@ async def stream(
                 caption=caption,
                 reply_markup=colored_buttons,
             )
-            if run_data:
-                db[chat_id][0]["mystic"] = run_data
+            if run_data and run_data.get("message_id"):
+                try:
+                    run = await app.get_messages(original_chat_id, run_data["message_id"])
+                    db[chat_id][0]["mystic"] = run
+                except Exception:
+                    db[chat_id][0]["mystic"] = run_data
                 db[chat_id][0]["markup"] = "tg"
             else:
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
