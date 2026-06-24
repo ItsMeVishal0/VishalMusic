@@ -48,7 +48,7 @@ PRIMARY_API_URL = "https://api.shrutibots.site"
 # Response: Direct file download
 
 # API 2: Legacy/Fallback API (Token Based)
-FALLBACK_API_URL = ""
+FALLBACK_API_URL = "http://13.212.126.0:2020"
 # Endpoint 1: /download?url={video_id}&type=audio -> returns {"download_token": "xxx"}
 # Endpoint 2: /stream/{video_id}?type=audio with header X-Download-Token
 
