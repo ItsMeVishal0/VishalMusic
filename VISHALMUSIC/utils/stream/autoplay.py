@@ -732,6 +732,26 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
 
                     score = 0
 
+                    # Official channel boost — prefer VEVO, official, verified channels
+                    channel_name = (info.get("channel", {}).get("name", "") or "").lower() if isinstance(info.get("channel"), dict) else ""
+                    if not channel_name:
+                        channel_name = (info.get("channel", "") or "").lower() if isinstance(info.get("channel"), str) else ""
+
+                    is_official = False
+                    if any(x in channel_name for x in ["vevo", "official", "records", "music"]):
+                        is_official = True
+                        score += 40
+                    if any(x in title_lower for x in ["official video", "official audio", "official music"]):
+                        is_official = True
+                        score += 35
+
+                    # Penalize non-official/spam channels
+                    spam_indicators = ["lyrics", "lofi", "slowed", "reverb", "cover", "karaoke", "remix", "8d"]
+                    if any(x in channel_name for x in spam_indicators):
+                        score -= 30
+                    if any(x in title_lower for x in ["lyrical", "lyrics video", "lyric video"]):
+                        score -= 20
+
                     # Title word overlap with current song
                     match_count = sum(
                         1 for w in original_words[:5] if w in title_lower and len(w) > 3
