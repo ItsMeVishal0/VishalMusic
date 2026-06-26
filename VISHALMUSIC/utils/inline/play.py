@@ -1,6 +1,7 @@
-﻿import time
+import time
 from pyrogram.types import InlineKeyboardButton
 from VISHALMUSIC.utils.formatters import time_to_seconds
+from VISHALMUSIC.utils.colored_buttons import styled_button
 
 LAST_UPDATE_TIME = {}
 
@@ -47,18 +48,18 @@ def generate_progress_bar(played_sec, duration_sec):
 
     if filled > 0:
         if filled == bar_length:
-            return "≡ôéâ" * (filled - 1) + "Ω¿ä"
+            return "𓂃" * (filled - 1) + "ꨄ"
         else:
-            return "≡ôéâ" * (filled - 1) + "Ω¿ä" + "≡ôéâ" * remaining
+            return "𓂃" * (filled - 1) + "ꨄ" + "𓂃" * remaining
     else:
-        return "Ω¿ä" + "≡ôéâ" * remaining
+        return "ꨄ" + "𓂃" * remaining
 
 
 def autoplay_button(chat_id: int, status: bool) -> InlineKeyboardButton:
     if status:
-        label = "≡ƒöü ß┤Çß┤£ß┤¢ß┤Åß┤ÿ╩ƒß┤Ç╩Å : ß┤Å╔┤ Γ£à"
+        label = "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
     else:
-        label = "≡ƒöü ß┤Çß┤£ß┤¢ß┤Åß┤ÿ╩ƒß┤Ç╩Å : ß┤Å╥ô╥ô Γ¥î"
+        label = "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
     return InlineKeyboardButton(
         text=label,
         callback_data=f"AUTOPLAY_TOGGLE {chat_id}",
@@ -67,11 +68,11 @@ def autoplay_button(chat_id: int, status: bool) -> InlineKeyboardButton:
 
 def control_buttons(_, chat_id):
     return [[
-        InlineKeyboardButton(text="Γû╖", callback_data=f"ADMIN Resume|{chat_id}"),
+        InlineKeyboardButton(text="▷", callback_data=f"ADMIN Resume|{chat_id}"),
         InlineKeyboardButton(text="II", callback_data=f"ADMIN Pause|{chat_id}"),
-        InlineKeyboardButton(text="Γå╗", callback_data=f"ADMIN Replay|{chat_id}"),
-        InlineKeyboardButton(text="ΓÇúΓÇúI", callback_data=f"ADMIN Skip|{chat_id}"),
-        InlineKeyboardButton(text="Γûó", callback_data=f"ADMIN Stop|{chat_id}"),
+        InlineKeyboardButton(text="↻", callback_data=f"ADMIN Replay|{chat_id}"),
+        InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
+        InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
     ]]
 
 
@@ -153,7 +154,7 @@ def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
         ],
         [
             InlineKeyboardButton(
-                text="Γùü",
+                text="◁",
                 callback_data=f"slider B|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
             ),
             InlineKeyboardButton(
@@ -161,8 +162,56 @@ def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
                 callback_data=f"forceclose {short_query}|{user_id}",
             ),
             InlineKeyboardButton(
-                text="Γû╖",
+                text="▷",
                 callback_data=f"slider F|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
             ),
         ],
     ]
+
+
+# ═══════════════════════════════════════════════════════════
+#   COLORED BUTTON VARIANTS (Bot API HTTP - style support)
+# ═══════════════════════════════════════════════════════════
+
+def colored_control_buttons(_, chat_id):
+    """Control row with colored styles."""
+    return [[
+        styled_button("▷", callback_data=f"ADMIN Resume|{chat_id}", style="success"),
+        styled_button("II", callback_data=f"ADMIN Pause|{chat_id}", style="primary"),
+        styled_button("↻", callback_data=f"ADMIN Replay|{chat_id}", style="primary"),
+        styled_button("‣‣I", callback_data=f"ADMIN Skip|{chat_id}", style="primary"),
+        styled_button("▢", callback_data=f"ADMIN Stop|{chat_id}", style="danger"),
+    ]]
+
+
+def colored_autoplay_button(chat_id: int, status: bool) -> dict:
+    if status:
+        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="success")
+    else:
+        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="danger")
+
+
+def colored_stream_markup(_, chat_id, autoplay_status: bool = False):
+    """Stream 'Now Playing' buttons with colors."""
+    return (
+        colored_control_buttons(_, chat_id)
+        + [[colored_autoplay_button(chat_id, autoplay_status)]]
+        + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
+    )
+
+
+def colored_stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
+    """Stream buttons with progress bar and colors."""
+    if not should_update_progress(chat_id):
+        return None
+
+    played_sec = time_to_seconds(played)
+    duration_sec = time_to_seconds(dur)
+    bar = generate_progress_bar(played_sec, duration_sec)
+
+    return (
+        [[styled_button(f"{played} {bar} {dur}", callback_data="GetTimer")]]
+        + colored_control_buttons(_, chat_id)
+        + [[colored_autoplay_button(chat_id, autoplay_status)]]
+        + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
+    )
