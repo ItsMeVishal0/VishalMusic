@@ -1067,6 +1067,23 @@ async def auto_play_next(
                 pass
             return False
 
+        # Log autoplay song to logger channel
+        try:
+            from config import LOGGER_ID
+            from VISHALMUSIC.utils.database import is_on_off
+            if await is_on_off(2):
+                log_text = (
+                    f"<b>{app.mention} ᴀᴜᴛᴏᴘʟᴀʏ ʟᴏɢ</b>\n\n"
+                    f"<b>ᴄʜᴀᴛ ɪᴅ :</b> <code>{chat_id}</code>\n"
+                    f"<b>ᴛɪᴛʟᴇ :</b> {details.get('title', '—')}\n"
+                    f"<b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {details.get('duration_min', '—')}\n"
+                    f"<b>sᴛʀᴇᴀᴍᴛʏᴘᴇ :</b> Autoplay (YouTube)\n"
+                    f"<b>ᴠɪᴅᴇᴏ ɪᴅ :</b> <code>{vidid}</code>"
+                )
+                await app.send_message(chat_id=LOGGER_ID, text=log_text)
+        except Exception:
+            pass
+
         try:
             await msg.delete()
         except Exception:
