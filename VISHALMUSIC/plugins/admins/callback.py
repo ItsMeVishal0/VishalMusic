@@ -46,8 +46,6 @@ from VISHALMUSIC.utils.database import (
 from VISHALMUSIC.utils.decorators import ActualAdminCB, languageCB
 from VISHALMUSIC.utils.formatters import seconds_to_min
 from VISHALMUSIC.utils.inline import close_markup, stream_markup, stream_markup_timer
-from VISHALMUSIC.utils.inline.play import colored_stream_markup_timer
-from VISHALMUSIC.utils.colored_buttons import edit_reply_markup_colored
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
 
@@ -487,7 +485,7 @@ async def markup_timer():
                     _lang = get_string("en")
                 try:
                     ap_status = await is_autoplay_on(chat_id)
-                    buttons = colored_stream_markup_timer(
+                    buttons = stream_markup_timer(
                         _lang,
                         chat_id,
                         seconds_to_min(playing[0]["played"]),
@@ -495,23 +493,7 @@ async def markup_timer():
                         autoplay_status=ap_status,
                     )
                     if buttons:
-                        # Use Bot API HTTP to keep colored buttons
-                        result = await edit_reply_markup_colored(
-                            chat_id=mystic.chat.id,
-                            message_id=mystic.id,
-                            reply_markup=buttons,
-                        )
-                        if not result:
-                            # Fallback to Pyrogram (no color)
-                            fallback_buttons = stream_markup_timer(
-                                _lang,
-                                chat_id,
-                                seconds_to_min(playing[0]["played"]),
-                                playing[0]["dur"],
-                                autoplay_status=ap_status,
-                            )
-                            if fallback_buttons:
-                                await mystic.edit_reply_markup(reply_markup=InlineKeyboardMarkup(fallback_buttons))
+                        await mystic.edit_reply_markup(reply_markup=InlineKeyboardMarkup(buttons))
                 except Exception:
                     continue
             except Exception:
