@@ -9,7 +9,7 @@ import asyncio
 import random
 
 from pyrogram import filters
-from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import CallbackQuery
 
 from config import (
     BANNED_USERS,
@@ -27,7 +27,7 @@ from strings import get_string
 from VISHALMUSIC import YouTube, app
 from VISHALMUSIC.core.call import VISHAL
 from VISHALMUSIC.misc import SUDOERS, db
-from VISHALMUSIC.utils.autoplay_utils import is_autoplay_on
+from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.database import (
     get_active_chats,
     get_assistant,
@@ -44,13 +44,22 @@ from VISHALMUSIC.utils.database import (
     set_loop,
 )
 from VISHALMUSIC.utils.decorators import ActualAdminCB, languageCB
-from VISHALMUSIC.utils.formatters import seconds_to_min
-from VISHALMUSIC.utils.inline import close_markup, stream_markup, stream_markup_timer
+from VISHALMUSIC.utils.formatters import seconds_to_min, time_to_seconds
+from VISHALMUSIC.utils.inline import close_markup, stream_markup
+from VISHALMUSIC.utils.inline.play import stream_markup_timer, generate_progress_bar
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    edit_reply_markup_colored,
+    edit_message_text_colored,
+    edit_message_caption_colored,
+    send_message_colored,
+    send_photo_colored,
+    buttons_to_inline_markup,
+)
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
 
 
-checker = {}
 upvoters = {}
 
 
@@ -99,14 +108,13 @@ async def handle_upvote(callback: CallbackQuery, chat_id: int, counter, _):
             await callback.answer(_["admin_38"], show_alert=True)
         else:
             await callback.answer(_["admin_39"], show_alert=True)
-        markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton(
-                text=f"👍 {current_upvotes}",
-                callback_data=f"ADMIN  UpVote|{chat_id}_{counter if counter is not None else chat_id}"
-            )]
-        ])
+        markup = [[styled_button(
+            text=f"👍 {current_upvotes}",
+            callback_data=f"ADMIN  UpVote|{chat_id}_{counter if counter is not None else chat_id}",
+            style="primary",
+        )]]
         await callback.answer(_["admin_40"], show_alert=True)
-        await callback.edit_message_reply_markup(reply_markup=markup)
+        await edit_reply_markup_colored(callback.message.chat.id, callback.message.id, reply_markup=markup)
         return None, None
 
 
@@ -125,6 +133,7 @@ async def unban_assistant(_, callback: CallbackQuery):
             "Fᴀɪʟᴇᴅ ᴛᴏ ᴜɴʙᴀɴ ᴍʏ ᴀssɪsᴛᴀɴᴛ ʙᴇᴄᴀᴜsᴇ ɪ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ʙᴀɴ ᴘᴏᴡᴇʀ\n\n➻ Pʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴍᴇ ʙᴀɴ ᴘᴏᴡᴇʀ sᴏ ᴛʜᴀᴛ ɪ ᴄᴀɴ ᴜɴʙᴀɴ ᴍʏ ᴀssɪsᴛᴀɴᴛ ɪᴅ",
             show_alert=True,
         )
+
 
 
 @app.on_callback_query(filters.regex("ADMIN") & ~BANNED_USERS)
@@ -159,7 +168,11 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await callback.answer()
         await music_off(chat_id)
         await VISHAL.pause_stream(chat_id)
-        await callback.message.reply_text(_["admin_2"].format(user_mention), reply_markup=close_markup(_))
+        await send_message_colored(
+            callback.message.chat.id,
+            _["admin_2"].format(user_mention),
+            reply_markup=close_markup(_),
+        )
 
     elif command == "Resume":
         if await is_music_playing(chat_id):
@@ -167,13 +180,21 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await callback.answer()
         await music_on(chat_id)
         await VISHAL.resume_stream(chat_id)
-        await callback.message.reply_text(_["admin_4"].format(user_mention), reply_markup=close_markup(_))
+        await send_message_colored(
+            callback.message.chat.id,
+            _["admin_4"].format(user_mention),
+            reply_markup=close_markup(_),
+        )
 
     elif command in ["Stop", "End"]:
         await callback.answer()
         await VISHAL.stop_stream(chat_id)
         await set_loop(chat_id, 0)
-        await callback.message.reply_text(_["admin_5"].format(user_mention), reply_markup=close_markup(_))
+        await send_message_colored(
+            callback.message.chat.id,
+            _["admin_5"].format(user_mention),
+            reply_markup=close_markup(_),
+        )
         await callback.message.delete()
 
     elif command == "Mute":
@@ -205,7 +226,6 @@ async def manage_callback(client, callback: CallbackQuery, _):
             popped = playlist.pop(0)
         except Exception:
             return await callback.answer(_["admin_43"], show_alert=True)
-
         if not playlist:
             playlist.insert(0, popped)
             return await callback.answer(_["admin_43"], show_alert=True)
@@ -219,6 +239,33 @@ async def manage_callback(client, callback: CallbackQuery, _):
 
     else:
         await handle_seek(callback, _, chat_id, command, user_mention)
+
+
+async def _colored_reply_photo(callback, photo, caption, buttons, db_ref, chat_id, markup_type):
+    """Send a new photo reply with colored buttons, fallback to Pyrogram."""
+    run_data = await send_photo_colored(
+        chat_id=callback.message.chat.id,
+        photo=photo,
+        caption=caption,
+        reply_markup=buttons,
+    )
+    if run_data and run_data.get("message_id"):
+        try:
+            run = await app.get_messages(callback.message.chat.id, run_data["message_id"])
+        except Exception:
+            run = run_data
+    else:
+        run = await callback.message.reply_photo(
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons_to_inline_markup(buttons),
+        )
+    playlist = db.get(chat_id)
+    if playlist and len(playlist) > 0:
+        playlist[0]["mystic"] = run
+        playlist[0]["markup"] = markup_type
+        playlist[0]["base_caption"] = caption
+    return run
 
 
 async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: str, user_mention: str):
@@ -251,17 +298,19 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                     except Exception:
                         pass
                 await callback.edit_message_text(text_msg)
-                await callback.message.reply_text(
+                await send_message_colored(
+                    callback.message.chat.id,
                     _["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_)
+                    reply_markup=close_markup(_),
                 )
                 return await VISHAL.stop_stream(chat_id)
         except Exception:
             try:
                 await callback.edit_message_text(text_msg)
-                await callback.message.reply_text(
+                await send_message_colored(
+                    callback.message.chat.id,
                     _["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_)
+                    reply_markup=close_markup(_),
                 )
                 return await VISHAL.stop_stream(chat_id)
             except Exception:
@@ -295,9 +344,10 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
     if "live_" in queued:
         n, new_link = await YouTube.video(videoid, True)
         if n == 0:
-            return await callback.message.reply_text(
+            return await send_message_colored(
+                callback.message.chat.id,
                 _["admin_7"].format(title),
-                reply_markup=close_markup(_)
+                reply_markup=close_markup(_),
             )
         try:
             image = await YouTube.thumbnail(videoid, True)
@@ -309,14 +359,12 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             return await callback.message.reply_text(_["call_6"])
         buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
-        run = await callback.message.reply_photo(
-            photo=img,
-            caption=_["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
-            reply_markup=InlineKeyboardMarkup(buttons)
+        await _colored_reply_photo(
+            callback, img,
+            _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
+            buttons, None, chat_id, "tg",
         )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "tg"
-        await callback.edit_message_text(text_msg, reply_markup=close_markup(_))
+        await edit_message_text_colored(callback.message.chat.id, callback.message.id, text_msg, reply_markup=close_markup(_))
 
     elif "vid_" in queued:
         mystic = await callback.message.reply_text(_["call_7"], disable_web_page_preview=True)
@@ -334,14 +382,12 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             return await mystic.edit_text(_["call_6"])
         buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
-        run = await callback.message.reply_photo(
-            photo=img,
-            caption=_["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
-            reply_markup=InlineKeyboardMarkup(buttons)
+        await _colored_reply_photo(
+            callback, img,
+            _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
+            buttons, None, chat_id, "stream",
         )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "stream"
-        await callback.edit_message_text(text_msg, reply_markup=close_markup(_))
+        await edit_message_text_colored(callback.message.chat.id, callback.message.id, text_msg, reply_markup=close_markup(_))
         await mystic.delete()
 
     elif "index_" in queued:
@@ -350,14 +396,8 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
         except Exception:
             return await callback.message.reply_text(_["call_6"])
         buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
-        run = await callback.message.reply_photo(
-            photo=STREAM_IMG_URL,
-            caption=_["stream_2"].format(user),
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "tg"
-        await callback.edit_message_text(text_msg, reply_markup=close_markup(_))
+        await _colored_reply_photo(callback, STREAM_IMG_URL, _["stream_2"].format(user), buttons, None, chat_id, "tg")
+        await edit_message_text_colored(callback.message.chat.id, callback.message.id, text_msg, reply_markup=close_markup(_))
 
     else:
         if videoid in ["telegram", "soundcloud"]:
@@ -373,33 +413,29 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             return await callback.message.reply_text(_["call_6"])
         if videoid == "telegram":
             buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
-            run = await callback.message.reply_photo(
-                photo=(TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL),
-                caption=_["stream_1"].format(SUPPORT_CHAT, title[:23], duration, user),
-                reply_markup=InlineKeyboardMarkup(buttons)
+            photo = TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL
+            await _colored_reply_photo(
+                callback, photo,
+                _["stream_1"].format(SUPPORT_CHAT, title[:23], duration, user),
+                buttons, None, chat_id, "tg",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
         elif videoid == "soundcloud":
             buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
-            run = await callback.message.reply_photo(
-                photo=(SOUNCLOUD_IMG_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL),
-                caption=_["stream_1"].format(SUPPORT_CHAT, title[:23], duration, user),
-                reply_markup=InlineKeyboardMarkup(buttons)
+            photo = SOUNCLOUD_IMG_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL
+            await _colored_reply_photo(
+                callback, photo,
+                _["stream_1"].format(SUPPORT_CHAT, title[:23], duration, user),
+                buttons, None, chat_id, "tg",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
         else:
             buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
             img = await get_thumb(videoid)
-            run = await callback.message.reply_photo(
-                photo=img,
-                caption=_["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
-                reply_markup=InlineKeyboardMarkup(buttons)
+            await _colored_reply_photo(
+                callback, img,
+                _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], duration, user),
+                buttons, None, chat_id, "stream",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "stream"
-        await callback.edit_message_text(text_msg, reply_markup=close_markup(_))
+        await edit_message_text_colored(callback.message.chat.id, callback.message.id, text_msg, reply_markup=close_markup(_))
 
 
 async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, user_mention: str):
@@ -421,7 +457,7 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
             return await callback.answer(
                 f"» ʙᴏᴛ ɪs ᴜɴᴀʙʟᴇ ᴛᴏ sᴇᴇᴋ ʙᴇᴄᴀᴜsᴇ ᴛʜᴇ ᴅᴜʀᴀᴛɪᴏɴ ᴇxᴄᴇᴇᴅs.\n\n"
                 f"ᴄᴜʀʀᴇɴᴛʟʏ ᴩʟᴀʏᴇᴅ :** {bet}** ᴍɪɴᴜᴛᴇs ᴏᴜᴛ ᴏғ **{duration}** ᴍɪɴᴜᴛᴇs.",
-                show_alert=True
+                show_alert=True,
             )
         to_seek = duration_played - duration_to_skip + 1
     else:
@@ -430,7 +466,7 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
             return await callback.answer(
                 f"» ʙᴏᴛ ɪs ᴜɴᴀʙʟᴇ ᴛᴏ sᴇᴇᴋ ʙᴇᴄᴀᴜsᴇ ᴛʜᴇ ᴅᴜʀᴀᴛɪᴏɴ ᴇxᴄᴇᴇᴅs.\n\n"
                 f"ᴄᴜʀʀᴇɴᴛʟʏ ᴩʟᴀʏᴇᴅ :** {bet}** ᴍɪɴᴜᴛᴇs ᴏᴜᴛ ᴏғ **{duration}** ᴍɪɴᴜᴛᴇs.",
-                show_alert=True
+                show_alert=True,
             )
         to_seek = duration_played + duration_to_skip + 1
 
@@ -458,51 +494,7 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
     await mystic.edit_text(f"{seek_message}\n\nᴄʜᴀɴɢᴇs ᴅᴏɴᴇ ʙʏ : {user_mention} !")
 
 
-async def markup_timer():
-    while True:
-        await asyncio.sleep(6)
-        active_chats = await get_active_chats()
-        for chat_id in active_chats:
-            try:
-                if not await is_music_playing(chat_id):
-                    continue
-                playing = db.get(chat_id)
-                if not playing:
-                    continue
-                duration_seconds = int(playing[0]["seconds"])
-                if duration_seconds == 0:
-                    continue
-                mystic = playing[0].get("mystic")
-                if not mystic:
-                    continue
-                if chat_id in checker and mystic.id in checker[chat_id]:
-                    if checker[chat_id][mystic.id] is False:
-                        continue
-                try:
-                    language = await get_lang(chat_id)
-                    _lang = get_string(language)
-                except Exception:
-                    _lang = get_string("en")
-                try:
-                    ap_status = await is_autoplay_on(chat_id)
-                    buttons = stream_markup_timer(
-                        _lang,
-                        chat_id,
-                        seconds_to_min(playing[0]["played"]),
-                        playing[0]["dur"],
-                        autoplay_status=ap_status,
-                    )
-                    if buttons:
-                        await mystic.edit_reply_markup(reply_markup=InlineKeyboardMarkup(buttons))
-                except Exception:
-                    continue
-            except Exception:
-                continue
-
-asyncio.create_task(markup_timer())
-
-
-@app.on_callback_query(filters.regex("close") & ~BANNED_USERS)
+@app.on_callback_query(filters.regex("^close$") & ~BANNED_USERS)
 async def close_menu(_, query: CallbackQuery):
     try:
         await query.answer()
@@ -510,7 +502,7 @@ async def close_menu(_, query: CallbackQuery):
         msg = await query.message.reply_text(f"✅ ᴄʟᴏꜱᴇᴅ ʙʏ : {query.from_user.mention}")
         await asyncio.sleep(2)
         await msg.delete()
-    except:
+    except Exception:
         pass
 
 
@@ -520,17 +512,105 @@ async def stop_download(_, query: CallbackQuery, _lang):
     task = lyrical.get(query.message.id)
     if not task:
         return await query.answer(_lang["tg_4"], show_alert=True)
-
     if task.done() or task.cancelled():
         return await query.answer(_lang["tg_5"], show_alert=True)
-
     try:
         task.cancel()
         lyrical.pop(query.message.id, None)
         await query.answer(_lang["tg_6"], show_alert=True)
         return await query.edit_message_text(_lang["tg_7"].format(query.from_user.mention))
-    except:
+    except Exception:
         return await query.answer(_lang["tg_8"], show_alert=True)
+
+
+async def _now_playing_timer():
+    """
+    Unified background task: updates caption + inline buttons in ONE single
+    editMessageCaption call every UPDATE_INTERVAL seconds.
+
+    Using a single API call instead of two separate edits (editMessageCaption +
+    editMessageReplyMarkup) prevents the flicker/blink that users see when the
+    message is edited twice in quick succession.
+    """
+    from VISHALMUSIC.utils.inline.play import UPDATE_INTERVAL, should_update_progress
+    while True:
+        await asyncio.sleep(UPDATE_INTERVAL)
+        active_chats = await get_active_chats()
+        for chat_id in active_chats:
+            try:
+                playing = db.get(chat_id)
+                if not playing or not isinstance(playing, list) or len(playing) == 0:
+                    continue
+                track = playing[0]
+                mystic = track.get("mystic")
+                base_caption = track.get("base_caption")
+                if not mystic or not base_caption:
+                    continue
+
+                # Resolve message coordinates
+                if isinstance(mystic, dict):
+                    m_chat_id = (mystic.get("chat") or {}).get("id")
+                    m_id = mystic.get("message_id")
+                else:
+                    m_chat_id = getattr(getattr(mystic, "chat", None), "id", None)
+                    m_id = getattr(mystic, "id", None)
+                if not m_chat_id or not m_id:
+                    continue
+
+                played = track.get("played", 0)
+                dur = track.get("dur", "0:00")
+                dur_sec = time_to_seconds(dur)
+                if dur_sec == 0:
+                    continue
+
+                played_sec = played if isinstance(played, int) else time_to_seconds(str(played))
+                bar = generate_progress_bar(played_sec, dur_sec)
+                played_str = seconds_to_min(played_sec)
+
+                # Build updated caption with embedded progress bar
+                new_caption = f"{base_caption}\n\n⏳ <code>{played_str} {bar} {dur}</code>"
+
+                # Build updated inline buttons (rate-limited inside should_update_progress)
+                _lang = get_string(await get_lang(chat_id))
+                ap_status = await is_autoplay_on(chat_id)
+                buttons = stream_markup_timer(
+                    _lang,
+                    chat_id,
+                    played_str,
+                    dur,
+                    autoplay_status=ap_status,
+                )
+
+                if buttons:
+                    # Single API call — caption + markup together = zero blink
+                    result = await edit_message_caption_colored(
+                        chat_id=m_chat_id,
+                        message_id=m_id,
+                        caption=new_caption,
+                        reply_markup=buttons,
+                    )
+                    if not result:
+                        # Fallback: Pyrogram (no colors, but at least updates)
+                        if not isinstance(mystic, dict):
+                            try:
+                                await mystic.edit_caption(
+                                    caption=new_caption,
+                                    reply_markup=buttons_to_inline_markup(buttons),
+                                )
+                            except Exception:
+                                pass
+                else:
+                    # Timer throttled — only update caption (no markup change)
+                    await edit_message_caption_colored(
+                        chat_id=m_chat_id,
+                        message_id=m_id,
+                        caption=new_caption,
+                    )
+            except Exception:
+                continue
+
+
+asyncio.create_task(_now_playing_timer())
 
 # ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎

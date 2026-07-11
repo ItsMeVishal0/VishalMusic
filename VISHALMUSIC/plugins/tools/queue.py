@@ -11,6 +11,7 @@ from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils import VISHALBIN, get_channeplayCB, seconds_to_min
 from VISHALMUSIC.utils.database import get_cmode, is_active_chat, is_music_playing
 from VISHALMUSIC.utils.decorators.language import language, languageCB
+from VISHALMUSIC.utils.colored_buttons import send_photo_colored, edit_message_text_colored, edit_message_media_colored, edit_reply_markup_colored, buttons_to_inline_markup
 from VISHALMUSIC.utils.inline import queue_back_markup, queue_markup
 from config import BANNED_USERS
 
@@ -97,7 +98,14 @@ async def get_queue(client, message: Message, _):
         )
     )
     basic[videoid] = True
-    mystic = await message.reply_photo(IMAGE, caption=cap, reply_markup=upl)
+    mystic_data = await send_photo_colored(chat_id=message.chat.id, photo=IMAGE, caption=cap, reply_markup=upl)
+    if mystic_data and mystic_data.get("message_id"):
+        try:
+            mystic = await app.get_messages(message.chat.id, mystic_data["message_id"])
+        except:
+            mystic = mystic_data
+    else:
+        mystic = await message.reply_photo(IMAGE, caption=cap, reply_markup=buttons_to_inline_markup(upl))
     if DUR != "Unknown":
         try:
             while db[chat_id][0]["vidid"] == videoid:
@@ -114,7 +122,19 @@ async def get_queue(client, message: Message, _):
                                     seconds_to_min(db[chat_id][0]["played"]),
                                     db[chat_id][0]["dur"],
                                 )
-                                await mystic.edit_reply_markup(reply_markup=buttons)
+                                if isinstance(mystic, dict):
+                                    m_chat = mystic.get("chat", {}).get("id", message.chat.id)
+                                    m_msg = mystic.get("message_id")
+                                    r = await edit_reply_markup_colored(chat_id=m_chat, message_id=m_msg, reply_markup=buttons)
+                                    if not r:
+                                        try:
+                                            await app.edit_message_reply_markup(m_chat, m_msg, reply_markup=buttons_to_inline_markup(buttons))
+                                        except:
+                                            pass
+                                else:
+                                    r = await edit_reply_markup_colored(chat_id=mystic.chat.id, message_id=mystic.id, reply_markup=buttons)
+                                    if not r:
+                                        await mystic.edit_reply_markup(reply_markup=buttons_to_inline_markup(buttons))
                             except FloodWait:
                                 pass
                         else:
@@ -173,15 +193,15 @@ async def queued_tracks(client, CallbackQuery: CallbackQuery, _):
     if "Queued" in msg:
         if len(msg) < 700:
             await asyncio.sleep(1)
-            return await CallbackQuery.edit_message_text(msg, reply_markup=buttons)
+            return await edit_message_text_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, text=msg, reply_markup=buttons)
         if "✨" in msg:
             msg = msg.replace("✨", "")
         link = await VISHALBIN(msg)
-        med = InputMediaPhoto(media=link, caption=_["queue_3"].format(link))
-        await CallbackQuery.edit_message_media(media=med, reply_markup=buttons)
+        med = {"type": "photo", "media": link, "caption": _["queue_3"].format(link)}
+        await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=buttons)
     else:
         await asyncio.sleep(1)
-        return await CallbackQuery.edit_message_text(msg, reply_markup=buttons)
+        return await edit_message_text_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, text=msg, reply_markup=buttons)
 
 
 @app.on_callback_query(filters.regex("queue_back_timer") & ~BANNED_USERS)
@@ -238,8 +258,15 @@ async def queue_back(client, CallbackQuery: CallbackQuery, _):
     )
     basic[videoid] = True
 
-    med = InputMediaPhoto(media=IMAGE, caption=cap)
-    mystic = await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
+    med = {"type": "photo", "media": IMAGE, "caption": cap}
+    mystic_data = await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=upl)
+    if mystic_data and mystic_data.get("message_id"):
+        try:
+            mystic = await app.get_messages(CallbackQuery.message.chat.id, mystic_data["message_id"])
+        except:
+            mystic = mystic_data
+    else:
+        mystic = await CallbackQuery.edit_message_media(media=InputMediaPhoto(media=IMAGE, caption=cap), reply_markup=buttons_to_inline_markup(upl))
     if DUR != "Unknown":
         try:
             while db[chat_id][0]["vidid"] == videoid:
@@ -256,7 +283,19 @@ async def queue_back(client, CallbackQuery: CallbackQuery, _):
                                     seconds_to_min(db[chat_id][0]["played"]),
                                     db[chat_id][0]["dur"],
                                 )
-                                await mystic.edit_reply_markup(reply_markup=buttons)
+                                if isinstance(mystic, dict):
+                                    m_chat = mystic.get("chat", {}).get("id", CallbackQuery.message.chat.id)
+                                    m_msg = mystic.get("message_id")
+                                    r = await edit_reply_markup_colored(chat_id=m_chat, message_id=m_msg, reply_markup=buttons)
+                                    if not r:
+                                        try:
+                                            await app.edit_message_reply_markup(m_chat, m_msg, reply_markup=buttons_to_inline_markup(buttons))
+                                        except:
+                                            pass
+                                else:
+                                    r = await edit_reply_markup_colored(chat_id=mystic.chat.id, message_id=mystic.id, reply_markup=buttons)
+                                    if not r:
+                                        await mystic.edit_reply_markup(reply_markup=buttons_to_inline_markup(buttons))
                             except FloodWait:
                                 pass
                         else:

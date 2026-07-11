@@ -11,7 +11,7 @@ import string
 
 from pyrogram import filters
 from pyrogram.errors import FloodWait, RandomIdDuplicate
-from pyrogram.types import InlineKeyboardMarkup, InputMediaPhoto, Message
+from pyrogram.types import InputMediaPhoto, Message
 from pytgcalls.exceptions import NoActiveGroupCall
 
 import config
@@ -31,6 +31,7 @@ from VISHALMUSIC.utils.inline import (
     slider_markup,
     track_markup,
 )
+from VISHALMUSIC.utils.colored_buttons import send_photo_colored, edit_message_text_colored
 from VISHALMUSIC.utils.logger import play_logs
 from VISHALMUSIC.utils.stream.stream import stream
 
@@ -416,9 +417,10 @@ async def play_command(
     else:
         if len(message.command) < 2:
             buttons = botplaylist_markup(_)
-            return await mystic.edit_text(
+            return await edit_message_text_colored(
+                mystic.chat.id, mystic.id,
                 _["play_18"],
-                reply_markup=InlineKeyboardMarkup(buttons),
+                reply_markup=buttons,
             )
 
         slider = True
@@ -451,9 +453,10 @@ async def play_command(
                     "c" if channel else "g",
                     "f" if fplay else "d",
                 )
-                return await mystic.edit_text(
+                return await edit_message_text_colored(
+                    mystic.chat.id, mystic.id,
                     _["play_13"],
-                    reply_markup=InlineKeyboardMarkup(buttons),
+                    reply_markup=buttons,
                 )
 
         try:
@@ -496,14 +499,15 @@ async def play_command(
                 "f" if fplay else "d",
             )
             await mystic.delete()
-            await message.reply_photo(
+            await send_photo_colored(
+                chat_id=message.chat.id,
                 photo=(
                     details["thumb"]
                     if plist_type == "yt"
                     else (details if plist_type == "apple" else img)
                 ),
                 caption=cap,
-                reply_markup=InlineKeyboardMarkup(buttons),
+                reply_markup=buttons,
             )
             plist_label_map = {
                 "yt": "Youtube playlist",
@@ -528,13 +532,14 @@ async def play_command(
                     "f" if fplay else "d",
                 )
                 await mystic.delete()
-                await message.reply_photo(
+                await send_photo_colored(
+                    chat_id=message.chat.id,
                     photo=details["thumb"],
                     caption=_["play_10"].format(
                         details["title"].title(),
                         details["duration_min"],
                     ),
-                    reply_markup=InlineKeyboardMarkup(buttons),
+                    reply_markup=buttons,
                 )
                 return await play_logs(message, streamtype="Searched on YouTube")
 
@@ -547,13 +552,14 @@ async def play_command(
                     "f" if fplay else "d",
                 )
                 await mystic.delete()
-                await message.reply_photo(
+                await send_photo_colored(
+                    chat_id=message.chat.id,
                     photo=details["thumb"],
                     caption=_["play_10"].format(
                         details["title"],
                         details["duration_min"],
                     ),
-                    reply_markup=InlineKeyboardMarkup(buttons),
+                    reply_markup=buttons,
                 )
                 return await play_logs(message, streamtype="URL Search Inline")
 
@@ -603,8 +609,9 @@ async def play_music(client, CallbackQuery, _):
                 "c" if cplay == "c" else "g",
                 "f" if fplay else "d",
             )
-            return await mystic.edit_text(
-                _["play_13"], reply_markup=InlineKeyboardMarkup(buttons)
+            return await edit_message_text_colored(
+                mystic.chat.id, mystic.id,
+                _["play_13"], reply_markup=buttons
             )
 
         video = mode == "v"
@@ -760,17 +767,25 @@ async def slider_queries(client, CallbackQuery, _):
         )
 
         buttons = slider_markup(_, vidid, user_id, query, query_type, cplay, fplay)
-        med = InputMediaPhoto(
-            media=thumbnail,
-            caption=_["play_10"].format(
-                title.title(),
-                duration_min,
-            ),
+        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, edit_message_media_colored
+        media_dict = {
+            "type": "photo",
+            "media": thumbnail,
+            "caption": _["play_10"].format(title.title(), duration_min),
+            "parse_mode": "HTML",
+        }
+        result = await edit_message_media_colored(
+            CallbackQuery.message.chat.id, CallbackQuery.message.id,
+            media=media_dict, reply_markup=buttons,
         )
-
-        await CallbackQuery.edit_message_media(
-            media=med, reply_markup=InlineKeyboardMarkup(buttons)
-        )
+        if not result:
+            med = InputMediaPhoto(
+                media=thumbnail,
+                caption=_["play_10"].format(title.title(), duration_min),
+            )
+            await CallbackQuery.edit_message_media(
+                media=med, reply_markup=buttons_to_inline_markup(buttons)
+            )
         await CallbackQuery.answer(_["playcb_2"])
 
     except Exception:

@@ -1,24 +1,42 @@
-# ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Skip, Seek & Stream Control
-# ═══════════════════════════════════════════════════════════
-
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, Message
+from pyrogram.types import Message
 
 import config
 from VISHALMUSIC import YouTube, app
 from VISHALMUSIC.core.call import VISHAL
 from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils.database import get_loop
-from VISHALMUSIC.utils.autoplay_utils import is_autoplay_on
+from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.decorators import AdminRightsCheck
 from VISHALMUSIC.utils.inline import close_markup, stream_markup
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
+from VISHALMUSIC.utils.colored_buttons import send_message_colored, send_photo_colored, buttons_to_inline_markup
 from config import BANNED_USERS
+
+
+async def _skip_send_photo(chat_id, message, photo, caption, buttons, db_ref, chat_id_ref, markup_type):
+    from VISHALMUSIC.misc import db
+    run_data = await send_photo_colored(
+        chat_id=chat_id,
+        photo=photo,
+        caption=caption,
+        reply_markup=buttons,
+    )
+    if run_data and run_data.get("message_id"):
+        try:
+            run = await app.get_messages(chat_id, run_data["message_id"])
+        except Exception:
+            run = run_data
+    else:
+        run = await message.reply_photo(
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons_to_inline_markup(buttons),
+        )
+    db[chat_id_ref][0]["mystic"] = run
+    db[chat_id_ref][0]["markup"] = markup_type
+    return run
 
 
 @app.on_message(
@@ -49,7 +67,8 @@ async def skip(cli, message: Message, _, chat_id):
                                 await auto_clean(popped)
                             if not check:
                                 try:
-                                    await message.reply_text(
+                                    await send_message_colored(
+                                        message.chat.id,
                                         text=_["admin_6"].format(
                                             message.from_user.mention,
                                             message.chat.title,
@@ -92,7 +111,8 @@ async def skip(cli, message: Message, _, chat_id):
                         return
                     except Exception:
                         pass
-                await message.reply_text(
+                await send_message_colored(
+                    message.chat.id,
                     text=_["admin_6"].format(
                         message.from_user.mention, message.chat.title
                     ),
@@ -104,7 +124,8 @@ async def skip(cli, message: Message, _, chat_id):
                     return
         except:
             try:
-                await message.reply_text(
+                await send_message_colored(
+                    message.chat.id,
                     text=_["admin_6"].format(
                         message.from_user.mention, message.chat.title
                     ),
@@ -140,27 +161,15 @@ async def skip(cli, message: Message, _, chat_id):
             return await message.reply_text(_["call_6"])
         button = stream_markup(_, chat_id)
         img = await get_thumb(videoid)
-        run = await message.reply_photo(
-            photo=img,
-            caption=_["stream_1"].format(
-                f"https://t.me/{app.username}?start=info_{videoid}",
-                title[:23],
-                check[0]["dur"],
-                user,
-            ),
-            reply_markup=InlineKeyboardMarkup(button),
+        await _skip_send_photo(
+            message.chat.id, message, img,
+            _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], check[0]["dur"], user),
+            button, None, chat_id, "tg",
         )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "tg"
     elif "vid_" in queued:
         mystic = await message.reply_text(_["call_7"], disable_web_page_preview=True)
         try:
-            file_path, direct = await YouTube.download(
-                videoid,
-                mystic,
-                videoid=True,
-                video=status,
-            )
+            file_path, direct = await YouTube.download(videoid, mystic, videoid=True, video=status)
         except:
             return await mystic.edit_text(_["call_6"])
         try:
@@ -173,18 +182,11 @@ async def skip(cli, message: Message, _, chat_id):
             return await mystic.edit_text(_["call_6"])
         button = stream_markup(_, chat_id)
         img = await get_thumb(videoid)
-        run = await message.reply_photo(
-            photo=img,
-            caption=_["stream_1"].format(
-                f"https://t.me/{app.username}?start=info_{videoid}",
-                title[:23],
-                check[0]["dur"],
-                user,
-            ),
-            reply_markup=InlineKeyboardMarkup(button),
+        await _skip_send_photo(
+            message.chat.id, message, img,
+            _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], check[0]["dur"], user),
+            button, None, chat_id, "stream",
         )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "stream"
         await mystic.delete()
     elif "index_" in queued:
         try:
@@ -192,13 +194,11 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             return await message.reply_text(_["call_6"])
         button = stream_markup(_, chat_id)
-        run = await message.reply_photo(
-            photo=config.STREAM_IMG_URL,
-            caption=_["stream_2"].format(user),
-            reply_markup=InlineKeyboardMarkup(button),
+        await _skip_send_photo(
+            message.chat.id, message, config.STREAM_IMG_URL,
+            _["stream_2"].format(user),
+            button, None, chat_id, "tg",
         )
-        db[chat_id][0]["mystic"] = run
-        db[chat_id][0]["markup"] = "tg"
     else:
         if videoid == "telegram":
             image = None
@@ -215,47 +215,25 @@ async def skip(cli, message: Message, _, chat_id):
             return await message.reply_text(_["call_6"])
         if videoid == "telegram":
             button = stream_markup(_, chat_id)
-            run = await message.reply_photo(
-                photo=config.TELEGRAM_AUDIO_URL
-                if str(streamtype) == "audio"
-                else config.TELEGRAM_VIDEO_URL,
-                caption=_["stream_1"].format(
-                    config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            photo = config.TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
+            await _skip_send_photo(
+                message.chat.id, message, photo,
+                _["stream_1"].format(config.SUPPORT_CHAT, title[:23], check[0]["dur"], user),
+                button, None, chat_id, "tg",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
         elif videoid == "soundcloud":
             button = stream_markup(_, chat_id)
-            run = await message.reply_photo(
-                photo=config.SOUNCLOUD_IMG_URL
-                if str(streamtype) == "audio"
-                else config.TELEGRAM_VIDEO_URL,
-                caption=_["stream_1"].format(
-                    config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            photo = config.SOUNCLOUD_IMG_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
+            await _skip_send_photo(
+                message.chat.id, message, photo,
+                _["stream_1"].format(config.SUPPORT_CHAT, title[:23], check[0]["dur"], user),
+                button, None, chat_id, "tg",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
         else:
             button = stream_markup(_, chat_id)
             img = await get_thumb(videoid)
-            run = await message.reply_photo(
-                photo=img,
-                caption=_["stream_1"].format(
-                    f"https://t.me/{app.username}?start=info_{videoid}",
-                    title[:23],
-                    check[0]["dur"],
-                    user,
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            await _skip_send_photo(
+                message.chat.id, message, img,
+                _["stream_1"].format(f"https://t.me/{app.username}?start=info_{videoid}", title[:23], check[0]["dur"], user),
+                button, None, chat_id, "stream",
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "stream"
-
-# ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   github.com/ItsMeVishal0/VishalMusic
-# ═══════════════════════════════════════════════════════════

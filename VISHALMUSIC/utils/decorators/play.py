@@ -8,7 +8,6 @@ from pyrogram.errors import (
     UserAlreadyParticipant,
     UserNotParticipant,
 )
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import PLAYLIST_IMG_URL, SUPPORT_CHAT, adminlist
 from strings import get_string
@@ -24,14 +23,13 @@ from VISHALMUSIC.utils.database import (
     is_maintenance,
 )
 from VISHALMUSIC.utils.inline import botplaylist_markup
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, send_photo_colored
 
-# Cache for invite links per chat
 links = {}
 
 
 def PlayWrapper(command):
     async def wrapper(client, message):
-        # ── Parallel DB lookups for speed ──
         chat_id_raw = message.chat.id
         lang_task = asyncio.create_task(get_lang(chat_id_raw))
         maintenance_task = asyncio.create_task(is_maintenance())
@@ -42,17 +40,8 @@ def PlayWrapper(command):
         _ = get_string(language)
 
         if message.sender_chat:
-            upl = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="ʜᴏᴡ ᴛᴏ ғɪx ?",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
-                ]
-            )
-            return await message.reply_text(_["general_3"], reply_markup=upl)
+            upl = [[styled_button(text="ʜᴏᴡ ᴛᴏ ғɪx ?", callback_data="AnonymousAdmin", style="primary")]]
+            return await send_message_colored(message.chat.id, _["general_3"], reply_markup=upl)
 
         if await maintenance_task is False:
             if message.from_user.id not in SUDOERS:
@@ -83,10 +72,11 @@ def PlayWrapper(command):
                 if "stream" in message.command:
                     return await message.reply_text(_["str_1"])
                 buttons = botplaylist_markup(_)
-                return await message.reply_photo(
+                return await send_photo_colored(
+                    chat_id=message.chat.id,
                     photo=PLAYLIST_IMG_URL,
                     caption=_["play_18"],
-                    reply_markup=InlineKeyboardMarkup(buttons),
+                    reply_markup=buttons,
                 )
         if message.command[0][0] == "c":
             chat_id = await get_cmode(message.chat.id)
@@ -138,20 +128,13 @@ def PlayWrapper(command):
                     ChatMemberStatus.BANNED,
                     ChatMemberStatus.RESTRICTED,
                 ):
-                    return await message.reply_text(
+                    btn = [[styled_button(text="๏ 𝗨ɴʙᴀɴ 𝗔ssɪsᴛᴀɴᴛ ๏", callback_data="unban_assistant", style="danger")]]
+                    return await send_message_colored(
+                        message.chat.id,
                         _["call_2"].format(
                             app.mention, userbot.id, userbot.name, userbot.username
                         ),
-                        reply_markup=InlineKeyboardMarkup(
-                            [
-                                [
-                                    InlineKeyboardButton(
-                                        text="๏ 𝗨ɴʙᴀɴ 𝗔ssɪsᴛᴀɴᴛ ๏",
-                                        callback_data="unban_assistant",
-                                    )
-                                ]
-                            ]
-                        ),
+                        reply_markup=btn,
                     )
             except UserNotParticipant:
                 if chat_id in links:
@@ -182,10 +165,8 @@ def PlayWrapper(command):
                 try:
                     await userbot.join_chat(invitelink)
                 except InviteHashExpired:
-                    # Remove expired invite link from the cache.
                     if chat_id in links:
                         del links[chat_id]
-                    # Generate a new invite link.
                     try:
                         invitelink = await app.export_chat_invite_link(chat_id)
                     except ChatAdminRequired:
@@ -198,7 +179,6 @@ def PlayWrapper(command):
                         invitelink = invitelink.replace(
                             "https://t.me/+", "https://t.me/joinchat/"
                         )
-                    # Update the cache.
                     links[chat_id] = invitelink
                     await userbot.join_chat(invitelink)
                 except InviteRequestSent:

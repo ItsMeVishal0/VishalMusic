@@ -1,41 +1,28 @@
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
 from config import SUPPORT_CHAT
+from VISHALMUSIC.utils.colored_buttons import styled_button
 
 
 def botplaylist_markup(_):
     buttons = [
         [
-            InlineKeyboardButton(text=_["S_B_4"], url=SUPPORT_CHAT),
-            InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data="close"),
+            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT),
+            styled_button(text=_["CLOSE_BUTTON"], callback_data="close", style="danger"),
         ],
     ]
     return buttons
 
 
 def close_markup(_):
-    upl = InlineKeyboardMarkup(
+    return [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ]
-        ]
-    )
-    return upl
+            styled_button(text=_["CLOSE_BUTTON"], callback_data="close", style="danger"),
+        ],
+    ]
 
 
 def supp_markup(_):
-    upl = InlineKeyboardMarkup(
+    return [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["S_B_4"],
-                    url=SUPPORT_CHAT,
-                ),
-            ]
-        ]
-    )
-    return upl
+            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT),
+        ],
+    ]

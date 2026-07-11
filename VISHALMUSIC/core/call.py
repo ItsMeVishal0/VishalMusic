@@ -13,7 +13,6 @@ from typing import Union
 from ntgcalls import TelegramServerError
 from pyrogram import Client
 from pyrogram.errors import FloodWait, ChatAdminRequired
-from pyrogram.types import InlineKeyboardMarkup
 from pytgcalls import PyTgCalls
 from pytgcalls.exceptions import NoActiveGroupCall
 from pytgcalls.types import AudioQuality, ChatUpdate, MediaStream, StreamEnded, Update, VideoQuality
@@ -22,7 +21,7 @@ import config
 from strings import get_string
 from VISHALMUSIC import LOGGER, YouTube, app
 from VISHALMUSIC.misc import db
-from VISHALMUSIC.utils.autoplay_utils import is_autoplay_on
+from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.database import (
     add_active_chat,
     add_active_video_chat,
@@ -38,6 +37,7 @@ from VISHALMUSIC.utils.database import (
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.formatters import check_duration, seconds_to_min, speed_converter
 from VISHALMUSIC.utils.inline.play import stream_markup
+from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
 from VISHALMUSIC.utils.errors import capture_internal_err, send_large_error
@@ -55,6 +55,33 @@ def dynamic_media_stream(path: str, video: bool = False, ffmpeg_params: str = No
         video_flags=(MediaStream.Flags.AUTO_DETECT if video else MediaStream.Flags.IGNORE),
         ffmpeg_parameters=ffmpeg_params,
     )
+
+async def _colored_send_photo(original_chat_id, photo, caption, buttons, db_ref, chat_id, markup_type):
+    run_data = await send_photo_colored(
+        chat_id=original_chat_id,
+        photo=photo,
+        caption=caption,
+        reply_markup=buttons,
+    )
+    if run_data and run_data.get("message_id"):
+        try:
+            run = await app.get_messages(original_chat_id, run_data["message_id"])
+        except Exception:
+            run = run_data
+    else:
+        run = await app.send_photo(
+            chat_id=original_chat_id,
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons_to_inline_markup(buttons),
+        )
+    playlist = db.get(chat_id)
+    if playlist and len(playlist) > 0:
+        playlist[0]["mystic"] = run
+        playlist[0]["markup"] = markup_type
+        playlist[0]["base_caption"] = caption
+    return run
+
 
 async def _clear_(chat_id: int) -> None:
     popped = db.pop(chat_id, None)
@@ -363,19 +390,12 @@ class Call:
 
                 img = await get_thumb(videoid)
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
-                run = await app.send_photo(
-                    chat_id=original_chat_id,
-                    photo=img,
-                    caption=_["stream_1"].format(
+                await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
                         title[:23],
                         check[0]["dur"],
                         user,
-                    ),
-                    reply_markup=InlineKeyboardMarkup(button),
-                )
-                db[chat_id][0]["mystic"] = run
-                db[chat_id][0]["markup"] = "tg"
+                    ), button, None, chat_id, "tg")
 
             elif "vid_" in queued:
                 mystic = await app.send_message(original_chat_id, _["call_7"])
@@ -400,19 +420,12 @@ class Call:
                 img = await get_thumb(videoid)
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
                 await mystic.delete()
-                run = await app.send_photo(
-                    chat_id=original_chat_id,
-                    photo=img,
-                    caption=_["stream_1"].format(
+                await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
                         title[:23],
                         check[0]["dur"],
                         user,
-                    ),
-                    reply_markup=InlineKeyboardMarkup(button),
-                )
-                db[chat_id][0]["mystic"] = run
-                db[chat_id][0]["markup"] = "stream"
+                    ), button, None, chat_id, "stream")
 
             elif "index_" in queued:
                 stream = dynamic_media_stream(path=videoid, video=video)
@@ -422,14 +435,7 @@ class Call:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
-                run = await app.send_photo(
-                    chat_id=original_chat_id,
-                    photo=config.STREAM_IMG_URL,
-                    caption=_["stream_2"].format(user),
-                    reply_markup=InlineKeyboardMarkup(button),
-                )
-                db[chat_id][0]["mystic"] = run
-                db[chat_id][0]["markup"] = "tg"
+                await _colored_send_photo(original_chat_id, config.STREAM_IMG_URL, _["stream_2"].format(user), button, None, chat_id, "tg")
 
             else:
                 stream = dynamic_media_stream(path=queued, video=video)
@@ -440,65 +446,48 @@ class Call:
 
                 if videoid == "telegram":
                     button = stream_markup(_, chat_id, autoplay_status=ap_status)
-                    run = await app.send_photo(
-                        chat_id=original_chat_id,
-                        photo=(
-                            config.TELEGRAM_AUDIO_URL
-                            if str(streamtype) == "audio"
-                            else config.TELEGRAM_VIDEO_URL
-                        ),
-                        caption=_["stream_1"].format(
-                            config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
-                        ),
-                        reply_markup=InlineKeyboardMarkup(button),
-                    )
-                    db[chat_id][0]["mystic"] = run
-                    db[chat_id][0]["markup"] = "tg"
+                    photo = config.TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
+                    await _colored_send_photo(original_chat_id, photo, _["stream_1"].format(
+                            config.SUPPORT_CHAT, title[:23], check[0]["dur"], user,
+                        ), button, None, chat_id, "tg")
 
                 elif videoid == "soundcloud":
                     button = stream_markup(_, chat_id, autoplay_status=ap_status)
-                    run = await app.send_photo(
-                        chat_id=original_chat_id,
-                        photo=config.SOUNCLOUD_IMG_URL,
-                        caption=_["stream_1"].format(
-                            config.SUPPORT_CHAT, title[:23], check[0]["dur"], user
-                        ),
-                        reply_markup=InlineKeyboardMarkup(button),
-                    )
-                    db[chat_id][0]["mystic"] = run
-                    db[chat_id][0]["markup"] = "tg"
+                    await _colored_send_photo(original_chat_id, config.SOUNCLOUD_IMG_URL, _["stream_1"].format(
+                            config.SUPPORT_CHAT, title[:23], check[0]["dur"], user,
+                        ), button, None, chat_id, "tg")
 
                 else:
                     img = await get_thumb(videoid)
                     button = stream_markup(_, chat_id, autoplay_status=ap_status)
-                    try:
-                        run = await app.send_photo(
-                            chat_id=original_chat_id,
-                            photo=img,
-                            caption=_["stream_1"].format(
-                                f"https://t.me/{app.username}?start=info_{videoid}",
-                                title[:23],
-                                check[0]["dur"],
-                                user,
-                            ),
-                            reply_markup=InlineKeyboardMarkup(button),
-                        )
-                    except FloodWait as e:
-                        LOGGER(__name__).warning(f"FloodWait: Sleeping for {e.value}")
-                        await asyncio.sleep(e.value)
-                        run = await app.send_photo(
-                            chat_id=original_chat_id,
-                            photo=img,
-                            caption=_["stream_1"].format(
-                                f"https://t.me/{app.username}?start=info_{videoid}",
-                                title[:23],
-                                check[0]["dur"],
-                                user,
-                            ),
-                            reply_markup=InlineKeyboardMarkup(button),
-                        )
-                    db[chat_id][0]["mystic"] = run
-                    db[chat_id][0]["markup"] = "stream"
+                    caption = _["stream_1"].format(
+                        f"https://t.me/{app.username}?start=info_{videoid}",
+                        title[:23], check[0]["dur"], user,
+                    )
+                    run_data = await send_photo_colored(
+                        chat_id=original_chat_id, photo=img, caption=caption, reply_markup=button,
+                    )
+                    if run_data and run_data.get("message_id"):
+                        try:
+                            run = await app.get_messages(original_chat_id, run_data["message_id"])
+                        except Exception:
+                            run = run_data
+                    else:
+                        try:
+                            run = await app.send_photo(
+                                chat_id=original_chat_id, photo=img, caption=caption, reply_markup=buttons_to_inline_markup(button),
+                            )
+                        except FloodWait as e:
+                            LOGGER(__name__).warning(f"FloodWait: Sleeping for {e.value}")
+                            await asyncio.sleep(e.value)
+                            run = await app.send_photo(
+                                chat_id=original_chat_id, photo=img, caption=caption, reply_markup=buttons_to_inline_markup(button),
+                            )
+                    playlist = db.get(chat_id)
+                    if playlist and len(playlist) > 0:
+                        playlist[0]["mystic"] = run
+                        playlist[0]["markup"] = "stream"
+                        playlist[0]["base_caption"] = caption
 
 
     async def start(self) -> None:

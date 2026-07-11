@@ -9,13 +9,36 @@ try:
 except ImportError:
     _unidecode = None
 
-from VISHALMUSIC import app
+from VISHALMUSIC import LOGGER, app
 from VISHALMUSIC.core.mongo import mongodb
 from VISHALMUSIC.misc import db
 from VISHALMUSIC.platforms.Youtube import YouTubeAPI, youtube_search_multi
 
 yt = YouTubeAPI()
 autoplay_db = mongodb.autoplay
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  AUTOPLAY DB HELPERS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async def is_autoplay_on(chat_id: int) -> bool:
+    data = await autoplay_db.find_one({"chat_id": chat_id})
+    return bool(data.get("status", False)) if data else False
+
+
+async def toggle_autoplay(chat_id: int) -> bool:
+    data = await autoplay_db.find_one({"chat_id": chat_id})
+    if not data:
+        await autoplay_db.insert_one({"chat_id": chat_id, "status": True})
+        return True
+    new_status = not bool(data.get("status", False))
+    await autoplay_db.update_one(
+        {"chat_id": chat_id},
+        {"$set": {"status": new_status}},
+    )
+    return new_status
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  PROTECTION SYSTEM
@@ -548,29 +571,30 @@ def build_smart_queries(title, artist, movie, lang, mood, recent_artists=None):
         flags=re.IGNORECASE,
     ).strip()
 
-    # Title-based queries (most related)
+    # Title-based queries (most related) — "official" ensures original releases
     if clean_title:
-        queries.append(f"{clean_title} song")
+        queries.append(f"{clean_title} official song")
+        queries.append(f"{clean_title} official audio")
         queries.append(f"{clean_title} {lang}" if lang else clean_title)
 
-    # Artist queries — but if same artist dominates recent history, rotate to similar
+    # Artist queries — "original" + "official" to filter covers / remixes
     if artist:
         same_artist_count = recent_artists.count(artist.lower())
         if same_artist_count >= 3:
-            # Enough of this artist — add similar artists for variety
             for sim in SIMILAR_ARTISTS.get(artist.lower(), []):
-                queries.append(f"{sim} {lang} songs" if lang else f"{sim} songs")
-                queries.append(f"{sim} hits")
+                queries.append(f"{sim} {lang} official songs" if lang else f"{sim} official songs")
+                queries.append(f"{sim} original songs")
         else:
-            queries.append(f"{artist} songs")
-            queries.append(f"{artist} best songs")
+            queries.append(f"{artist} official songs")
+            queries.append(f"{artist} original song")
             if lang:
-                queries.append(f"{artist} {lang} hits")
+                queries.append(f"{artist} {lang} official hits")
 
-    # Movie queries — very relevant (same movie = same vibe)
+    # Movie queries — jukebox = official audio collection
     if movie:
+        queries.append(f"{movie} official jukebox")
         queries.append(f"{movie} all songs")
-        queries.append(f"{movie} jukebox")
+        queries.append(f"{movie} original soundtrack")
 
     # Mood queries — always prefixed with lang to prevent genre cross-over
     lang_prefix = lang if lang in ("hindi", "punjabi", "bhojpuri", "haryanvi") else "hindi"
@@ -589,27 +613,27 @@ def build_smart_queries(title, artist, movie, lang, mood, recent_artists=None):
     elif mood == "sufi":
         queries += ["sufi hindi songs", "qawwali hindi"]
 
-    # Language-specific generic fallback — stays in the correct genre
+    # Language-specific generic fallback — "original/official" for authenticity
     if lang == "hindi":
-        queries += ["top bollywood songs 2024", "best hindi romantic songs"]
+        queries += ["latest bollywood official songs", "top hindi original songs 2024"]
     elif lang == "punjabi":
-        queries += ["top punjabi songs 2024", "best punjabi hits"]
+        queries += ["punjabi official songs 2024", "latest punjabi hits"]
     elif lang == "bhojpuri":
-        queries += ["bhojpuri superhit songs", "bhojpuri new songs"]
+        queries += ["bhojpuri official songs 2024", "bhojpuri superhit songs"]
     elif lang == "haryanvi":
-        queries += ["haryanvi superhit songs", "haryanvi new songs 2024"]
+        queries += ["haryanvi official songs", "haryanvi superhit songs 2024"]
     elif lang == "gujarati":
-        queries += ["gujarati love songs", "garba songs new"]
+        queries += ["gujarati official songs", "garba songs new"]
     elif lang == "tamil":
-        queries += ["tamil melody songs", "kollywood hits 2024"]
+        queries += ["tamil official songs 2024", "kollywood hits 2024"]
     elif lang == "telugu":
-        queries += ["telugu melody songs", "tollywood hits 2024"]
+        queries += ["telugu official songs 2024", "tollywood hits 2024"]
     elif lang == "bengali":
-        queries += ["bangla romantic songs", "bengali new songs"]
+        queries += ["bangla official songs", "bengali new songs"]
     elif lang == "marathi":
-        queries += ["marathi romantic songs", "marathi new songs 2024"]
+        queries += ["marathi official songs", "marathi new songs 2024"]
     elif lang == "urdu":
-        queries += ["urdu ghazal songs", "urdu romantic songs"]
+        queries += ["urdu official songs", "urdu romantic songs"]
 
     # Deduplicate and sanitize
     bad_words = [
@@ -666,7 +690,10 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
         "bass boosted", "cover", "karaoke", "instrumental", "sped up",
     ]
 
-    # Incompatible languages for this session's language
+    # Structural episode/season detection — catches ANY show/podcast/reality
+    # without needing a named blocklist. Patterns:
+    #   "Episode 12", "Ep 5", "E15", "S01E05", "Season 1 Episode 3"
+    _EPISODE_RE = re.compile(r"(?:ep(?:isode)?\s*\d+|s\d+e\d+|season\s+\d+)", re.IGNORECASE)
     blocked_langs = set(INCOMPATIBLE_LANGS.get(lang, []))
 
     # Recent artist counts — penalise over-repeated artists
@@ -698,31 +725,31 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
                     if any(x in title_lower for x in BAD_WORDS):
                         continue
 
-                    # 2. Exact same song title — compare AFTER normalizing both
+                    # 2. Episode/season pattern → structural non-song detection
+                    # Works for ANY show/reality/podcast without a named blocklist
+                    if _EPISODE_RE.search(title_lower):
+                        continue
+
+                    # 3. Exact same song title — compare AFTER normalizing both
                     # (includes unidecode so "तुम ही हो" == "Tum Hi Ho" after norm)
                     if normalize_title(raw_title) == normalize_title(last_title):
                         continue
 
-                    # 3. Duration 2–10 min (HH:MM:SS parsed correctly)
-                    # BUG FIX: total_mins == 0 means duration was "0:00" or unknown
-                    # (YouTube API sometimes omits it). Old code filtered these out
-                    # which caused autoplay to find zero songs after 2–3 tracks.
-                    # Allow unknown-duration songs through; only hard-block when
-                    # the duration is known AND out of range.
+                    # 4. Duration 2–10 min (HH:MM:SS parsed correctly)
                     total_mins = _parse_duration_mins(duration_str)
                     if total_mins != 0 and (total_mins < 2 or total_mins > 10):
                         continue
 
-                    # 4. Already played recently
+                    # 5. Already played recently
                     if await is_repeat(chat_id, vidid, raw_title):
                         continue
 
-                    # 5. Devotional content when mood is NOT devotional
+                    # 6. Devotional content when mood is NOT devotional
                     if mood != "devotional":
                         if any(dw in title_lower for dw in DEVOTIONAL_WORDS):
                             continue
 
-                    # 6. Language cross-over — block incompatible languages
+                    # 7. Language cross-over — block incompatible languages
                     if blocked_langs:
                         title_detected_lang = _detect_title_lang(title_lower)
                         if title_detected_lang and title_detected_lang in blocked_langs:
@@ -741,16 +768,23 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
                     if any(x in channel_name for x in ["vevo", "official", "records", "music"]):
                         is_official = True
                         score += 40
-                    if any(x in title_lower for x in ["official video", "official audio", "official music"]):
+                    if any(x in title_lower for x in ["official video", "official audio", "official music", "original song"]):
                         is_official = True
                         score += 35
 
-                    # Penalize non-official/spam channels
+                    # "- Topic" channel = YouTube's auto-generated Content-ID channel
+                    # Every licensed song has one. Contains ONLY original studio track,
+                    # no reactions/covers/reality clips. Generic — works for ANY artist.
+                    if channel_name.endswith(" - topic"):
+                        is_official = True
+                        score += 60
+
+                    # Hard skip for spam / non-original content
                     spam_indicators = ["lyrics", "lofi", "slowed", "reverb", "cover", "karaoke", "remix", "8d"]
                     if any(x in channel_name for x in spam_indicators):
-                        score -= 30
-                    if any(x in title_lower for x in ["lyrical", "lyrics video", "lyric video"]):
-                        score -= 20
+                        continue
+                    if any(x in title_lower for x in ["lyrical", "lyrics video", "lyric video", "cover by", "remix by", "dj remix"]):
+                        continue
 
                     # Title word overlap with current song
                     match_count = sum(
@@ -781,9 +815,9 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
                     if artist:
                         same_count = recent_artists_list.count(artist.lower())
                         if same_count >= 3:
-                            score -= same_count * 10  # penalise, but don't hard-block
+                            score -= same_count * 10
 
-                    # Build details dict matching what stream() expects
+                    # Build details dict
                     thumb = ""
                     thumb_info = info.get("thumbnails") or []
                     if thumb_info and isinstance(thumb_info, list):
@@ -799,7 +833,7 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
                         "link": f"https://youtube.com/watch?v={vidid}",
                     }
 
-                    candidates.append((score, vidid, details))
+                    candidates.append((score, vidid, details, is_official))
 
                 except Exception:
                     continue
@@ -812,11 +846,17 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
     if not candidates:
         return None, None
 
-    candidates.sort(key=lambda x: x[0], reverse=True)
+    # Prefer official content — only fallback to non-official if nothing official found
+    official = [c for c in candidates if c[3]]
+    if official:
+        pool = official
+    else:
+        pool = candidates
 
-    # Pick randomly among top-3 — prevents always picking the same winner
-    # when multiple songs have close scores
-    top_pool = candidates[:3]
+    pool.sort(key=lambda x: x[0], reverse=True)
+
+    # Pick randomly among top-3
+    top_pool = pool[:3]
     best = random.choice(top_pool)
     return best[1], best[2]
 
@@ -936,16 +976,14 @@ async def auto_play_next(
             blocked_langs = set(INCOMPATIBLE_LANGS.get(lang, []))
             fallback_queries = []
             if movie:
-                fallback_queries += [f"{movie} jukebox", f"{movie} all songs"]
+                fallback_queries += [f"{movie} official jukebox", f"{movie} original soundtrack"]
             if artist:
-                # If same artist dominated recently, use similar artists
                 same_count = recent_artists_list.count(artist.lower())
                 if same_count >= 3:
                     for sim in SIMILAR_ARTISTS.get(artist.lower(), [artist]):
-                        fallback_queries.append(f"{sim} {lang} songs")
+                        fallback_queries.append(f"{sim} {lang} official song")
                 else:
-                    fallback_queries += [f"{artist} {lang} songs", f"{artist} hits"]
-            # Lang-specific fallbacks — stays in genre
+                    fallback_queries += [f"{artist} {lang} official song", f"{artist} original audio"]
             if lang == "hindi":
                 fallback_queries += ["best hindi romantic songs", "bollywood melody songs 2024"]
             elif lang == "punjabi":
@@ -970,6 +1008,8 @@ async def auto_play_next(
                         fb_title_lower = fb_title.lower()
                         # Apply same hard filters as get_best_song
                         if await is_repeat(chat_id, fb_vidid, fb_title):
+                            continue
+                        if _EPISODE_RE.search(fb_title_lower):
                             continue
                         fb_dur = fb_info.get("duration", "0:00") or "0:00"
                         try:
@@ -1067,13 +1107,24 @@ async def auto_play_next(
                 pass
             return False
 
-        # Log autoplay song to logger channel
+        # Log autoplay song
+        try:
+            chat = await app.get_chat(original_chat_id)
+            chat_title = chat.title if chat.title else chat.first_name
+        except Exception:
+            chat_title = str(chat_id)
+        LOGGER.info("Autoplay — Chat: %s (%d) | Title: %s | Dur: %s | Video: %s",
+                     chat_title, chat_id,
+                     details.get('title', '—'),
+                     details.get('duration_min', '—'),
+                     vidid)
         try:
             from config import LOGGER_ID
             from VISHALMUSIC.utils.database import is_on_off
             if await is_on_off(2):
                 log_text = (
                     f"<b>{app.mention} ᴀᴜᴛᴏᴘʟᴀʏ ʟᴏɢ</b>\n\n"
+                    f"<b>ᴄʜᴀᴛ :</b> {chat_title}\n"
                     f"<b>ᴄʜᴀᴛ ɪᴅ :</b> <code>{chat_id}</code>\n"
                     f"<b>ᴛɪᴛʟᴇ :</b> {details.get('title', '—')}\n"
                     f"<b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {details.get('duration_min', '—')}\n"

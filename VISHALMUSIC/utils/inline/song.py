@@ -1,22 +1,14 @@
-from pyrogram.types import InlineKeyboardButton
+from VISHALMUSIC.utils.colored_buttons import styled_button
 
 
 def song_markup(_, vidid):
     buttons = [
         [
-            InlineKeyboardButton(
-                text=_["SG_B_2"],
-                callback_data=f"song_helper audio|{vidid}",
-            ),
-            InlineKeyboardButton(
-                text=_["SG_B_3"],
-                callback_data=f"song_helper video|{vidid}",
-            ),
+            styled_button(text=_["SG_B_2"], callback_data=f"song_helper audio|{vidid}", style="primary"),
+            styled_button(text=_["SG_B_3"], callback_data=f"song_helper video|{vidid}", style="primary"),
         ],
         [
-            InlineKeyboardButton(
-                text=_["CLOSE_BUTTON"], callback_data="close"
-            ),
+            styled_button(text=_["CLOSE_BUTTON"], callback_data="close", style="danger"),
         ],
     ]
     return buttons
