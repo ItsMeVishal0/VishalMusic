@@ -1,10 +1,11 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 from pyrogram import enums, filters
-from pyrogram.types import Message, ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import ChatMemberUpdated
 from pyrogram.errors import TopicClosed
 from VISHALMUSIC import app
-from VISHALMUSIC.mongo.welcomedb import is_on, set_state, bump, cool, auto_on
+from VISHALMUSIC.mongo.welcomedb import is_on, bump, cool, auto_on
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_photo_colored
 
 BG_PATH = "VISHALMUSIC/assets/VISHAL/welcome.png"
 FALLBACK_PIC = "VISHALMUSIC/assets/upic.png"
@@ -113,26 +114,6 @@ def build_pic(av, fn, uid, un):
     return path
 
 
-@app.on_message(filters.command("welcome") & filters.group)
-async def toggle(client, m: Message):
-    usage = "**Usage:**\n⦿/welcome [on|off]\n➤ Vishal Special Welcome....."
-    if len(m.command) != 2:
-        return await m.reply_text(usage)
-    u = await client.get_chat_member(m.chat.id, m.from_user.id)
-    if u.status not in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
-        return await m.reply_text("**sᴏʀʀʏ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴄʜᴀɴɢᴇ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ sᴛᴀᴛᴜs!**")
-    flag = m.command[1].lower()
-    if flag not in ("on", "off"):
-        return await m.reply_text(usage)
-    cur = await is_on(m.chat.id)
-    if flag == "off" and not cur:
-        return await m.reply_text("**ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ ᴀʟʀᴇᴀᴅʏ ᴅɪsᴀʙʟᴇᴅ!**")
-    if flag == "on" and cur:
-        return await m.reply_text("**ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ ᴀʟʀᴇᴀᴅʏ ᴇɴᴀʙʟᴇᴅ!**")
-    await set_state(m.chat.id, flag)
-    await m.reply_text(f"**{'ᴇɴᴀʙʟᴇᴅ' if flag == 'on' else 'ᴅɪsᴀʙʟᴇᴅ'} ᴡᴇʟᴄᴏᴍᴇ ɪɴ {m.chat.title}**")
-
-
 @app.on_chat_member_updated(filters.group, group=-3)
 async def welcome(client, update: ChatMemberUpdated):
     old = update.old_chat_member
@@ -177,14 +158,14 @@ async def welcome(client, update: ChatMemberUpdated):
             count=members
         )
         try:
-            sent = await client.send_photo(
-                cid,
-                img,
+            sent = await send_photo_colored(
+                chat_id=cid,
+                photo=img,
                 caption=caption,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton(BTN_VIEW, url=f"tg://openmessage?user_id={user.id}")],
-                    [InlineKeyboardButton(BTN_ADD, url=f"https://t.me/{client.username}?startgroup=true")],
-                ])
+                reply_markup=[
+                    [styled_button(BTN_VIEW, url=f"tg://openmessage?user_id={user.id}")],
+                    [styled_button(BTN_ADD, url=f"https://t.me/{client.username}?startgroup=true")],
+                ]
             )
         except TopicClosed:
             return
@@ -192,10 +173,17 @@ async def welcome(client, update: ChatMemberUpdated):
         last_messages.setdefault(cid, []).append(sent)
         if len(last_messages[cid]) > WELCOME_LIMIT:
             old_msg = last_messages[cid].pop(0)
-            try:
-                await old_msg.delete()
-            except:
-                pass
+            if old_msg:
+                try:
+                    if isinstance(old_msg, dict):
+                        chat_id = old_msg.get("chat", {}).get("id") or cid
+                        msg_id = old_msg.get("message_id")
+                        if msg_id:
+                            await app.delete_messages(chat_id, msg_id)
+                    else:
+                        await old_msg.delete()
+                except:
+                    pass
     except TopicClosed:
         return
     except Exception:

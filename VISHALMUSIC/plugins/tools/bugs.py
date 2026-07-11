@@ -2,13 +2,11 @@ from datetime import datetime
 from pyrogram import filters
 from pyrogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     Message,
 )
-from pyrogram.enums import ParseMode
 from config import OWNER_ID
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 
 
 def extract_bug_content(msg: Message) -> str | None:
@@ -54,25 +52,24 @@ async def report_bug(_, msg: Message):
             "**ʏᴏᴜ ᴀʀᴇ ᴛʜᴇ ᴏᴡɴᴇʀ ᴏғ ᴛʜᴇ ʙᴏᴛ. ᴘʟᴇᴀsᴇ ᴀᴅᴅʀᴇss ᴛʜᴇ ʙᴜɢ ᴅɪʀᴇᴄᴛʟʏ.**"
         )
 
-    await msg.reply_text(
-        "**ʙᴜɢ ʀᴇᴘᴏʀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ!**",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close_data")]]
-        ),
+    await send_message_colored(
+        chat_id=msg.chat.id,
+        text="**ʙᴜɢ ʀᴇᴘᴏʀᴛᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ!**",
+        reply_markup=[[styled_button("ᴄʟᴏsᴇ", callback_data="close_data", style="danger")]],
     )
 
     # Send report to log group
-    buttons = [[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close_send_photo")]]
+    buttons = [[styled_button("ᴄʟᴏsᴇ", callback_data="close_send_photo", style="danger")]]
     if msg.chat.username:
         link = f"https://t.me/{msg.chat.username}/{msg.id}"
-        buttons.insert(0, [InlineKeyboardButton("ᴠɪᴇᴡ ʙᴜɢ", url=link)])
+        buttons.insert(0, [styled_button("ᴠɪᴇᴡ ʙᴜɢ", url=link)])
 
-    await app.send_message(
-        -1002077986660,
-        bug_report,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup(buttons),
-        disable_web_page_preview=True
+    await send_message_colored(
+        chat_id=-1002077986660,
+        text=bug_report,
+        reply_markup=buttons,
+        parse_mode="Markdown",
+        disable_web_page_preview=True,
     )
 
 

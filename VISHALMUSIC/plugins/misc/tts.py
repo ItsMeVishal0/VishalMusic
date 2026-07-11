@@ -6,9 +6,10 @@ from typing import Dict, List, Tuple
 import edge_tts
 from pyrogram import Client, filters
 from pyrogram.enums import ChatAction, ParseMode
-from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.types import CallbackQuery, Message
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_text_colored
 
 # ---------------------------------------------------------------------------
 # Global caches & constants
@@ -61,53 +62,56 @@ def _build_keyboard(
     step: str,
     extra: Dict[str, str],
     page: int,
-) -> InlineKeyboardMarkup:
+) -> list:
     """Build an inline keyboard for the current *step* with navigation."""
     page_items, total_pages = _paginate(items, page)
 
     # item buttons
-    rows: List[List[InlineKeyboardButton]] = []
+    rows: List[List[dict]] = []
     for i in range(0, len(page_items), PER_ROW):
         chunk = page_items[i : i + PER_ROW]
         rows.append(
             [
-                InlineKeyboardButton(
+                styled_button(
                     text=item,
                     callback_data="tts:"
                     + f"s={step}"
                     + "".join(f"|{k}={v}" for k, v in extra.items())
                     + f"|p={page}|v={item}",
+                    style="primary",
                 )
                 for item in chunk
             ]
         )
 
     # navigation row
-    nav: List[InlineKeyboardButton] = []
+    nav: List[dict] = []
     if page > 1:
         nav.append(
-            InlineKeyboardButton(
+            styled_button(
                 "◀️ Prev",
                 callback_data="tts:"
                 + f"s={step}"
                 + "".join(f"|{k}={v}" for k, v in extra.items())
                 + f"|p={page-1}",
+                style="primary",
             )
         )
     if page < total_pages:
         nav.append(
-            InlineKeyboardButton(
+            styled_button(
                 "Next ▶️",
                 callback_data="tts:"
                 + f"s={step}"
                 + "".join(f"|{k}={v}" for k, v in extra.items())
                 + f"|p={page+1}",
+                style="primary",
             )
         )
     if nav:
         rows.append(nav)
 
-    return InlineKeyboardMarkup(rows)
+    return rows
 
 
 def _session_key(chat_id: int, user_id: int) -> Tuple[int, int]:
@@ -142,10 +146,10 @@ async def cmd_voices(client: Client, message: Message):
     _voice_sessions[_session_key(message.chat.id, message.from_user.id)] = text
 
     kb = _build_keyboard(_languages, step="lang", extra={}, page=1)
-    await message.reply_text(
-        "🌐 **Step 1:** Select a language",
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text="🌐 **Step 1:** Select a language",
         reply_markup=kb,
-        parse_mode=ParseMode.MARKDOWN,
     )
 
 
@@ -210,10 +214,11 @@ async def cb_tts(client: Client, callback: CallbackQuery):
     if step == "lang":
         if "v" not in parts:  # show languages
             kb = _build_keyboard(_languages, "lang", {}, page)
-            return await callback.message.edit_text(
-                "🌐 **Step 1:** Select a language",
+            return await edit_message_text_colored(
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.id,
+                text="🌐 **Step 1:** Select a language",
                 reply_markup=kb,
-                parse_mode=ParseMode.MARKDOWN,
             )
 
         lang = parts["v"]  # language chosen → regions
@@ -225,10 +230,11 @@ async def cb_tts(client: Client, callback: CallbackQuery):
             }
         )
         kb = _build_keyboard(regions, "region", {"l": lang}, 1)
-        return await callback.message.edit_text(
-            "🌍 **Step 2:** Select a region",
+        return await edit_message_text_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            text="🌍 **Step 2:** Select a region",
             reply_markup=kb,
-            parse_mode=ParseMode.MARKDOWN,
         )
 
     # -------------------- region level --------------------
@@ -244,10 +250,11 @@ async def cb_tts(client: Client, callback: CallbackQuery):
                 }
             )
             kb = _build_keyboard(regions, "region", {"l": lang}, page)
-            return await callback.message.edit_text(
-                "🌍 **Step 2:** Select a region",
+            return await edit_message_text_colored(
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.id,
+                text="🌍 **Step 2:** Select a region",
                 reply_markup=kb,
-                parse_mode=ParseMode.MARKDOWN,
             )
 
         # region chosen → show models
@@ -255,10 +262,11 @@ async def cb_tts(client: Client, callback: CallbackQuery):
         locale = f"{lang}-{region}"
         models = sorted([v["short_name"] for v in _voices if v["locale"] == locale])
         kb = _build_keyboard(models, "model", {"l": lang, "r": region}, 1)
-        return await callback.message.edit_text(
-            "🔊 **Step 3:** Choose a voice model",
+        return await edit_message_text_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            text="🔊 **Step 3:** Choose a voice model",
             reply_markup=kb,
-            parse_mode=ParseMode.MARKDOWN,
         )
 
     # -------------------- model level --------------------
@@ -270,10 +278,11 @@ async def cb_tts(client: Client, callback: CallbackQuery):
             locale = f"{lang}-{region}"
             models = sorted([v["short_name"] for v in _voices if v["locale"] == locale])
             kb = _build_keyboard(models, "model", {"l": lang, "r": region}, page)
-            return await callback.message.edit_text(
-                "🔊 **Step 3:** Choose a voice model",
+            return await edit_message_text_colored(
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.id,
+                text="🔊 **Step 3:** Choose a voice model",
                 reply_markup=kb,
-                parse_mode=ParseMode.MARKDOWN,
             )
 
         # model chosen → synthesize

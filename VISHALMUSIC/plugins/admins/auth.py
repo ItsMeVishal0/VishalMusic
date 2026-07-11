@@ -17,6 +17,7 @@ from VISHALMUSIC.utils.database import (
     save_authuser,
 )
 from VISHALMUSIC.utils.decorators import AdminActual, language
+from VISHALMUSIC.utils.colored_buttons import edit_message_text_colored
 from VISHALMUSIC.utils.inline import close_markup
 from config import BANNED_USERS, adminlist
 
@@ -93,7 +94,7 @@ async def authusers(client, message: Message, _):
                 continue
             text += f"{j}➤ {user}[<code>{user_id}</code>]\n"
             text += f"   {_['auth_8']} {admin_name}[<code>{admin_id}</code>]\n\n"
-        await mystic.edit_text(text, reply_markup=close_markup(_))
+        await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=text, reply_markup=close_markup(_))
     
 
 # ═══════════════════════════════════════════════════════════

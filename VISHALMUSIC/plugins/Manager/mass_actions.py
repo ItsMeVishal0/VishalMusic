@@ -18,22 +18,22 @@ import asyncio
 
 from pyrogram import filters, Client
 from pyrogram.types import (
-    InlineKeyboardButton, InlineKeyboardMarkup,
     CallbackQuery, Message, ChatPermissions
 )
 from pyrogram.enums import ChatMemberStatus, ChatMembersFilter
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 from VISHALMUSIC.utils.permissions import is_owner_or_sudoer, mention
 
 MASS_CMDS = ["kickall", "banall", "unbanall", "muteall", "unmuteall", "unpinall"]
 
 
-def _confirmation_keyboard(cmd: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("Yes", callback_data=f"{cmd}_yes"),
-         InlineKeyboardButton("No",  callback_data=f"{cmd}_no")]
-    ])
+def _confirmation_keyboard(cmd: str) -> list:
+    return [
+        [styled_button("Yes", callback_data=f"{cmd}_yes", style="success"),
+         styled_button("No",  callback_data=f"{cmd}_no", style="danger")]
+    ]
 
 
 @app.on_message(filters.command(MASS_CMDS) & filters.group)
@@ -46,8 +46,9 @@ async def ask_mass_confirm(client: Client, message: Message):
             f"❌ Only {owner_m} may run “{cmd}”."
         )
 
-    await message.reply_text(
-        f"⚠️ {message.from_user.mention}, confirm `{cmd}` for this group?",
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=f"⚠️ {message.from_user.mention}, confirm `{cmd}` for this group?",
         reply_markup=_confirmation_keyboard(cmd)
     )
 

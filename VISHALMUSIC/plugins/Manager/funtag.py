@@ -4,14 +4,13 @@ from pyrogram import filters
 from pyrogram.enums import ChatType
 from pyrogram.errors import FloodWait
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.admin_check import is_admin
+from VISHALMUSIC.utils.admin_filters import is_admin
 from VISHALMUSIC.plugins.misc.funtag_messages import (
     GN_MESSAGES,
     GM_MESSAGES,
     HI_MESSAGES,
     QUOTES,
     SHAYARI,
-    TAG_ALL,
 )
 
 spam_chats = set()
@@ -79,11 +78,7 @@ async def lifetag(client, message):
 async def shayari_tag(client, message):
     await mention_members(client, message, SHAYARI, "shayarioff")
 
-@app.on_message(filters.command("tagall", prefixes=["/", "!"]))
-async def tag_all(client, message):
-    await mention_members(client, message, TAG_ALL, "tagoff")
-
-@app.on_message(filters.command(["gmstop", "gnstop", "histop", "lifestop", "shayarioff", "tagoff", "tagstop"], prefixes=["/", "!"]))
+@app.on_message(filters.command(["gmstop", "gnstop", "histop", "lifestop", "shayarioff", "tagstop", "tagoff"], prefixes=["/", "!"]))
 async def stop_tagging(client, message):
     chat_id = message.chat.id
 
@@ -96,3 +91,68 @@ async def stop_tagging(client, message):
     spam_chats.discard(chat_id)
     active_tags.pop(chat_id, None)
     await message.reply_text("✅ ᴍᴇɴᴛɪᴏɴɪɴɢ sᴛᴏᴘᴘᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.")
+
+
+TAG_ALL_TEXT = []
+
+@app.on_message(filters.command("tagall"))
+async def tagall(client, message):
+    chat_id = message.chat.id
+
+    if message.chat.type == ChatType.PRIVATE:
+        return await message.reply_text("❗ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴡᴏʀᴋs ᴏɴʟʏ ɪɴ ɢʀᴏᴜᴘs.")
+
+    if not await is_admin(message):
+        return await message.reply_text("🚫 ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
+
+    if chat_id in spam_chats:
+        return await message.reply_text("⚠️ ᴀ ᴛᴀɢɢɪɴɢ sᴇssɪᴏɴ ɪs ᴀʟʀᴇᴀᴅʏ ʀᴜɴɴɪɴɢ.")
+
+    spam_chats.add(chat_id)
+
+    try:
+        usernum, usertxt, total_tagged = 0, "", 0
+        async for member in client.get_chat_members(chat_id):
+            if chat_id not in spam_chats:
+                break
+            if not member.user or member.user.is_bot or member.user.is_deleted:
+                continue
+
+            usernum += 1
+            total_tagged += 1
+            usertxt += f"⊚ [{member.user.first_name}](tg://user?id={member.user.id})\n"
+
+            if usernum == 5:
+                try:
+                    await client.send_message(chat_id, usertxt)
+                except FloodWait as e:
+                    await asyncio.sleep(e.value)
+                except Exception:
+                    pass
+
+                await asyncio.sleep(2)
+                usernum, usertxt = 0, ""
+
+        if usertxt:
+            try:
+                await client.send_message(chat_id, usertxt)
+            except Exception:
+                pass
+    finally:
+        spam_chats.discard(chat_id)
+        await message.reply_text(f"✅ ᴛᴀɢɢᴇᴅ {total_tagged} ᴜsᴇʀs.")
+
+
+@app.on_message(filters.command(["cancel", "tagstop", "tagoff"]))
+async def cancel_tag(client, message):
+    chat_id = message.chat.id
+
+    if chat_id not in spam_chats:
+        return await message.reply_text("⚠️ ɴᴏ ᴀᴄᴛɪᴠᴇ sᴇssɪᴏɴ.")
+
+    if not await is_admin(message):
+        return await message.reply_text("🚫 ᴏɴʟʏ ᴀᴅᴍɪɴs.")
+
+    spam_chats.discard(chat_id)
+    active_tags.pop(chat_id, None)
+    await message.reply_text("✅ sᴇssɪᴏɴ sᴛᴏᴘᴘᴇᴅ.")

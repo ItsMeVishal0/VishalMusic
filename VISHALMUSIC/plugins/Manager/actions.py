@@ -186,44 +186,6 @@ async def unmute_cmd(client, message: Message):
         await message.reply_text("I need unmute permissions.")
 
 # ────────────────────────────────────────────────────────────
-# /tmute
-# ────────────────────────────────────────────────────────────
-@app.on_message(filters.command("tmute"))
-@admin_required("can_restrict_members")
-async def tmute_cmd(client, message: Message):
-    if ((not message.reply_to_message and len(message.command) < 3) or
-        (message.reply_to_message and len(message.command) < 2)):
-        return await message.reply_text(_usage("tmute"))
-
-    if message.reply_to_message:
-        user    = message.reply_to_message.from_user
-        time_arg= message.command[1]
-        reason  = message.text.partition(time_arg)[2].strip()
-    else:
-        user = await client.get_users(message.command[1])
-        if not user:
-            return await message.reply_text("I can’t find that user.")
-        time_arg= message.command[2]
-        reason  = message.text.partition(time_arg)[2].strip()
-
-    target = await _get_member_safe(client, message.chat.id, user.id)
-    if target and _is_admin_status(target.status):
-        return await message.reply_text("I cannot mute an admin or the group owner.")
-
-    delta = parse_time(time_arg)
-    if not delta:
-        return await message.reply_text("Invalid time format. Use s/m/h/d suffix.")
-
-    until = dt.datetime.now(dt.timezone.utc) + delta
-    try:
-        await client.restrict_chat_member(message.chat.id, user.id, _DEF_MUTE_PERMS, until_date=until)
-        await message.reply_text(_format_success(f"Mute for {time_arg}", message, user.id, user.first_name, reason))
-    except ChatAdminRequired:
-        await message.reply_text("I need mute permissions.")
-    except UserAdminInvalid:
-        await message.reply_text("I cannot mute an admin.")
-
-# ────────────────────────────────────────────────────────────
 # /kick
 # ────────────────────────────────────────────────────────────
 @app.on_message(filters.command("kick"))
@@ -249,6 +211,44 @@ async def kick_cmd(client, message: Message):
         await message.reply_text("I need ban permissions.")
     except UserAdminInvalid:
         await message.reply_text("I cannot kick an admin.")
+
+# ────────────────────────────────────────────────────────────
+# /tmute
+# ────────────────────────────────────────────────────────────
+@app.on_message(filters.command("tmute"))
+@admin_required("can_restrict_members")
+async def tmute_cmd(client, message: Message):
+    if ((not message.reply_to_message and len(message.command) < 3) or
+        (message.reply_to_message and len(message.command) < 2)):
+        return await message.reply_text(_usage("tmute"))
+
+    if message.reply_to_message:
+        user    = message.reply_to_message.from_user
+        time_arg= message.command[1]
+        reason  = message.text.partition(time_arg)[2].strip()
+    else:
+        user = await client.get_users(message.command[1])
+        if not user:
+            return await message.reply_text("I can't find that user.")
+        time_arg= message.command[2]
+        reason  = message.text.partition(time_arg)[2].strip()
+
+    target = await _get_member_safe(client, message.chat.id, user.id)
+    if target and _is_admin_status(target.status):
+        return await message.reply_text("I cannot mute an admin or the group owner.")
+
+    delta = parse_time(time_arg)
+    if not delta:
+        return await message.reply_text("Invalid time format. Use s/m/h/d suffix.")
+
+    until = dt.datetime.now(dt.timezone.utc) + delta
+    try:
+        await client.restrict_chat_member(message.chat.id, user.id, _DEF_MUTE_PERMS, until_date=until)
+        await message.reply_text(_format_success(f"Mute for {time_arg}", message, user.id, user.first_name, reason))
+    except ChatAdminRequired:
+        await message.reply_text("I need mute permissions.")
+    except UserAdminInvalid:
+        await message.reply_text("I cannot mute an admin.")
 
 # ────────────────────────────────────────────────────────────
 # /dban
@@ -310,7 +310,7 @@ async def kickme_cmd(client, message: Message):
 
     target = await _get_member_safe(client, message.chat.id, message.from_user.id)
     if target and _is_admin_status(target.status):
-        return await message.reply_text("Nice try, boss 😅 I can’t kick admins or the owner.")
+        return await message.reply_text("Nice try, boss 😅 I can't kick admins or the owner.")
 
     bot_mem = await _get_bot_member(client, message.chat.id)
     if not bot_mem or not getattr(bot_mem, "can_restrict_members", False):
@@ -324,7 +324,7 @@ async def kickme_cmd(client, message: Message):
     except ChatAdminRequired:
         await message.reply_text("I need ban permissions.")
     except UserAdminInvalid:
-        await message.reply_text("I can’t kick admins or the owner.")
+        await message.reply_text("I can't kick admins or the owner.")
 
 # ────────────────────────────────────────────────────────────
 # /tban
@@ -343,7 +343,7 @@ async def tban_cmd(client, message: Message):
     else:
         user = await client.get_users(message.command[1])
         if not user:
-            return await message.reply_text("I can’t find that user.")
+            return await message.reply_text("I can't find that user.")
         time_arg= message.command[2]
         reason  = message.text.partition(time_arg)[2].strip()
 

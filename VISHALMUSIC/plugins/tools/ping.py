@@ -7,6 +7,7 @@ from VISHALMUSIC import app
 from VISHALMUSIC.core.call import VISHAL
 from VISHALMUSIC.utils import bot_sys_stats
 from VISHALMUSIC.utils.decorators.language import language
+from VISHALMUSIC.utils.colored_buttons import edit_message_text_colored
 from VISHALMUSIC.utils.inline import supp_markup
 from config import BANNED_USERS, PING_VID_URL
 
@@ -22,7 +23,8 @@ async def ping_com(client, message: Message, _):
     pytgping = await VISHAL.ping()
     UP, CPU, RAM, DISK = await bot_sys_stats()
     resp = (datetime.now() - start).microseconds / 1000
-    await response.edit_text(
-        _["ping_2"].format(resp, app.mention, UP, RAM, CPU, DISK, pytgping),
+    await edit_message_text_colored(
+        chat_id=response.chat.id, message_id=response.id,
+        text=_["ping_2"].format(resp, app.mention, UP, RAM, CPU, DISK, pytgping),
         reply_markup=supp_markup(_),
     )

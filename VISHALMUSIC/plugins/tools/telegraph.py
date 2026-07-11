@@ -2,9 +2,10 @@ import os
 import aiohttp
 
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.types import Message
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, edit_message_text_colored
 
 
 async def upload_file(path: str):
@@ -48,11 +49,11 @@ async def telegraph_handler(_, message: Message):
         success, result = await upload_file(local_path)
 
         if success:
-            await status.edit(
-                f"✅ **Uploaded successfully!**\n🔗 [Click to View]({result})",
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("📎 Open Telegraph", url=result)]]
-                ),
+            await edit_message_text_colored(
+                chat_id=status.chat.id,
+                message_id=status.id,
+                text=f"✅ **Uploaded successfully!**\n🔗 [Click to View]({result})",
+                reply_markup=[[styled_button("📎 Open Telegraph", url=result)]],
             )
         else:
             await status.edit(f"❌ **Upload failed:**\n`{result}`")

@@ -1,10 +1,9 @@
 from pyrogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     InlineQueryResultPhoto,
 )
 from py_yt import VideosSearch
 
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from VISHALMUSIC.utils.inlinequery import answer
 from config import BANNED_USERS
 from VISHALMUSIC import app
@@ -32,16 +31,11 @@ async def inline_query_handler(client, query):
             link = result[x]["link"]
             published = result[x]["publishedTime"]
             description = f"{views} | {duration} ᴍɪɴᴜᴛᴇs | {channel}  | {published}"
-            buttons = InlineKeyboardMarkup(
+            buttons = buttons_to_inline_markup([
                 [
-                    [
-                        InlineKeyboardButton(
-                            text="ʏᴏᴜᴛᴜʙᴇ 🎄",
-                            url=link,
-                        )
-                    ],
-                ]
-            )
+                    styled_button(text="ʏᴏᴜᴛᴜʙᴇ 🎄", url=link),
+                ],
+            ])
             searched_text = f"""
 ❄ <b>ᴛɪᴛʟᴇ :</b> <a href={link}>{title}</a>
 

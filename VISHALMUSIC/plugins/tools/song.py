@@ -3,14 +3,13 @@ import re
 from pyrogram import filters
 from pyrogram.enums import ChatAction
 from pyrogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     InputMediaAudio,
     InputMediaVideo,
     Message,
 )
 
 from VISHALMUSIC import app, YouTube
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, send_photo_colored, edit_reply_markup_colored
 from config import (
     BANNED_USERS,
     SONG_DOWNLOAD_DURATION,
@@ -25,8 +24,8 @@ SONG_COMMAND = ["song"]
 
 
 class InlineKeyboardBuilder(list):
-    def row(self, *buttons):
-        self.append(list(buttons))
+    def row(self, *btns):
+        self.append(list(btns))
 
 
 # ───────────────────────────── COMMANDS ───────────────────────────── #
@@ -34,11 +33,10 @@ class InlineKeyboardBuilder(list):
 @capture_err
 @language
 async def song_command_group(client, message: Message, lang):
-    await message.reply_text(
-        lang["song_1"],
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton(lang["SG_B_1"], url=f"https://t.me/{app.username}?start=song")]]
-        ),
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=lang["song_1"],
+        reply_markup=[[styled_button(lang["SG_B_1"], url=f"https://t.me/{app.username}?start=song")]],
     )
 
 
@@ -68,10 +66,11 @@ async def song_command_private(client, message: Message, lang):
         return await mystic.edit_text(lang["play_4"].format(SONG_DOWNLOAD_DURATION, dur_min))
 
     await mystic.delete()
-    await message.reply_photo(
-        thumb,
+    await send_photo_colored(
+        chat_id=message.chat.id,
+        photo=thumb,
         caption=lang["song_4"].format(title),
-        reply_markup=InlineKeyboardMarkup(song_markup(lang, vidid)),
+        reply_markup=song_markup(lang, vidid),
     )
 
 
@@ -82,8 +81,10 @@ async def song_command_private(client, message: Message, lang):
 async def songs_back_helper(client, cq, lang):
     _ignored, req = cq.data.split(None, 1)
     stype, vidid = req.split("|")
-    await cq.edit_message_reply_markup(
-        reply_markup=InlineKeyboardMarkup(song_markup(lang, vidid))
+    await edit_reply_markup_colored(
+        chat_id=cq.message.chat.id,
+        message_id=cq.message.id,
+        reply_markup=song_markup(lang, vidid),
     )
 
 
@@ -116,9 +117,10 @@ async def song_helper_cb(client, cq, lang):
                 continue
             seen.add(label)
             kb.row(
-                InlineKeyboardButton(
+                styled_button(
                     text=f"{label} • {convert_bytes(f['filesize'])}",
                     callback_data=f"song_download {stype}|{f['format_id']}|{vidid}",
+                    style="success",
                 )
             )
     else:
@@ -133,17 +135,18 @@ async def song_helper_cb(client, cq, lang):
             note = (f.get("format_note") or "").strip()
             res = note or f.get("format", "").split("-")[-1].strip() or str(fmt_id)
             kb.row(
-                InlineKeyboardButton(
+                styled_button(
                     text=f"{res} • {convert_bytes(f['filesize'])}",
                     callback_data=f"song_download {stype}|{f['format_id']}|{vidid}",
+                    style="success",
                 )
             )
 
     kb.row(
-        InlineKeyboardButton(lang["BACK_BUTTON"], callback_data=f"song_back {stype}|{vidid}"),
-        InlineKeyboardButton(lang["CLOSE_BUTTON"], callback_data="close"),
+        styled_button(lang["BACK_BUTTON"], callback_data=f"song_back {stype}|{vidid}", style="primary"),
+        styled_button(lang["CLOSE_BUTTON"], callback_data="close", style="danger"),
     )
-    await cq.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(kb))
+    await edit_reply_markup_colored(chat_id=cq.message.chat.id, message_id=cq.message.id, reply_markup=kb)
 
 
 @app.on_callback_query(filters.regex(r"song_download") & ~BANNED_USERS)

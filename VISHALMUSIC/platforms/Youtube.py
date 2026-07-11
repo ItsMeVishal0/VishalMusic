@@ -1,4 +1,4 @@
-﻿# ═══════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎
 #   GitHub : github.com/ItsMeVishal0/VishalMusic
 #   Developer : @ItsMeVishalBots | Telegram
@@ -470,24 +470,24 @@ async def download_audio(link: str) -> str:
     Main audio download - Primary API -> Fallback API -> yt-dlp
     """
     # 1. TRY PRIMARY API FIRST
-    print("🎵 Audio Download - Trying Primary API (Direct)...")
+    LOGGER.info("🎵 Audio Download - Trying Primary API (Direct)...")
     result = await download_song_primary_api(link)
     if result:
-        print("✅ Audio: Primary API Success")
+        LOGGER.info("✅ Audio: Primary API Success")
         return result
     
     # 2. TRY FALLBACK API (TOKEN BASED)
-    print("🔄 Audio - Primary failed, trying Fallback API (Token)...")
+    LOGGER.info("🔄 Audio - Primary failed, trying Fallback API (Token)...")
     result = await download_song_fallback_api(link)
     if result:
-        print("✅ Audio: Fallback API Success")
+        LOGGER.info("✅ Audio: Fallback API Success")
         return result
     
     # 3. TRY YT-DLP AS LAST RESORT
-    print("🔄 Audio - Both APIs failed, trying yt-dlp fallback...")
+    LOGGER.info("🔄 Audio - Both APIs failed, trying yt-dlp fallback...")
     result = await download_audio_ytdlp(link)
     if result:
-        print("✅ Audio: yt-dlp Success")
+        LOGGER.info("✅ Audio: yt-dlp Success")
         if result.endswith('.webm'):
             mp3_path = result.replace('.webm', '.mp3')
             try:
@@ -497,7 +497,7 @@ async def download_audio(link: str) -> str:
                 return result
         return result
     
-    print("❌ All audio download methods failed")
+    LOGGER.info("❌ All audio download methods failed")
     return None
 
 
@@ -506,27 +506,27 @@ async def download_video(link: str) -> str:
     Main video download - Primary API -> Fallback API -> yt-dlp
     """
     # 1. TRY PRIMARY API FIRST
-    print("🎬 Video Download - Trying Primary API (Direct)...")
+    LOGGER.info("🎬 Video Download - Trying Primary API (Direct)...")
     result = await download_video_primary_api(link)
     if result:
-        print("✅ Video: Primary API Success")
+        LOGGER.info("✅ Video: Primary API Success")
         return result
     
     # 2. TRY FALLBACK API (TOKEN BASED)
-    print("🔄 Video - Primary failed, trying Fallback API (Token)...")
+    LOGGER.info("🔄 Video - Primary failed, trying Fallback API (Token)...")
     result = await download_video_fallback_api(link)
     if result:
-        print("✅ Video: Fallback API Success")
+        LOGGER.info("✅ Video: Fallback API Success")
         return result
     
     # 3. TRY YT-DLP AS LAST RESORT
-    print("🔄 Video - Both APIs failed, trying yt-dlp fallback...")
+    LOGGER.info("🔄 Video - Both APIs failed, trying yt-dlp fallback...")
     result = await download_video_ytdlp(link)
     if result:
-        print("✅ Video: yt-dlp Success")
+        LOGGER.info("✅ Video: yt-dlp Success")
         return result
     
-    print("❌ All video download methods failed")
+    LOGGER.info("❌ All video download methods failed")
     return None
 
 
@@ -843,14 +843,14 @@ class YouTubeAPI:
         common_file_path = os.path.join("downloads", f"{video_id}{extension}")
         
         if os.path.exists(common_file_path) and os.path.getsize(common_file_path) > 10240:
-            print("✅ Local cache")
+            LOGGER.info("✅ Local cache")
             return common_file_path, True
 
         if songvideo or video:
             try:
                 downloaded_file = await download_video(link)
                 if downloaded_file:
-                    print("✅ Video downloaded successfully")
+                    LOGGER.info("✅ Video downloaded successfully")
                     if downloaded_file != common_file_path and downloaded_file.endswith('.mp4'):
                         try:
                             shutil.move(downloaded_file, common_file_path)
@@ -859,11 +859,11 @@ class YouTubeAPI:
                             return downloaded_file, True
                     return downloaded_file, True
             except Exception as e:
-                print(f"❌ Video download error: {str(e)}")
+                LOGGER.info(f"❌ Video download error: {str(e)}")
             
             status, stream_url = await self.video(link)
             if status == 1:
-                print("✅ Video stream")
+                LOGGER.info("✅ Video stream")
                 return stream_url, None
             else:
                 return None, None
@@ -900,7 +900,7 @@ class YouTubeAPI:
                     continue
 
             if audio_result:
-                print("✅ Audio downloaded (race winner)")
+                LOGGER.info("✅ Audio downloaded (race winner)")
                 if audio_result != common_file_path:
                     try:
                         shutil.move(audio_result, common_file_path)
@@ -909,7 +909,7 @@ class YouTubeAPI:
                         return audio_result, True
                 return audio_result, True
 
-            print("❌ All audio download methods failed")
+            LOGGER.info("❌ All audio download methods failed")
             return None, None
 
 YouTube = YouTubeAPI()

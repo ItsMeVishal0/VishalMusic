@@ -6,9 +6,9 @@ from uuid import uuid4
 from PIL import Image
 from pyrogram import raw, filters
 from pyrogram.errors import StickersetInvalid
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from config import BOT_USERNAME
 
 
@@ -99,7 +99,7 @@ async def pack_clone(client, message):
         )
         await proc.edit(
             f"cloned {len(items)} stickers!",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("view pack", url=f"https://t.me/addstickers/{short}")]]),
+            reply_markup=buttons_to_inline_markup([[styled_button("view pack", url=f"https://t.me/addstickers/{short}")]]),
         )
     except StickersetInvalid:
         await proc.edit("invalid sticker set")

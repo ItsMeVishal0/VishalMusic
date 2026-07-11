@@ -1,5 +1,4 @@
 from pyrogram.enums import ChatType
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS, db
@@ -13,6 +12,7 @@ from VISHALMUSIC.utils.database import (
     is_nonadmin_chat,
     is_skipmode,
 )
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, buttons_to_inline_markup
 from config import SUPPORT_CHAT, adminlist, confirmer
 from strings import get_string
 
@@ -39,17 +39,8 @@ def AdminRightsCheck(mystic):
         except:
             _ = get_string("en")
         if message.sender_chat:
-            upl = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="ʜᴏᴡ ᴛᴏ ғɪx ?",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
-                ]
-            )
-            return await message.reply_text(_["general_3"], reply_markup=upl)
+            upl = [[styled_button(text="ʜᴏᴡ ᴛᴏ ғɪx ?", callback_data="AnonymousAdmin", style="primary")]]
+            return await send_message_colored(message.chat.id, _["general_3"], reply_markup=upl)
         if message.command[0][0] == "c":
             chat_id = await get_cmode(message.chat.id)
             if chat_id is None:
@@ -84,16 +75,7 @@ def AdminRightsCheck(mystic):
                             if command == "speed":
                                 return await message.reply_text(_["admin_14"])
                             MODE = command.title()
-                            upl = InlineKeyboardMarkup(
-                                [
-                                    [
-                                        InlineKeyboardButton(
-                                            text="ᴠᴏᴛᴇ",
-                                            callback_data=f"ADMIN  UpVote|{chat_id}_{MODE}",
-                                        ),
-                                    ]
-                                ]
-                            )
+                            upl = [[styled_button(text="ᴠᴏᴛᴇ", callback_data=f"ADMIN  UpVote|{chat_id}_{MODE}", style="primary")]]
                             if chat_id not in confirmer:
                                 confirmer[chat_id] = {}
                             try:
@@ -101,8 +83,10 @@ def AdminRightsCheck(mystic):
                                 file = db[chat_id][0]["file"]
                             except:
                                 return await message.reply_text(_["admin_14"])
-                            senn = await message.reply_text(text, reply_markup=upl)
-                            confirmer[chat_id][senn.id] = {
+                            senn = await send_message_colored(message.chat.id, text, reply_markup=upl)
+                            if not senn:
+                                senn = await message.reply_text(text, reply_markup=buttons_to_inline_markup(upl))
+                            confirmer[chat_id][senn.get("message_id", senn.id if hasattr(senn, 'id') else id(senn))] = {
                                 "vidid": vidid,
                                 "file": file,
                             }
@@ -135,17 +119,8 @@ def AdminActual(mystic):
         except:
             _ = get_string("en")
         if message.sender_chat:
-            upl = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="ʜᴏᴡ ᴛᴏ ғɪx ?",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
-                ]
-            )
-            return await message.reply_text(_["general_3"], reply_markup=upl)
+            upl = [[styled_button(text="ʜᴏᴡ ᴛᴏ ғɪx ?", callback_data="AnonymousAdmin", style="primary")]]
+            return await send_message_colored(message.chat.id, _["general_3"], reply_markup=upl)
         if message.from_user.id not in SUDOERS:
             try:
                 member = (

@@ -62,7 +62,7 @@ async def tag_all_users(client: Client, message: Message):
         spam_chats.discard(message.chat.id)
 
 
-@app.on_message(filters.command(["cancel", "ustop"]))
+@app.on_message(filters.command(["ustop"]))
 async def cancel_spam(client: Client, message: Message):
     chat_id = message.chat.id
 

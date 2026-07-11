@@ -9,11 +9,12 @@ import asyncio
 import random
 import urllib.parse
 from pyrogram import filters, errors, types
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import Message
 from typing import Optional
 
 from config import LOGGER_ID
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 BOT_INFO: Optional[types.User] = None
 BOT_ID: Optional[int] = None
@@ -103,8 +104,8 @@ async def join_watcher(_, message: Message):
 
             reply_markup = None
             if _is_valid_url(invite_link):
-                reply_markup = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip())]]
+                reply_markup = buttons_to_inline_markup(
+                    [[styled_button("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip())]]
                 )
 
             await safe_send_photo(

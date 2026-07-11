@@ -1,7 +1,7 @@
 import random
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, edit_message_text_colored
 from config import BOT_USERNAME
 
 
@@ -30,8 +30,11 @@ async def password(bot, message):
         f"<b>Pᴀꜱꜱᴡᴏʀᴅ:</b> <code>{generated_password}</code>"
     )
 
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")]
-    ])
+    buttons = [[styled_button("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")]]
 
-    await processing.edit_text(reply_text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
+    await edit_message_text_colored(
+        chat_id=processing.chat.id,
+        message_id=processing.id,
+        text=reply_text,
+        reply_markup=buttons,
+    )

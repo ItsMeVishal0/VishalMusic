@@ -5,7 +5,7 @@ from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS
 from VISHALMUSIC.utils.database import add_gban_user, remove_gban_user
 from VISHALMUSIC.utils.decorators.language import language
-from VISHALMUSIC.utils.extraction import extract_user
+from VISHALMUSIC.utils.formatters import extract_user
 from config import BANNED_USERS
 
 

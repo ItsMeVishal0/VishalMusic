@@ -1,9 +1,9 @@
 import csv
 from io import StringIO, BytesIO
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.admin_filters import admin_filter
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 
 async def collect_members(chat_id, processing_msg):
     members_list = []
@@ -19,22 +19,17 @@ async def collect_members(chat_id, processing_msg):
                 pass
     return members_list
 
-# ─── /user Command ──────────────────────────────────────────────
-
 @app.on_message(filters.command("user") & admin_filter)
 async def user_command(_, message):
-    keyboard = InlineKeyboardMarkup(
-        [[
-            InlineKeyboardButton("CSV", callback_data="members_csv"),
-            InlineKeyboardButton("TXT", callback_data="members_txt")
-        ]]
-    )
-    await message.reply_text(
+    keyboard = [
+        [styled_button("CSV", callback_data="members_csv", style="primary"),
+         styled_button("TXT", callback_data="members_txt", style="primary")]
+    ]
+    await send_message_colored(
+        message.chat.id,
         "In which format do you want the members list?",
-        reply_markup=keyboard
+        reply_markup=keyboard,
     )
-
-# ─── Callback Query Handler for the /user Command ───────────────
 
 @app.on_callback_query(filters.regex("^members_"))
 async def members_format_callback(_, callback_query):

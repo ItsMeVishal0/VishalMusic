@@ -15,6 +15,7 @@ from VISHALMUSIC.misc import SUDOERS, mongodb
 from VISHALMUSIC.plugins import ALL_MODULES
 from VISHALMUSIC.utils.database import get_served_chats, get_served_users, get_sudoers
 from VISHALMUSIC.utils.decorators.language import language, languageCB
+from VISHALMUSIC.utils.colored_buttons import send_message_colored, edit_message_text_colored, edit_message_media_colored, buttons_to_inline_markup
 from VISHALMUSIC.utils.inline.stats import back_stats_buttons, stats_buttons
 from config import BANNED_USERS
 
@@ -23,9 +24,9 @@ from config import BANNED_USERS
 @language
 async def stats_global(client, message: Message, _):
     upl = stats_buttons(_, True if message.from_user.id in SUDOERS else False)
-    await message.reply_video(
-        video=config.STATS_VID_URL,
-        caption=_["gstats_2"].format(app.mention),
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=_["gstats_2"].format(app.mention),
         reply_markup=upl,
     )
 
@@ -34,7 +35,9 @@ async def stats_global(client, message: Message, _):
 @languageCB
 async def home_stats(client, CallbackQuery, _):
     upl = stats_buttons(_, True if CallbackQuery.from_user.id in SUDOERS else False)
-    await CallbackQuery.edit_message_text(
+    await edit_message_text_colored(
+        chat_id=CallbackQuery.message.chat.id,
+        message_id=CallbackQuery.message.id,
         text=_["gstats_2"].format(app.mention),
         reply_markup=upl,
     )
@@ -63,13 +66,15 @@ async def overall_stats(client, CallbackQuery, _):
         config.AUTO_LEAVING_ASSISTANT,
         config.DURATION_LIMIT_MIN,
     )
-    med = InputMediaVideo(media=config.STATS_VID_URL, caption=text)
-    try:
-        await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-    except MessageIdInvalid:
-        await CallbackQuery.message.reply_video(
-            video=config.STATS_VID_URL, caption=text, reply_markup=upl
-        )
+    med = {"type": "video", "media": config.STATS_VID_URL, "caption": text}
+    botapi_result = await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=upl)
+    if not botapi_result:
+        try:
+            await CallbackQuery.edit_message_media(media=InputMediaVideo(media=config.STATS_VID_URL, caption=text), reply_markup=buttons_to_inline_markup(upl))
+        except MessageIdInvalid:
+            await CallbackQuery.message.reply_video(
+                video=config.STATS_VID_URL, caption=text, reply_markup=buttons_to_inline_markup(upl)
+            )
 
 
 @app.on_callback_query(filters.regex("bot_stats_sudo"))
@@ -82,7 +87,7 @@ async def bot_stats(client, CallbackQuery, _):
         await CallbackQuery.answer()
     except:
         pass
-    await CallbackQuery.edit_message_text(_["gstats_1"].format(app.mention))
+    await edit_message_text_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, text=_["gstats_1"].format(app.mention))
     p_core = psutil.cpu_count(logical=False)
     t_core = psutil.cpu_count(logical=True)
     ram = str(round(psutil.virtual_memory().total / (1024.0**3))) + " ɢʙ"
@@ -126,10 +131,12 @@ async def bot_stats(client, CallbackQuery, _):
         call["collections"],
         call["objects"],
     )
-    med = InputMediaVideo(media=config.STATS_VID_URL, caption=text)
-    try:
-        await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-    except MessageIdInvalid:
-        await CallbackQuery.message.reply_video(
-            video=config.STATS_VID_URL, caption=text, reply_markup=upl
-        )
+    med = {"type": "video", "media": config.STATS_VID_URL, "caption": text}
+    botapi_result = await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=upl)
+    if not botapi_result:
+        try:
+            await CallbackQuery.edit_message_media(media=InputMediaVideo(media=config.STATS_VID_URL, caption=text), reply_markup=buttons_to_inline_markup(upl))
+        except MessageIdInvalid:
+            await CallbackQuery.message.reply_video(
+                video=config.STATS_VID_URL, caption=text, reply_markup=buttons_to_inline_markup(upl)
+            )

@@ -16,7 +16,7 @@ from pyrogram.errors import (
     FileReferenceExpired,
     RPCError,
 )
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.files import resize_file_to_sticker_size
@@ -218,8 +218,8 @@ async def kang(client, message):
             f"ᴘᴀᴄᴋ: {title}\n"
             f"ᴄᴏᴜɴᴛ: {count}\n"
             f"ᴇᴍᴏᴊɪ: {emoji}",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}")]]
+            reply_markup=buttons_to_inline_markup(
+                [[styled_button("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}")]]
             )
         )
 

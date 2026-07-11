@@ -1,9 +1,10 @@
 from pyrogram import filters, Client
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 from unidecode import unidecode
 
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 from VISHALMUSIC.utils.database import (
     get_active_chats,
     get_active_video_chats,
@@ -61,9 +62,8 @@ async def activevi_(_, message: Message):
 async def active_count(client: Client, message: Message):
     ac_audio = str(len(await get_active_chats()))
     ac_video = str(len(await get_active_video_chats()))
-    await message.reply_text(
-        f"✫ <b><u>ᴀᴄᴛɪᴠᴇ ᴄʜᴀᴛs ɪɴғᴏ</u></b> :\n\nᴠᴏɪᴄᴇ : {ac_audio}\nᴠɪᴅᴇᴏ  : {ac_video}",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("✯ ᴄʟᴏsᴇ ✯", callback_data="close")]]
-        )
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=f"✫ <b><u>ᴀᴄᴛɪᴠᴇ ᴄʜᴀᴛs ɪɴғᴏ</u></b> :\n\nᴠᴏɪᴄᴇ : {ac_audio}\nᴠɪᴅᴇᴏ  : {ac_video}",
+        reply_markup=[[styled_button("✯ ᴄʟᴏsᴇ ✯", callback_data="close", style="danger")]]
     )

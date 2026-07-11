@@ -2,10 +2,11 @@ import aiohttp
 import html
 from datetime import datetime
 from pyrogram import filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, send_photo_colored
 
 
 def _safe(x: str | None) -> str:
@@ -101,21 +102,19 @@ async def github(_, message: Message):
         f"🔗 <b>ᴘʀᴏғɪʟᴇ:</b> {profile_link}"
     )
 
-    keyboard = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]]
-    )
+    buttons = [[styled_button("ᴄʟᴏsᴇ", callback_data="close", style="danger")]]
 
     if avatar:
-        await message.reply_photo(
+        await send_photo_colored(
+            chat_id=message.chat.id,
             photo=avatar,
             caption=caption,
-            reply_markup=keyboard,
-            parse_mode=ParseMode.HTML,
+            reply_markup=buttons,
         )
     else:
-        await message.reply_text(
-            caption,
-            reply_markup=keyboard,
-            parse_mode=ParseMode.HTML,
+        await send_message_colored(
+            chat_id=message.chat.id,
+            text=caption,
+            reply_markup=buttons,
             disable_web_page_preview=True,
         )

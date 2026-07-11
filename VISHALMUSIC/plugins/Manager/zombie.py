@@ -7,13 +7,13 @@ from pyrogram.enums import ChatMemberStatus, ChatType
 from pyrogram.errors import FloodWait, ChannelInvalid, ChatAdminRequired, RPCError
 from pyrogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     Message,
 )
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.admin_check import is_admin
+from VISHALMUSIC.utils.admin_filters import is_admin
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+
 
 chatQueue: set[int] = set()
 stopProcess: bool = False
@@ -60,7 +60,7 @@ async def safe_edit(msg: Message, text: str):
         pass
 
 
-@app.on_message(filters.command(["zombies"]))
+@app.on_message(filters.command("zombies"))
 async def prompt_zombie_cleanup(_: Client, message: Message):
     if not _in_group(message):
         return await message.reply_text(
@@ -68,47 +68,48 @@ async def prompt_zombie_cleanup(_: Client, message: Message):
             parse_mode=enums.ParseMode.HTML,
         )
 
-    if not await is_admin(message):
+    if not await _bot_is_admin(message.chat.id):
         return await message.reply_text(
-            "👮🏻 | <b>Only admins can execute this command.</b>",
+            "➠ | <b>I need admin rights to remove deleted accounts here.</b>",
             parse_mode=enums.ParseMode.HTML,
         )
 
-    if not await _bot_is_admin(message.chat.id):
+    if not await is_admin(message):
         return await message.reply_text(
-            "➠ | <b>I need admin rights to scan & remove deleted accounts.</b>",
+            "👮🏻 | <b>Only admins can clean up deleted accounts.</b>",
             parse_mode=enums.ParseMode.HTML,
         )
 
     deleted_list = await scan_deleted_members(message.chat.id)
-    if not deleted_list:
+    total = len(deleted_list)
+
+    if total == 0:
         return await message.reply_text(
-            "⟳ | <b>No deleted accounts found in this chat.</b>",
+            "✅ | <b>No zombie (deleted) accounts found in this chat.</b>",
             parse_mode=enums.ParseMode.HTML,
         )
 
-    total = len(deleted_list)
-    est_time = max(1, total // 5)
-
-    keyboard = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    "✅ Yes, Clean", callback_data=f"confirm_zombies:{message.chat.id}"
-                ),
-                InlineKeyboardButton("❌ Cancel", callback_data="cancel_zombies"),
-            ]
-        ]
-    )
-
-    await message.reply_text(
-        (
-            f"⚠️ | <b>Found <code>{total}</code> deleted accounts.</b>\n"
-            f"⏳ | <b>Estimated cleanup time:</b> <code>{est_time}s</code>\n\n"
-            "Do you want to clean them?"
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=(
+            f"🧟 | <b>Found <code>{total}</code> deleted account(s) in"
+            f" {html.escape(message.chat.title or 'this chat')}</b>\n\n"
+            "🗑️ | <b>Do you want to remove them all?</b>"
         ),
-        reply_markup=keyboard,
-        parse_mode=enums.ParseMode.HTML,
+        reply_markup=[
+            [
+                styled_button(
+                    "✅ Yes, Clean",
+                    callback_data=f"confirm_zombies:{message.chat.id}",
+                    style="success",
+                ),
+                styled_button(
+                    "❌ Cancel",
+                    callback_data="cancel_zombies",
+                    style="danger",
+                ),
+            ],
+        ],
     )
 
 
@@ -193,48 +194,22 @@ async def cancel_zombie_cleanup(_: Client, cq: CallbackQuery):
         pass
 
 
-@app.on_message(filters.command(["admins", "staff"]))
+@app.on_message(filters.command(["admins", "staff", "adminlist"]))
 async def list_admins(_: Client, message: Message):
     if not _in_group(message):
-        return await message.reply_text(
-            "👥 <b>Use this in a group or supergroup.</b>",
-            parse_mode=enums.ParseMode.HTML,
-        )
+        return await message.reply_text("👥 <b>Use this in a group or supergroup.</b>", parse_mode=enums.ParseMode.HTML)
 
-    try:
-        owners, admins = [], []
-        async for m in app.get_chat_members(
-            message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS
-        ):
-            if (getattr(m, "privileges", None) and getattr(m.privileges, "is_anonymous", False)) or m.user.is_bot:
-                continue
-            if m.status == ChatMemberStatus.OWNER:
-                owners.append(m.user)
-            else:
-                admins.append(m.user)
-
-        title = html.escape(message.chat.title or "this chat")
-        txt = f"<b>Group Staff – {title}</b>\n\n"
-        owner_line = _mention_html(owners[0]) if owners else "<i>Hidden</i>"
-        txt += f"👑 <b>Owner</b>\n└ {owner_line}\n\n👮🏻 <b>Admins</b>\n"
-
-        if not admins:
-            txt += "└ <i>No visible admins</i>"
-        else:
-            for i, adm in enumerate(admins):
-                branch = "└" if i == len(admins) - 1 else "├"
-                handle = f"@{adm.username}" if adm.username else _mention_html(adm)
-                txt += f"{branch} {handle}\n"
-
-        txt += f"\n✅ | <b>Total Admins</b>: {len(owners) + len(admins)}"
-        await app.send_message(message.chat.id, txt, parse_mode=enums.ParseMode.HTML)
-    except FloodWait as e:
-        await asyncio.sleep(e.value)
-    except (ChannelInvalid, ChatAdminRequired):
-        await message.reply_text(
-            "➠ | <b>I need admin rights to list admins here.</b>",
-            parse_mode=enums.ParseMode.HTML,
-        )
+    text = f"<b>👑 Admins of {html.escape(message.chat.title or 'this chat')}:</b>\n\n"
+    async for m in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+        title = m.custom_title or ""
+        user = m.user
+        line = f"👤 {_mention_html(user)}"
+        if title:
+            line += f" — <code>{html.escape(title)}</code>"
+        if m.status == ChatMemberStatus.OWNER:
+            line = "👑 " + line
+        text += line + "\n"
+    await message.reply_text(text, parse_mode=enums.ParseMode.HTML)
 
 
 @app.on_message(filters.command("bots"))

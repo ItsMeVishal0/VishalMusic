@@ -1,11 +1,12 @@
 import random
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.types import Message
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from config import SUPPORT_CHAT
 
-BUTTON = InlineKeyboardMarkup([[InlineKeyboardButton("ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
+BUTTON = buttons_to_inline_markup([[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
 
 MEDIA = {
     "cutie": "https://graph.org/file/24375c6e54609c0e4621c.mp4",

@@ -1,7 +1,8 @@
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, Message
+from pyrogram.types import Message
 
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import send_message_colored
 from VISHALMUSIC.utils.database import get_playmode, get_playtype, is_nonadmin_chat
 from VISHALMUSIC.utils.decorators import language
 from VISHALMUSIC.utils.inline.settings import playmode_users_markup
@@ -29,7 +30,8 @@ async def playmode_(client, message: Message, _):
     else:
         Playtype = True
     buttons = playmode_users_markup(_, Direct, Group, Playtype)
-    response = await message.reply_text(
-        _["play_22"].format(message.chat.title),
-        reply_markup=InlineKeyboardMarkup(buttons),
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=_["play_22"].format(message.chat.title),
+        reply_markup=buttons,
     )

@@ -6,14 +6,15 @@
 # ═══════════════════════════════════════════════════════════
 
 from pyrogram import filters
-from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.types import CallbackQuery, Message
 
 from config import BANNED_USERS, OWNER_ID
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_caption_colored
 from VISHALMUSIC.utils.database import add_sudo, remove_sudo
 from VISHALMUSIC.utils.decorators.language import language
-from VISHALMUSIC.utils.extraction import extract_user
+from VISHALMUSIC.utils.formatters import extract_user
 
 # ─── Add Sudo ─────────────────────────────────────────────
 
@@ -57,13 +58,12 @@ async def remove_sudo_user(client, message: Message, _):
 
 @app.on_message(filters.command(["sudolist", "listsudo", "sudoers"], prefixes=["/", "!", "."]) & ~BANNED_USERS)
 async def sudoers_list(client, message: Message):
-    keyboard = [[InlineKeyboardButton("๏ ᴠɪᴇᴡ sᴜᴅᴏʟɪsᴛ ๏", callback_data="sudo_list_view")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    buttons = [[styled_button("๏ ᴠɪᴇᴡ sᴜᴅᴏʟɪsᴛ ๏", callback_data="sudo_list_view", style="primary")]]
 
-    await message.reply_video(
-        video="https://files.catbox.moe/qibmue.mp4",
-        caption="**» ᴄʜᴇᴄᴋ sᴜᴅᴏ ʟɪsᴛ ʙʏ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ.**\n\n**» ɴᴏᴛᴇ:**  ᴏɴʟʏ sᴜᴅᴏ ᴜsᴇʀs ᴄᴀɴ ᴠɪᴇᴡ.",
-        reply_markup=reply_markup
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text="**» ᴄʜᴇᴄᴋ sᴜᴅᴏ ʟɪsᴛ ʙʏ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ.**\n\n**» ɴᴏᴛᴇ:**  ᴏɴʟʏ sᴜᴅᴏ ᴜsᴇʀs ᴄᴀɴ ᴠɪᴇᴡ.",
+        reply_markup=buttons
     )
 
 # ─── Callback: View Sudo List ──────────────────────────────
@@ -75,7 +75,7 @@ async def view_sudo_list_callback(client, callback_query: CallbackQuery):
 
     owner = await app.get_users(OWNER_ID)
     caption = f"**˹ʟɪsᴛ ᴏғ ʙᴏᴛ ᴍᴏᴅᴇʀᴀᴛᴏʀs˼**\n\n**🌹Oᴡɴᴇʀ** ➥ {owner.mention}\n\n"
-    keyboard = [[InlineKeyboardButton("๏ ᴠɪᴇᴡ ᴏᴡɴᴇʀ ๏", url=f"tg://openmessage?user_id={OWNER_ID}")]]
+    buttons = [[styled_button("๏ ᴠɪᴇᴡ ᴏᴡɴᴇʀ ๏", url=f"tg://openmessage?user_id={OWNER_ID}")]]
 
     count = 0
     for user_id in SUDOERS:
@@ -85,8 +85,8 @@ async def view_sudo_list_callback(client, callback_query: CallbackQuery):
             user = await app.get_users(user_id)
             count += 1
             caption += f"**🎁 Sᴜᴅᴏ {count} »** {user.mention}\n"
-            keyboard.append([
-                InlineKeyboardButton(f"๏ ᴠɪᴇᴡ sᴜᴅᴏ {count} ๏", url=f"tg://openmessage?user_id={user_id}")
+            buttons.append([
+                styled_button(f"๏ ᴠɪᴇᴡ sᴜᴅᴏ {count} ๏", url=f"tg://openmessage?user_id={user_id}")
             ])
         except Exception:
             continue
@@ -94,18 +94,19 @@ async def view_sudo_list_callback(client, callback_query: CallbackQuery):
     if count == 0:
         caption += "_No additional sudoers yet._"
 
-    keyboard.append([InlineKeyboardButton("๏ ʙᴀᴄᴋ ๏", callback_data="sudo_list_back")])
-    await callback_query.message.edit_caption(caption=caption, reply_markup=InlineKeyboardMarkup(keyboard))
+    buttons.append([styled_button("๏ ʙᴀᴄᴋ ๏", callback_data="sudo_list_back", style="primary")])
+    await edit_message_caption_colored(chat_id=callback_query.message.chat.id, message_id=callback_query.message.id, caption=caption, reply_markup=buttons)
 
 # ─── Callback: Back to List Menu ────────────────────────────
 
 @app.on_callback_query(filters.regex("^sudo_list_back$"))
 async def back_to_sudo_list_menu(client, callback_query: CallbackQuery):
-    keyboard = [[InlineKeyboardButton("๏ ᴠɪᴇᴡ sᴜᴅᴏʟɪsᴛ ๏", callback_data="sudo_list_view")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await callback_query.message.edit_caption(
+    buttons = [[styled_button("๏ ᴠɪᴇᴡ sᴜᴅᴏʟɪsᴛ ๏", callback_data="sudo_list_view", style="primary")]]
+    await edit_message_caption_colored(
+        chat_id=callback_query.message.chat.id,
+        message_id=callback_query.message.id,
         caption="**» ᴄʜᴇᴄᴋ sᴜᴅᴏ ʟɪsᴛ ʙʏ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ.**\n\n**» ɴᴏᴛᴇ:**  ᴏɴʟʏ sᴜᴅᴏ ᴜsᴇʀs ᴄᴀɴ ᴠɪᴇᴡ.",
-        reply_markup=reply_markup
+        reply_markup=buttons
     )
 
 # ─── Delete All Sudo ───────────────────────────────────────

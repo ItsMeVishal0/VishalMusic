@@ -1,7 +1,8 @@
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton as ikb, InlineKeyboardMarkup as ikm, Message
+from pyrogram.types import Message
 from pyrogram.enums import ChatAction, ParseMode
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 import pyshorteners
 import httpx
 
@@ -26,12 +27,12 @@ async def short_urls(bot: Client, message: Message):
         dagd = shortener.dagd.short(link)
         clck = shortener.clckru.short(link)
 
-        markup = ikm([
-            [ikb("🔗 TinyURL", url=tiny)],
-            [ikb("🔗 Dagd", url=dagd), ikb("🔗 Clck.ru", url=clck)],
-        ])
+        buttons = [
+            [styled_button("🔗 TinyURL", url=tiny)],
+            [styled_button("🔗 Dagd", url=dagd), styled_button("🔗 Clck.ru", url=clck)],
+        ]
 
-        await message.reply_text("🔍 Here are your shortened URLs:", reply_markup=markup)
+        await send_message_colored(chat_id=message.chat.id, text="🔍 Here are your shortened URLs:", reply_markup=buttons)
 
     except Exception as e:
         print(f"Shortener error: {e}")
@@ -55,8 +56,8 @@ async def unshort_url(bot: Client, message: Message):
             response = await client.get(short_link)
             final_url = str(response.url)
 
-        markup = ikm([[ikb("🔗 View Final URL", url=final_url)]])
-        await message.reply_text(f"✅ **Unshortened URL:**\n`{final_url}`", reply_markup=markup, parse_mode=ParseMode.MARKDOWN)
+        buttons = [[styled_button("🔗 View Final URL", url=final_url)]]
+        await send_message_colored(chat_id=message.chat.id, text=f"✅ **Unshortened URL:**\n`{final_url}`", reply_markup=buttons)
 
     except Exception as e:
         print(f"Unshortener error: {e}")

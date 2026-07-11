@@ -1,6 +1,6 @@
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, edit_message_text_colored
 
 import asyncio
 import httpx
@@ -44,7 +44,7 @@ def _split_asn_org(org: str | None) -> tuple[str, str]:
         return asn, isp
     return "N/A", org
 
-def _build_card(ip: str, info: dict, score: int | None) -> tuple[str, InlineKeyboardMarkup]:
+def _build_card(ip: str, info: dict, score: int | None) -> tuple[str, list]:
     country = info.get("country")
     flag = _flag_emoji(country)
     city = info.get("city")
@@ -92,19 +92,17 @@ def _build_card(ip: str, info: dict, score: int | None) -> tuple[str, InlineKeyb
         f"🔢 <b>ASN</b> : <code>{s_asn}</code>\n"
     )
 
-    keyboard = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton("🗺️ View on Maps", url=maps_url),
-                InlineKeyboardButton("ℹ️ ipinfo", url=ipinfo_url),
-            ],
-            [
-                InlineKeyboardButton("🛡️ IPQualityScore", url=ipqs_url),
-                InlineKeyboardButton("🚫 AbuseIPDB", url=abuse_url),
-            ],
-        ]
-    )
-    return text, keyboard
+            styled_button("🗺️ View on Maps", url=maps_url),
+            styled_button("ℹ️ ipinfo", url=ipinfo_url),
+        ],
+        [
+            styled_button("🛡️ IPQualityScore", url=ipqs_url),
+            styled_button("🚫 AbuseIPDB", url=abuse_url),
+        ],
+    ]
+    return text, buttons
 
 # ---------- API Calls (async) ----------
 
@@ -175,9 +173,11 @@ async def ip_info_and_score(_, message):
         )
         return
 
-    text, keyboard = _build_card(ip_raw, ipinfo or {}, score)
-    await wait_msg.edit_text(
-        text,
-        reply_markup=keyboard,
+    text, buttons = _build_card(ip_raw, ipinfo or {}, score)
+    await edit_message_text_colored(
+        chat_id=wait_msg.chat.id,
+        message_id=wait_msg.id,
+        text=text,
+        reply_markup=buttons,
         disable_web_page_preview=True,
     )

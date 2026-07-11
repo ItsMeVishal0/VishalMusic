@@ -1,13 +1,11 @@
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import random
 import requests
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 SUPPORT_CHAT = "ItsMeVishalSupport"
-SUPPORT_BTN = InlineKeyboardMarkup(
-    [[InlineKeyboardButton("ꜱᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_CHAT}")]]
-)
+SUPPORT_BTN = [[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_CHAT}")]]
 
 CUTE_VIDEO = "https://files.catbox.moe/qibmue.mp4"
 
@@ -37,7 +35,7 @@ async def wish(_, m):
         chat_id=m.chat.id,
         animation=url,
         caption=caption,
-        reply_markup=SUPPORT_BTN,
+        reply_markup=buttons_to_inline_markup(SUPPORT_BTN),
     )
 
 
@@ -54,6 +52,6 @@ async def cute(_, message):
         document=CUTE_VIDEO,
         caption=caption,
         parse_mode=enums.ParseMode.MARKDOWN,
-        reply_markup=SUPPORT_BTN,
+        reply_markup=buttons_to_inline_markup(SUPPORT_BTN),
         reply_to_message_id=message.reply_to_message.message_id if message.reply_to_message else None,
     )

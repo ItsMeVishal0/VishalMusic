@@ -13,7 +13,6 @@ import asyncio
 
 from pyrogram import filters
 from pyrogram.types import (
-    InlineKeyboardMarkup, InlineKeyboardButton,
     CallbackQuery, Message, ChatInviteLink, ChatAdministratorRights
 )
 from pyrogram.enums import ChatMemberStatus
@@ -25,19 +24,20 @@ from pyrogram.errors import (
 from VISHALMUSIC import app
 from VISHALMUSIC.logging import LOGGER as _LOGGER_FACTORY
 from VISHALMUSIC.misc import SUDOERS
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
 from VISHALMUSIC.utils.database import get_assistant
 from VISHALMUSIC.utils.permissions import is_owner_or_sudoer, mention
 
 log = _LOGGER_FACTORY(__name__)
 
 
-def _confirm_kb(cmd: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([
+def _confirm_kb(cmd: str) -> list:
+    return [
         [
-            InlineKeyboardButton("Yes", callback_data=f"{cmd}_yes"),
-            InlineKeyboardButton("No", callback_data=f"{cmd}_no"),
+            styled_button("Yes", callback_data=f"{cmd}_yes", style="success"),
+            styled_button("No", callback_data=f"{cmd}_no", style="danger"),
         ]
-    ])
+    ]
 
 
 async def _safe_edit(cb: CallbackQuery, text: str):
@@ -76,8 +76,9 @@ async def deleteall_command(client, message: Message):
             "I need to be admin with delete_messages, invite_users & promote_members."
         )
 
-    await message.reply(
-        f"{message.from_user.mention}, confirm delete all messages?",
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=f"{message.from_user.mention}, confirm delete all messages?",
         reply_markup=_confirm_kb("deleteall")
     )
 

@@ -16,7 +16,7 @@ from VISHALMUSIC.utils.database import (
     remove_banned_user,
 )
 from VISHALMUSIC.utils.decorators.language import language
-from VISHALMUSIC.utils.extraction import extract_user
+from VISHALMUSIC.utils.formatters import extract_user
 from config import BANNED_USERS
 
 

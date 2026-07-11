@@ -1,6 +1,6 @@
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_photo_colored
 from config import BOT_USERNAME
 
 repo_caption = """**
@@ -18,24 +18,23 @@ repo_caption = """**
 @app.on_message(filters.command("repo"))
 async def show_repo(_, msg):
     buttons = [
-        [InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ʙᴀʙʏ ✨", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
+        [styled_button("➕ ᴀᴅᴅ ᴍᴇ ʙᴀʙʏ ✨", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
         [
-            InlineKeyboardButton("👑 ᴏᴡɴᴇʀ", url="https://t.me/Its_me_Vishall"),
-            InlineKeyboardButton("💬 ꜱᴜᴘᴘᴏʀᴛ", url="https://t.me/Its_me_Vishall")
+            styled_button("👑 ᴏᴡɴᴇʀ", url="https://t.me/Its_me_Vishall"),
+            styled_button("💬 ꜱᴜᴘᴘᴏʀᴛ", url="https://t.me/Its_me_Vishall"),
         ],
         [
-            InlineKeyboardButton("🛠️ ꜱᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ", url="https://t.me/Its_me_Vishall"),
-            InlineKeyboardButton("🎵 ɢɪᴛʜᴜʙ", url="https://github.com/ItsMeVishal0/VishalMusic")
-        ]
+            styled_button("🛠️ ꜱᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ", url="https://t.me/Its_me_Vishall"),
+            styled_button("🎵 ɢɪᴛʜᴜʙ", url="https://github.com/ItsMeVishal0/VishalMusic"),
+        ],
     ]
 
-    reply_markup = InlineKeyboardMarkup(buttons)
-
-    try:  
-        await msg.reply_photo(
+    try:
+        await send_photo_colored(
+            chat_id=msg.chat.id,
             photo="https://files.catbox.moe/a6sz5r.jpg",
             caption=repo_caption,
-            reply_markup=reply_markup
+            reply_markup=buttons,
         )
     except:
         pass

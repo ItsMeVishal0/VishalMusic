@@ -7,10 +7,11 @@ from io import StringIO
 from time import time
 
 from pyrogram import filters, Client
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.types import Message
 
 from config import OWNER_ID
 from VISHALMUSIC import app
+from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_text_colored, edit_reply_markup_colored
 
 
 async def aexec(code, client, message):
@@ -78,36 +79,48 @@ async def executor(client: Client, message: Message):
     final_output = f"<b>⥤ ʀᴇsᴜʟᴛ :</b>\n<pre language='python'>{evaluation}</pre>"
 
     t2 = time()
-    keyboard = InlineKeyboardMarkup(
+    keyboard = [
         [
-            [
-                InlineKeyboardButton(
-                    text="⏳",
-                    callback_data=f"runtime {round(t2 - t1, 3)} Seconds",
-                ),
-                InlineKeyboardButton(
-                    text="🗑",
-                    callback_data=f"forceclose abc|{message.from_user.id}",
-                ),
-            ]
+            styled_button(
+                text="⏳",
+                callback_data=f"runtime {round(t2 - t1, 3)} Seconds",
+                style="primary",
+            ),
+            styled_button(
+                text="🗑",
+                callback_data=f"forceclose abc|{message.from_user.id}",
+                style="danger",
+            ),
         ]
-    )
+    ]
 
     if len(final_output) > 4096:
         filename = "output.txt"
         with open(filename, "w+", encoding="utf8") as out_file:
             out_file.write(str(evaluation))
 
-        await message.reply_document(
+        msg = await message.reply_document(
             document=filename,
             caption=f"<b>⥤ ᴇᴠᴀʟ :</b>\n<code>{cmd[0:980]}</code>\n\n<b>⥤ ʀᴇsᴜʟᴛ :</b>\nAttached Document",
             quote=False,
-            reply_markup=keyboard,
         )
+        await edit_reply_markup_colored(chat_id=msg.chat.id, message_id=msg.id, reply_markup=keyboard)
         await message.delete()
         os.remove(filename)
     else:
-        await edit_or_reply(message, text=final_output, reply_markup=keyboard)
+        if message.from_user and message.from_user.is_self:
+            await edit_message_text_colored(
+                chat_id=message.chat.id,
+                message_id=message.id,
+                text=final_output,
+                reply_markup=keyboard,
+            )
+        else:
+            await send_message_colored(
+                chat_id=message.chat.id,
+                text=final_output,
+                reply_markup=keyboard,
+            )
 
 
 @app.on_callback_query(filters.regex(r"runtime"))

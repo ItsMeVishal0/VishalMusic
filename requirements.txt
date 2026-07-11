@@ -1,4 +1,6 @@
 aiofiles
+pyrogram
+urllib3
 aiohttp
 apscheduler
 bing_image_downloader
@@ -24,7 +26,7 @@ numpy
 opencv-python
 pillow==12.0.0
 psutil
-ntgcalls==2.0.6
+ntgcalls==2.2.5
 py-tgcalls==2.2.8
 pycryptodome
 pydub

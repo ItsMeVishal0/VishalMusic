@@ -1,16 +1,7 @@
-# ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Telegram File Download Handler
-# ═══════════════════════════════════════════════════════════
-
 import asyncio
 import os
 import time
 from typing import Optional, Union
-
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Voice
 
 import config
 from VISHALMUSIC import app
@@ -20,6 +11,7 @@ from VISHALMUSIC.utils.formatters import (
     get_readable_time,
     seconds_to_min,
 )
+from VISHALMUSIC.utils.colored_buttons import styled_button, edit_message_text_colored
 
 
 class TeleAPI:
@@ -72,7 +64,8 @@ class TeleAPI:
         base = os.path.realpath("downloads")
         if audio:
             try:
-                ext = (audio.file_name.split(".")[-1]) if not isinstance(audio, Voice) else "ogg"
+                fname = getattr(audio, "file_name", None)
+                ext = fname.split(".")[-1] if fname else "ogg"
             except Exception:
                 ext = "ogg"
             file_name = f"{audio.file_unique_id}.{ext}"
@@ -103,9 +96,7 @@ class TeleAPI:
                     speed_counter[message.id] = time.time()
                 elapsed = max(time.time() - speed_counter[message.id], 1e-3)
 
-                upl = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton(text="ᴄᴀɴᴄᴇʟ", callback_data="stop_downloading")]]
-                )
+                upl = [[styled_button(text="ᴄᴀɴᴄᴇʟ", callback_data="stop_downloading", style="danger")]]
 
                 percentage = current * 100 / total
                 try:
@@ -124,7 +115,9 @@ class TeleAPI:
                     low, high, check = int(lower[counter]), int(higher[counter]), int(checker[counter])
                     if low < percentage_i <= high and high == check:
                         try:
-                            await mystic.edit_text(
+                            await edit_message_text_colored(
+                                chat_id=mystic.chat.id,
+                                message_id=mystic.id,
                                 text=_["tg_1"].format(
                                     app.mention, total_size, completed_size, str(percentage)[:5], speed_h, eta
                                 ),
@@ -157,8 +150,3 @@ class TeleAPI:
             return False
         config.lyrical.pop(mystic.id, None)
         return True
-
-# ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   github.com/ItsMeVishal0/VishalMusic
-# ═══════════════════════════════════════════════════════════
