@@ -50,6 +50,17 @@ RECENT_ARTISTS = {}    # {chat_id: [artist, artist, ...]}  — last 10 artists
 AUTO_PLAYING = {}
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Structural episode/season detection — module-level so both
+# get_best_song() AND the fallback loop in auto_play_next() can use it.
+# Catches ANY show/podcast/reality without a named blocklist.
+#   "Episode 12", "Ep 5", "E15", "S01E05", "Season 1 Episode 3"
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_EPISODE_RE = re.compile(
+    r"(?:ep(?:isode)?\s*\d+|s\d+e\d+|season\s+\d+)",
+    re.IGNORECASE,
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🚫 DEVOTIONAL WORDS — hard-skip when mood != devotional
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -690,10 +701,7 @@ async def get_best_song(chat_id, queries, last_title, last_vidid, artist, movie,
         "bass boosted", "cover", "karaoke", "instrumental", "sped up",
     ]
 
-    # Structural episode/season detection — catches ANY show/podcast/reality
-    # without needing a named blocklist. Patterns:
-    #   "Episode 12", "Ep 5", "E15", "S01E05", "Season 1 Episode 3"
-    _EPISODE_RE = re.compile(r"(?:ep(?:isode)?\s*\d+|s\d+e\d+|season\s+\d+)", re.IGNORECASE)
+    # _EPISODE_RE is defined at module level — reused here
     blocked_langs = set(INCOMPATIBLE_LANGS.get(lang, []))
 
     # Recent artist counts — penalise over-repeated artists
