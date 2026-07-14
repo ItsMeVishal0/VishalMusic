@@ -11,7 +11,7 @@ from pyrogram.types import Message
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.database import get_loop, set_loop
 from VISHALMUSIC.utils.decorators import AdminRightsCheck
-from VISHALMUSIC.utils.colored_buttons import send_message_colored
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from VISHALMUSIC.utils.inline import close_markup
 from config import BANNED_USERS
 
@@ -32,26 +32,23 @@ async def admins(cli, message: Message, _, chat_id):
             if int(state) > 10:
                 state = 10
             await set_loop(chat_id, state)
-            return await send_message_colored(
-                chat_id=message.chat.id,
+            return await message.reply_text(
                 text=_["admin_18"].format(state, message.from_user.mention),
-                reply_markup=close_markup(_),
+                reply_markup=buttons_to_inline_markup(close_markup(_)),
             )
         else:
             return await message.reply_text(_["admin_17"])
     elif state.lower() == "enable":
         await set_loop(chat_id, 10)
-        return await send_message_colored(
-            chat_id=message.chat.id,
+        return await message.reply_text(
             text=_["admin_18"].format(state, message.from_user.mention),
-            reply_markup=close_markup(_),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
     elif state.lower() == "disable":
         await set_loop(chat_id, 0)
-        return await send_message_colored(
-            chat_id=message.chat.id,
+        return await message.reply_text(
             text=_["admin_19"].format(message.from_user.mention),
-            reply_markup=close_markup(_),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
     else:
         return await message.reply_text(usage)

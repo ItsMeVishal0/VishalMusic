@@ -6,7 +6,7 @@ from pyrogram.types import Message
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils.decorators import AdminRightsCheck
-from VISHALMUSIC.utils.colored_buttons import send_message_colored
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from VISHALMUSIC.utils.inline import close_markup
 from config import BANNED_USERS
 
@@ -22,15 +22,14 @@ async def admins(Client, message: Message, _, chat_id):
     try:
         popped = check.pop(0)
     except:
-        return await send_message_colored(chat_id=message.chat.id, text=_["admin_15"], reply_markup=close_markup(_))
+        return await message.reply_text(text=_["admin_15"], reply_markup=buttons_to_inline_markup(close_markup(_)))
     check = db.get(chat_id)
     if not check:
         check.insert(0, popped)
-        return await send_message_colored(chat_id=message.chat.id, text=_["admin_15"], reply_markup=close_markup(_))
+        return await message.reply_text(text=_["admin_15"], reply_markup=buttons_to_inline_markup(close_markup(_)))
     random.shuffle(check)
     check.insert(0, popped)
-    await send_message_colored(
-        chat_id=message.chat.id,
+    await message.reply_text(
         text=_["admin_16"].format(message.from_user.mention),
-        reply_markup=close_markup(_)
+        reply_markup=buttons_to_inline_markup(close_markup(_))
     )
