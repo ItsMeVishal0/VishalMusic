@@ -77,16 +77,9 @@ async def settings_back_markup(client, callback: CallbackQuery, _):
         )
     else:
         buttons = setting_markup(_)
-        result = await edit_reply_markup_colored(
-            callback.message.chat.id, callback.message.id,
-            reply_markup=buttons,
+        await callback.message.edit_reply_markup(
+            reply_markup=buttons_to_inline_markup(buttons),
         )
-        # Fallback to Pyrogram if Bot API fails
-        if not result:
-            from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-            await callback.message.edit_reply_markup(
-                reply_markup=buttons_to_inline_markup(buttons),
-            )
 
 # ─── CALLBACK WITHOUT ADMIN RIGHTS ──────────────────────────────────
 

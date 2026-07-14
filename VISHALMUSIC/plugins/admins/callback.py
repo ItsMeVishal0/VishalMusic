@@ -163,10 +163,9 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await callback.answer()
         await music_off(chat_id)
         await VISHAL.pause_stream(chat_id)
-        await send_message_colored(
-            callback.message.chat.id,
-            _["admin_2"].format(user_mention),
-            reply_markup=close_markup(_),
+        await callback.message.reply_text(
+            text=_["admin_2"].format(user_mention),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
 
     elif command == "Resume":
@@ -175,20 +174,18 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await callback.answer()
         await music_on(chat_id)
         await VISHAL.resume_stream(chat_id)
-        await send_message_colored(
-            callback.message.chat.id,
-            _["admin_4"].format(user_mention),
-            reply_markup=close_markup(_),
+        await callback.message.reply_text(
+            text=_["admin_4"].format(user_mention),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
 
     elif command in ["Stop", "End"]:
         await callback.answer()
         await VISHAL.stop_stream(chat_id)
         await set_loop(chat_id, 0)
-        await send_message_colored(
-            callback.message.chat.id,
-            _["admin_5"].format(user_mention),
-            reply_markup=close_markup(_),
+        await callback.message.reply_text(
+            text=_["admin_5"].format(user_mention),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
         await callback.message.delete()
 
@@ -237,24 +234,12 @@ async def manage_callback(client, callback: CallbackQuery, _):
 
 
 async def _colored_reply_photo(callback, photo, caption, buttons, db_ref, chat_id, markup_type):
-    """Send a new photo reply with colored buttons, fallback to Pyrogram."""
-    run_data = await send_photo_colored(
-        chat_id=callback.message.chat.id,
+    """Send a new photo reply with colored buttons using direct Pyrogram."""
+    run = await callback.message.reply_photo(
         photo=photo,
         caption=caption,
-        reply_markup=buttons,
+        reply_markup=buttons_to_inline_markup(buttons),
     )
-    if run_data and run_data.get("message_id"):
-        try:
-            run = await app.get_messages(callback.message.chat.id, run_data["message_id"])
-        except Exception:
-            run = run_data
-    else:
-        run = await callback.message.reply_photo(
-            photo=photo,
-            caption=caption,
-            reply_markup=buttons_to_inline_markup(buttons),
-        )
     playlist = db.get(chat_id)
     if playlist and len(playlist) > 0:
         playlist[0]["mystic"] = run
@@ -293,19 +278,17 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                     except Exception:
                         pass
                 await callback.edit_message_text(text_msg)
-                await send_message_colored(
-                    callback.message.chat.id,
-                    _["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_),
+                await callback.message.reply_text(
+                    text=_["admin_6"].format(user_mention, callback.message.chat.title),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 return await VISHAL.stop_stream(chat_id)
         except Exception:
             try:
                 await callback.edit_message_text(text_msg)
-                await send_message_colored(
-                    callback.message.chat.id,
-                    _["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_),
+                await callback.message.reply_text(
+                    text=_["admin_6"].format(user_mention, callback.message.chat.title),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 return await VISHAL.stop_stream(chat_id)
             except Exception:
