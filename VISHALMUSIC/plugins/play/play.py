@@ -31,7 +31,11 @@ from VISHALMUSIC.utils.inline import (
     slider_markup,
     track_markup,
 )
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    edit_message_text_colored,
+    send_photo_colored
+)
 from VISHALMUSIC.utils.logger import play_logs
 from VISHALMUSIC.utils.stream.stream import stream
 

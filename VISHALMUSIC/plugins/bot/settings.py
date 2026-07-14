@@ -29,7 +29,12 @@ from VISHALMUSIC.utils.inline.settings import (
     vote_mode_markup,
 )
 from VISHALMUSIC.utils.inline.start import private_panel
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    edit_message_text_colored,
+    edit_reply_markup_colored,
+    styled_button
+)
 from config import BANNED_USERS, OWNER_ID
 
 # ─── SETTINGS MESSAGE ──────────────────────────────────────────────

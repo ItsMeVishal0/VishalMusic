@@ -11,7 +11,12 @@ from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils import VISHALBIN, get_channeplayCB, seconds_to_min
 from VISHALMUSIC.utils.database import get_cmode, is_active_chat, is_music_playing
 from VISHALMUSIC.utils.decorators.language import language, languageCB
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    send_photo_colored,
+    edit_message_text_colored,
+    edit_reply_markup_colored
+)
 from VISHALMUSIC.utils.inline import queue_back_markup, queue_markup
 from config import BANNED_USERS
 
