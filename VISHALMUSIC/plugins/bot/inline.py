@@ -33,7 +33,7 @@ async def inline_query_handler(client, query):
             description = f"{views} | {duration} ᴍɪɴᴜᴛᴇs | {channel}  | {published}"
             buttons = buttons_to_inline_markup([
                 [
-                    styled_button(text="ʏᴏᴜᴛᴜʙᴇ 🎄", url=link),
+                    styled_button(text="ʏᴏᴜᴛᴜʙᴇ 🎄", url=link, style="primary"),
                 ],
             ])
             searched_text = f"""
