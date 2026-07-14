@@ -66,7 +66,7 @@ async def report_bug(_, msg: Message):
     buttons = [[styled_button("ᴄʟᴏsᴇ", callback_data="close_send_photo", style="danger")]]
     if msg.chat.username:
         link = f"https://t.me/{msg.chat.username}/{msg.id}"
-        buttons.insert(0, [styled_button("ᴠɪᴇᴡ ʙᴜɢ", url=link)])
+        buttons.insert(0, [styled_button("ᴠɪᴇᴡ ʙᴜɢ", url=link)], style="primary")
 
     await send_message_colored(
         chat_id=-1002077986660,

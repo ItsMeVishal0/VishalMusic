@@ -94,12 +94,12 @@ def _build_card(ip: str, info: dict, score: int | None) -> tuple[str, list]:
 
     buttons = [
         [
-            styled_button("🗺️ View on Maps", url=maps_url),
-            styled_button("ℹ️ ipinfo", url=ipinfo_url),
+            styled_button("🗺️ View on Maps", url=maps_url),, style="primary"
+            styled_button("ℹ️ ipinfo", url=ipinfo_url),, style="primary"
         ],
         [
-            styled_button("🛡️ IPQualityScore", url=ipqs_url),
-            styled_button("🚫 AbuseIPDB", url=abuse_url),
+            styled_button("🛡️ IPQualityScore", url=ipqs_url),, style="primary"
+            styled_button("🚫 AbuseIPDB", url=abuse_url),, style="primary"
         ],
     ]
     return text, buttons

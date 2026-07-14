@@ -24,7 +24,7 @@ def setting_markup(_):
 def vote_mode_markup(_, current, mode: Union[bool, str] = None):
     buttons = [
         [
-            styled_button(text="Vᴏᴛɪɴɢ ᴍᴏᴅᴇ ➜", callback_data="VOTEANSWER"),
+            styled_button(text="Vᴏᴛɪɴɢ ᴍᴏᴅᴇ ➜", callback_data="VOTEANSWER"),, style="primary"
             styled_button(
                 text=_["ST_B_5"] if mode == True else _["ST_B_6"],
                 callback_data="VOMODECHANGE",
@@ -33,7 +33,7 @@ def vote_mode_markup(_, current, mode: Union[bool, str] = None):
         ],
         [
             styled_button(text="-2", callback_data="FERRARIUDTI M", style="primary"),
-            styled_button(text=f"ᴄᴜʀʀᴇɴᴛ : {current}", callback_data="ANSWERVOMODE"),
+            styled_button(text=f"ᴄᴜʀʀᴇɴᴛ : {current}", callback_data="ANSWERVOMODE"),, style="primary"
             styled_button(text="+2", callback_data="FERRARIUDTI A", style="primary"),
         ],
         [
@@ -47,7 +47,7 @@ def vote_mode_markup(_, current, mode: Union[bool, str] = None):
 def auth_users_markup(_, status: Union[bool, str] = None):
     buttons = [
         [
-            styled_button(text=_["ST_B_7"], callback_data="AUTHANSWER"),
+            styled_button(text=_["ST_B_7"], callback_data="AUTHANSWER"),, style="primary"
             styled_button(
                 text=_["ST_B_8"] if status == True else _["ST_B_9"],
                 callback_data="AUTH",
@@ -73,7 +73,7 @@ def playmode_users_markup(
 ):
     buttons = [
         [
-            styled_button(text=_["ST_B_10"], callback_data="SEARCHANSWER"),
+            styled_button(text=_["ST_B_10"], callback_data="SEARCHANSWER"),, style="primary"
             styled_button(
                 text=_["ST_B_11"] if Direct == True else _["ST_B_12"],
                 callback_data="MODECHANGE",
@@ -81,7 +81,7 @@ def playmode_users_markup(
             ),
         ],
         [
-            styled_button(text=_["ST_B_13"], callback_data="AUTHANSWER"),
+            styled_button(text=_["ST_B_13"], callback_data="AUTHANSWER"),, style="primary"
             styled_button(
                 text=_["ST_B_8"] if Group == True else _["ST_B_9"],
                 callback_data="CHANNELMODECHANGE",
@@ -89,7 +89,7 @@ def playmode_users_markup(
             ),
         ],
         [
-            styled_button(text=_["ST_B_14"], callback_data="PLAYTYPEANSWER"),
+            styled_button(text=_["ST_B_14"], callback_data="PLAYTYPEANSWER"),, style="primary"
             styled_button(
                 text=_["ST_B_8"] if Playtype == True else _["ST_B_9"],
                 callback_data="PLAYTYPECHANGE",

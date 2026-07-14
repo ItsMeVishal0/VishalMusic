@@ -32,8 +32,8 @@ async def short_urls(bot: Client, message: Message):
         clck = shortener.clckru.short(link)
 
         buttons = [
-            [styled_button("🔗 TinyURL", url=tiny)],
-            [styled_button("🔗 Dagd", url=dagd), styled_button("🔗 Clck.ru", url=clck)],
+            [styled_button("🔗 TinyURL", url=tiny)],, style="primary"
+            [styled_button("🔗 Dagd", url=dagd), styled_button("🔗 Clck.ru", url=clck)],, style="primary"
         ]
 
         await send_message_colored(chat_id=message.chat.id, text="🔍 Here are your shortened URLs:", reply_markup=buttons)

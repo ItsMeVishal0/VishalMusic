@@ -143,7 +143,7 @@ async def goodbye_handler(client, update: ChatMemberUpdated):
         mention=user.mention, name=user.first_name, uid=user.id, uname=user.username or "No Username",
     )
     try:
-        await send_message_colored(cid, text, [[styled_button("👋", url=f"tg://openmessage?user_id={user.id}")]])
+        await send_message_colored(cid, text, [[styled_button("👋", url=f"tg://openmessage?user_id={user.id}")]], style="primary")
     except Exception:
         try:
             await client.send_message(cid, text)

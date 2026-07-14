@@ -163,8 +163,8 @@ async def welcome(client, update: ChatMemberUpdated):
                 photo=img,
                 caption=caption,
                 reply_markup=[
-                    [styled_button(BTN_VIEW, url=f"tg://openmessage?user_id={user.id}")],
-                    [styled_button(BTN_ADD, url=f"https://t.me/{client.username}?startgroup=true")],
+                    [styled_button(BTN_VIEW, url=f"tg://openmessage?user_id={user.id}")],, style="primary"
+                    [styled_button(BTN_ADD, url=f"https://t.me/{client.username}?startgroup=true")],, style="primary"
                 ]
             )
         except TopicClosed:

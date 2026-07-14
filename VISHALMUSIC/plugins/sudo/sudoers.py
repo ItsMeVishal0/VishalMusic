@@ -86,7 +86,7 @@ async def view_sudo_list_callback(client, callback_query: CallbackQuery):
             count += 1
             caption += f"**🎁 Sᴜᴅᴏ {count} »** {user.mention}\n"
             buttons.append([
-                styled_button(f"๏ ᴠɪᴇᴡ sᴜᴅᴏ {count} ๏", url=f"tg://openmessage?user_id={user_id}")
+                styled_button(f"๏ ᴠɪᴇᴡ sᴜᴅᴏ {count} ๏", url=f"tg://openmessage?user_id={user_id}", style="primary")
             ])
         except Exception:
             continue

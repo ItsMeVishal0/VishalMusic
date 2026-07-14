@@ -99,7 +99,7 @@ async def pack_clone(client, message):
         )
         await proc.edit(
             f"cloned {len(items)} stickers!",
-            reply_markup=buttons_to_inline_markup([[styled_button("view pack", url=f"https://t.me/addstickers/{short}")]]),
+            reply_markup=buttons_to_inline_markup([[styled_button("view pack", url=f"https://t.me/addstickers/{short}")]]),, style="primary"
         )
     except StickersetInvalid:
         await proc.edit("invalid sticker set")
