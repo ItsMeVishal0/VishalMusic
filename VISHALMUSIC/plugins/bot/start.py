@@ -187,12 +187,21 @@ async def start_pm(client, message: Message, _):
         out = private_panel(_)
         
         # Send start message with IMAGE (user photo or fallback)
-        await send_photo_colored(
+        result = await send_photo_colored(
             chat_id=message.chat.id,
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
             reply_markup=out,
         )
+        
+        # Fallback: If colored buttons API failed, use regular Pyrogram
+        if not result:
+            from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+            await message.reply_photo(
+                photo=start_photo,
+                caption=_["start_2"].format(message.from_user.mention, app.mention),
+                reply_markup=buttons_to_inline_markup(out),
+            )
         
         # Log
         if await is_on_off(2):
@@ -242,12 +251,21 @@ async def start_gp(client, message: Message, _):
         start_photo = random.choice(config.START_IMGS)
     
     # Direct reply with IMAGE for groups
-    await send_photo_colored(
+    result = await send_photo_colored(
         chat_id=message.chat.id,
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
         reply_markup=out,
     )
+    
+    # Fallback: If colored buttons API failed, use regular Pyrogram
+    if not result:
+        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+        await message.reply_photo(
+            photo=start_photo,
+            caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+            reply_markup=buttons_to_inline_markup(out),
+        )
     
     return await add_served_chat(message.chat.id)
 
