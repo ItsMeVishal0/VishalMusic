@@ -767,25 +767,13 @@ async def slider_queries(client, CallbackQuery, _):
         )
 
         buttons = slider_markup(_, vidid, user_id, query, query_type, cplay, fplay)
-        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, edit_message_media_colored
-        media_dict = {
-            "type": "photo",
-            "media": thumbnail,
-            "caption": _["play_10"].format(title.title(), duration_min),
-            "parse_mode": "HTML",
-        }
-        result = await edit_message_media_colored(
-            CallbackQuery.message.chat.id, CallbackQuery.message.id,
-            media=media_dict, reply_markup=buttons,
+        med = InputMediaPhoto(
+            media=thumbnail,
+            caption=_["play_10"].format(title.title(), duration_min),
         )
-        if not result:
-            med = InputMediaPhoto(
-                media=thumbnail,
-                caption=_["play_10"].format(title.title(), duration_min),
-            )
-            await CallbackQuery.edit_message_media(
-                media=med, reply_markup=buttons_to_inline_markup(buttons)
-            )
+        await CallbackQuery.edit_message_media(
+            media=med, reply_markup=buttons_to_inline_markup(buttons)
+        )
         await CallbackQuery.answer(_["playcb_2"])
 
     except Exception:

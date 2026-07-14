@@ -18,12 +18,7 @@ from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.database import add_active_video_chat, is_active_chat
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.inline import aq_markup, close_markup, stream_markup
-from VISHALMUSIC.utils.colored_buttons import (
-    send_photo_colored,
-    send_message_colored,
-    edit_message_text_colored,
-    buttons_to_inline_markup,
-)
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from VISHALMUSIC.utils.pastebin import VISHALBIN
 from VISHALMUSIC.utils.stream.queue import put_queue, put_queue_index
 from VISHALMUSIC.utils.thumbnails import get_thumb
