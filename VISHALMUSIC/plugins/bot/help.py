@@ -15,7 +15,7 @@ from VISHALMUSIC.utils.inline.help import (
     second_page,
 )
 from VISHALMUSIC.utils.inline.start import private_panel
-from VISHALMUSIC.utils.colored_buttons import send_photo_colored, edit_message_caption_colored, edit_message_text_colored, send_message_colored, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
 
@@ -34,34 +34,18 @@ async def helper_private(client: Client, update: Union[Message, types.CallbackQu
 
     if is_cb:
         await update.answer()
-        # Try colored edit first (Bot API HTTP for colors)
-        result = await edit_message_caption_colored(
-            update.message.chat.id, 
-            update.message.id, 
-            caption, 
-            reply_markup=keyboard
+        # Telegram native colored button support - direct edit
+        await update.message.edit_caption(
+            caption=caption, 
+            reply_markup=buttons_to_inline_markup(keyboard)
         )
-        # Fallback to Pyrogram if Bot API fails
-        if not result:
-            await update.message.edit_caption(
-                caption=caption, 
-                reply_markup=buttons_to_inline_markup(keyboard)
-            )
     else:
-        # Try colored send first (Bot API HTTP for colors)
-        result = await send_photo_colored(
-            chat_id=update.chat.id,
+        # Direct Pyrogram send
+        await update.reply_photo(
             photo=HELP_IMG_URL,
             caption=caption,
-            reply_markup=keyboard,
+            reply_markup=buttons_to_inline_markup(keyboard),
         )
-        # Fallback to Pyrogram if Bot API fails
-        if not result:
-            await update.reply_photo(
-                photo=HELP_IMG_URL,
-                caption=caption,
-                reply_markup=buttons_to_inline_markup(keyboard),
-            )
 
 # ────────────────────────────────────────────────  group /help notice ─
 

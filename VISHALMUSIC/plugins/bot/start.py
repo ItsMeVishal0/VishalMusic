@@ -183,27 +183,16 @@ async def start_pm(client, message: Message, _):
         if not start_photo:
             start_photo = random.choice(config.START_IMGS)
         
-        # Original start.py buttons for private
+        # Get buttons with Telegram native colored button support
         out = private_panel(_)
+        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
         
-        # Import colored functions
-        from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
-        
-        # Try colored send first (Bot API HTTP for colors)
-        result = await send_photo_colored(
-            chat_id=message.chat.id,
+        # Direct Pyrogram (Telegram natively handles colors now!)
+        await message.reply_photo(
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=out,
+            reply_markup=buttons_to_inline_markup(out),
         )
-        
-        # Fallback to Pyrogram if Bot API fails
-        if not result:
-            await message.reply_photo(
-                photo=start_photo,
-                caption=_["start_2"].format(message.from_user.mention, app.mention),
-                reply_markup=buttons_to_inline_markup(out),
-            )
         
         # Log
         if await is_on_off(2):
@@ -252,24 +241,15 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # Import colored functions
-    from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
+    # Get buttons with Telegram native colored button support
+    from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
     
-    # Try colored send first (Bot API HTTP for colors)
-    result = await send_photo_colored(
-        chat_id=message.chat.id,
+    # Direct Pyrogram (Telegram natively handles colors!)
+    await message.reply_photo(
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=out,
+        reply_markup=buttons_to_inline_markup(out),
     )
-    
-    # Fallback to Pyrogram if Bot API fails
-    if not result:
-        await message.reply_photo(
-            photo=start_photo,
-            caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-            reply_markup=buttons_to_inline_markup(out),
-        )
     
     return await add_served_chat(message.chat.id)
 
