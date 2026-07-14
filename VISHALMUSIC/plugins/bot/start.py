@@ -129,14 +129,18 @@ async def start_pm(client, message: Message, _):
             searched_text = _["start_6"].format(
                 title, duration, views, published, channellink, channel, app.mention
             )
-            key = InlineKeyboardMarkup(
+            
+            # Import colored button functions
+            from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+            
+            # Create colored buttons
+            key = [
                 [
-                    [
-                        InlineKeyboardButton(text=_["S_B_6"], url=link),
-                        InlineKeyboardButton(text=_["S_B_4"], url=config.SUPPORT_CHAT),
-                    ],
-                ]
-            )
+                    styled_button(text=_["S_B_6"], url=link, style="primary"),
+                    styled_button(text=_["S_B_4"], url=config.SUPPORT_CHAT, style="primary"),
+                ],
+            ]
+            
             await m.delete()
             await app.send_photo(
                 chat_id=message.chat.id,
