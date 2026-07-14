@@ -2,26 +2,38 @@
 #        😎  VISHAL MUSIC BOT  😎
 #   GitHub : github.com/ItsMeVishal0/VishalMusic
 #   Developer : @ItsMeVishalBots | Telegram
-#   Module : Colored Inline Buttons (Telegram Bot API Direct)
+#   Module : Colored Inline Buttons (Bot API 9.4+)
 # ═══════════════════════════════════════════════════════════
 
 """
-Telegram Bot API 9.4+ Colored Buttons Implementation
-────────────────────────────────────────────────────
+⚠️ CRITICAL: Telegram colored buttons require 2 things:
+   1. Telegram client updated AFTER February 9, 2026
+   2. Bot API HTTP calls (Kurigram/Pyrogram don't support 'style' field)
 
-Since February 9, 2026, Telegram supports colored inline buttons via Bot API.
-This module implements colored buttons using direct HTTP calls to Bot API.
+This module bypasses Kurigram and sends buttons directly via Telegram Bot API HTTP.
 
 Supported Styles:
-  • "primary" - Blue (recommended for main actions)
-  • "success" - Green (recommended for positive actions)  
-  • "danger"  - Red (recommended for destructive actions)
-  • None      - Default app-specific style
+  • "primary" - Blue (main actions)
+  • "success" - Green (positive actions like confirm)
+  • "danger"  - Red (destructive actions like delete)
+  • None - Default button color
 
-Note: Pyrogram doesn't support 'style' parameter yet, so we use direct Bot API calls.
+Example Usage:
+    buttons = [[
+        styled_button("✅ Yes", callback_data="yes", style="success"),
+        styled_button("❌ No", callback_data="no", style="danger")
+    ]]
+    
+    # Try Bot API first (with colors)
+    result = await send_message_colored(chat_id, "Choose:", buttons)
+    
+    # Fallback to Kurigram if Bot API fails (no colors)
+    if not result:
+        await message.reply_text("Choose:", reply_markup=buttons_to_inline_markup(buttons))
 """
 
 import asyncio
+import json
 import logging
 from typing import Dict, List, Optional, Union
 
@@ -32,12 +44,92 @@ import config
 
 logger = logging.getLogger(__name__)
 
-# Global session for connection pooling
+# Telegram Bot API base URL
+BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
+
+# Global aiohttp session
 _session: Optional[aiohttp.ClientSession] = None
 
 
 # ═══════════════════════════════════════════════════════════
-#  HELPER FUNCTIONS
+#  CORE FUNCTIONS
+# ═══════════════════════════════════════════════════════════
+
+async def _get_session() -> aiohttp.ClientSession:
+    """Get or create aiohttp session."""
+    global _session
+    
+    if _session is None or _session.closed:
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)
+        _session = aiohttp.ClientSession(timeout=timeout)
+    
+    return _session
+
+
+async def _bot_api_call(method: str, payload: dict) -> Optional[dict]:
+    """Make HTTP POST to Telegram Bot API.
+    
+    Args:
+        method: API method (e.g., 'sendMessage')
+        payload: JSON payload
+        
+    Returns:
+        Response 'result' field if successful, None otherwise
+    """
+    if not config.BOT_TOKEN:
+        logger.error("❌ BOT_TOKEN not set! Colored buttons will NOT work.")
+        return None
+    
+    url = f"{BOT_API_URL}/{method}"
+    session = await _get_session()
+    
+    try:
+        async with session.post(url, json=payload) as resp:
+            data = await resp.json()
+            
+            if data.get("ok"):
+                logger.debug(f"✅ Bot API {method} success")
+                return data.get("result")
+            else:
+                error = data.get("description", "Unknown error")
+                logger.warning(f"❌ Bot API {method} failed: {error}")
+                return None
+    
+    except asyncio.TimeoutError:
+        logger.error(f"⏱️ Bot API {method} timeout")
+        return None
+    except Exception as e:
+        logger.error(f"💥 Bot API {method} exception: {e}")
+        return None
+
+
+def _build_inline_keyboard(buttons: List[List[Dict]]) -> List[List[Dict]]:
+    """Convert styled button dicts to Bot API inline_keyboard format.
+    
+    This preserves the 'style' field which Kurigram doesn't support.
+    """
+    keyboard = []
+    for row in buttons:
+        button_row = []
+        for btn in row:
+            api_btn = {"text": btn["text"]}
+            
+            if "callback_data" in btn:
+                api_btn["callback_data"] = btn["callback_data"]
+            if "url" in btn:
+                api_btn["url"] = btn["url"]
+            if "style" in btn:
+                # ⭐ THIS is the magic field for colored buttons!
+                api_btn["style"] = btn["style"]
+            
+            button_row.append(api_btn)
+        keyboard.append(button_row)
+    
+    return keyboard
+
+
+# ═══════════════════════════════════════════════════════════
+#  PUBLIC API - BUTTON CREATION
 # ═══════════════════════════════════════════════════════════
 
 def styled_button(
@@ -46,20 +138,16 @@ def styled_button(
     url: str = None,
     style: str = None
 ) -> Dict[str, str]:
-    """Create a button dictionary with optional style.
+    """Create a colored button dictionary.
     
     Args:
-        text: Button label text
-        callback_data: Data to send in callback query (1-64 bytes)
-        url: HTTP/tg:// URL to open when pressed
-        style: Color style - "primary" (blue), "success" (green), "danger" (red)
+        text: Button label
+        callback_data: Callback data (1-64 bytes)
+        url: URL to open
+        style: "primary" (blue) | "success" (green) | "danger" (red)
     
     Returns:
-        Button dictionary compatible with Bot API and our helper functions
-    
-    Example:
-        >>> styled_button("Click Me", callback_data="btn_clicked", style="primary")
-        {'text': 'Click Me', 'callback_data': 'btn_clicked', 'style': 'primary'}
+        Button dict with 'style' field
     """
     btn = {"text": text}
     
@@ -69,125 +157,32 @@ def styled_button(
         btn["url"] = url
     if style and style in ("primary", "success", "danger"):
         btn["style"] = style
-        
+    
     return btn
 
 
 def buttons_to_inline_markup(buttons: List[List[Dict]]) -> InlineKeyboardMarkup:
-    """Convert button dicts to Pyrogram InlineKeyboardMarkup (WITHOUT colors).
+    """Convert styled buttons to Kurigram InlineKeyboardMarkup (NO COLORS).
     
-    This is the FALLBACK function for when Bot API calls fail.
-    It creates standard Pyrogram buttons without colored styles.
-    
-    Args:
-        buttons: 2D list of button dictionaries from styled_button()
-        
-    Returns:
-        InlineKeyboardMarkup for use with Pyrogram methods
-        
-    Example:
-        >>> buttons = [[styled_button("Test", callback_data="test", style="primary")]]
-        >>> markup = buttons_to_inline_markup(buttons)
-        >>> await message.reply_text("Hello", reply_markup=markup)
+    Use as FALLBACK when Bot API fails. Buttons will work but WITHOUT colors.
     """
     keyboard = []
-    
     for row in buttons:
-        button_row = []
-        for btn_dict in row:
-            # Create Pyrogram button (ignore 'style' - not supported)
-            kwargs = {"text": btn_dict["text"]}
-            
-            if "callback_data" in btn_dict:
-                kwargs["callback_data"] = btn_dict["callback_data"]
-            if "url" in btn_dict:
-                kwargs["url"] = btn_dict["url"]
-            
-            button_row.append(InlineKeyboardButton(**kwargs))
-        
-        keyboard.append(button_row)
+        kb_row = []
+        for btn in row:
+            kwargs = {"text": btn["text"]}
+            if "callback_data" in btn:
+                kwargs["callback_data"] = btn["callback_data"]
+            if "url" in btn:
+                kwargs["url"] = btn["url"]
+            kb_row.append(InlineKeyboardButton(**kwargs))
+        keyboard.append(kb_row)
     
     return InlineKeyboardMarkup(keyboard)
 
 
-async def _get_session() -> aiohttp.ClientSession:
-    """Get or create aiohttp session for Bot API calls."""
-    global _session
-    
-    if _session is None or _session.closed:
-        _session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=10),
-            connector=aiohttp.TCPConnector(limit=100, limit_per_host=30)
-        )
-    
-    return _session
-
-
-def _build_inline_keyboard(buttons: List[List[Dict]]) -> List[List[Dict]]:
-    """Build inline_keyboard array for Bot API with style support.
-    
-    Args:
-        buttons: 2D list of button dicts from styled_button()
-        
-    Returns:
-        Bot API compatible inline_keyboard array
-    """
-    inline_keyboard = []
-    
-    for row in buttons:
-        button_row = []
-        for btn_dict in row:
-            # Copy button dict and include 'style' if present
-            api_button = {"text": btn_dict["text"]}
-            
-            if "callback_data" in btn_dict:
-                api_button["callback_data"] = btn_dict["callback_data"]
-            if "url" in btn_dict:
-                api_button["url"] = btn_dict["url"]
-            if "style" in btn_dict:
-                api_button["style"] = btn_dict["style"]  # ← Color magic happens here!
-            
-            button_row.append(api_button)
-        
-        inline_keyboard.append(button_row)
-    
-    return inline_keyboard
-
-
-async def _bot_api_call(method: str, data: Dict) -> Optional[Dict]:
-    """Make POST request to Telegram Bot API.
-    
-    Args:
-        method: Bot API method name (e.g., 'sendMessage', 'editMessageText')
-        data: Request payload
-        
-    Returns:
-        Response dict if successful, None if failed
-    """
-    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/{method}"
-    session = await _get_session()
-    
-    try:
-        async with session.post(url, json=data) as response:
-            if response.status == 200:
-                result = await response.json()
-                if result.get("ok"):
-                    return result.get("result")
-                else:
-                    logger.debug(f"Bot API {method} returned ok=false: {result.get('description')}")
-            else:
-                logger.debug(f"Bot API {method} failed: HTTP {response.status}")
-    
-    except asyncio.TimeoutError:
-        logger.debug(f"Bot API {method} timeout")
-    except Exception as e:
-        logger.debug(f"Bot API {method} error: {e}")
-    
-    return None
-
-
 # ═══════════════════════════════════════════════════════════
-#  PUBLIC COLORED BUTTON FUNCTIONS
+#  PUBLIC API - SEND/EDIT MESSAGES WITH COLORED BUTTONS
 # ═══════════════════════════════════════════════════════════
 
 async def send_message_colored(
@@ -197,36 +192,21 @@ async def send_message_colored(
     parse_mode: str = "HTML",
     disable_web_page_preview: bool = False
 ) -> Optional[Dict]:
-    """Send message with colored buttons via Bot API.
+    """Send message with COLORED buttons via Bot API HTTP.
     
-    Args:
-        chat_id: Target chat ID
-        text: Message text
-        reply_markup: 2D list of button dicts from styled_button()
-        parse_mode: Text parse mode (HTML/Markdown)
-        disable_web_page_preview: Disable link previews
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
-        
-    Example:
-        >>> buttons = [[
-        ...     styled_button("✅ Confirm", callback_data="confirm", style="success"),
-        ...     styled_button("❌ Cancel", callback_data="cancel", style="danger")
-        ... ]]
-        >>> result = await send_message_colored(chat_id, "Choose:", buttons)
-        >>> if not result:
-        ...     await message.reply_text("Choose:", reply_markup=buttons_to_inline_markup(buttons))
+    Returns None if failed - use Kurigram fallback in that case.
     """
-    data = {
+    payload = {
         "chat_id": chat_id,
         "text": text,
         "parse_mode": parse_mode,
         "disable_web_page_preview": disable_web_page_preview,
-        "reply_markup": {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        "reply_markup": {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     }
     
-    return await _bot_api_call("sendMessage", data)
+    return await _bot_api_call("sendMessage", payload)
 
 
 async def send_photo_colored(
@@ -236,31 +216,22 @@ async def send_photo_colored(
     reply_markup: List[List[Dict]] = None,
     parse_mode: str = "HTML"
 ) -> Optional[Dict]:
-    """Send photo with colored buttons via Bot API.
-    
-    Args:
-        chat_id: Target chat ID
-        photo: Photo file_id or HTTP URL
-        caption: Photo caption
-        reply_markup: 2D list of button dicts from styled_button()
-        parse_mode: Caption parse mode
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
-    """
-    data = {
+    """Send photo with COLORED buttons via Bot API HTTP."""
+    payload = {
         "chat_id": chat_id,
         "photo": photo,
         "parse_mode": parse_mode
     }
     
     if caption:
-        data["caption"] = caption
+        payload["caption"] = caption
     
     if reply_markup:
-        data["reply_markup"] = {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        payload["reply_markup"] = {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     
-    return await _bot_api_call("sendPhoto", data)
+    return await _bot_api_call("sendPhoto", payload)
 
 
 async def edit_message_text_colored(
@@ -271,20 +242,8 @@ async def edit_message_text_colored(
     parse_mode: str = "HTML",
     disable_web_page_preview: bool = False
 ) -> Optional[Dict]:
-    """Edit message text with colored buttons via Bot API.
-    
-    Args:
-        chat_id: Target chat ID
-        message_id: Message ID to edit
-        text: New text
-        reply_markup: 2D list of button dicts from styled_button()
-        parse_mode: Text parse mode
-        disable_web_page_preview: Disable link previews
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
-    """
-    data = {
+    """Edit message text + buttons with COLORS via Bot API HTTP."""
+    payload = {
         "chat_id": chat_id,
         "message_id": message_id,
         "text": text,
@@ -293,9 +252,11 @@ async def edit_message_text_colored(
     }
     
     if reply_markup:
-        data["reply_markup"] = {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        payload["reply_markup"] = {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     
-    return await _bot_api_call("editMessageText", data)
+    return await _bot_api_call("editMessageText", payload)
 
 
 async def edit_message_caption_colored(
@@ -305,19 +266,8 @@ async def edit_message_caption_colored(
     reply_markup: List[List[Dict]] = None,
     parse_mode: str = "HTML"
 ) -> Optional[Dict]:
-    """Edit message caption with colored buttons via Bot API.
-    
-    Args:
-        chat_id: Target chat ID
-        message_id: Message ID to edit
-        caption: New caption
-        reply_markup: 2D list of button dicts from styled_button()
-        parse_mode: Caption parse mode
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
-    """
-    data = {
+    """Edit message caption + buttons with COLORS via Bot API HTTP."""
+    payload = {
         "chat_id": chat_id,
         "message_id": message_id,
         "caption": caption,
@@ -325,9 +275,11 @@ async def edit_message_caption_colored(
     }
     
     if reply_markup:
-        data["reply_markup"] = {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        payload["reply_markup"] = {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     
-    return await _bot_api_call("editMessageCaption", data)
+    return await _bot_api_call("editMessageCaption", payload)
 
 
 async def edit_reply_markup_colored(
@@ -335,23 +287,19 @@ async def edit_reply_markup_colored(
     message_id: int,
     reply_markup: List[List[Dict]]
 ) -> Optional[Dict]:
-    """Edit only message buttons (reply markup) via Bot API.
+    """Edit ONLY buttons (keeps colors persistent) via Bot API HTTP.
     
-    Args:
-        chat_id: Target chat ID
-        message_id: Message ID to edit
-        reply_markup: 2D list of button dicts from styled_button()
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
+    ⭐ Use this in callback handlers to prevent color disappearing on button tap!
     """
-    data = {
+    payload = {
         "chat_id": chat_id,
         "message_id": message_id,
-        "reply_markup": {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        "reply_markup": {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     }
     
-    return await _bot_api_call("editMessageReplyMarkup", data)
+    return await _bot_api_call("editMessageReplyMarkup", payload)
 
 
 async def edit_message_media_colored(
@@ -360,27 +308,19 @@ async def edit_message_media_colored(
     media: Dict,
     reply_markup: List[List[Dict]] = None
 ) -> Optional[Dict]:
-    """Edit message media with colored buttons via Bot API.
-    
-    Args:
-        chat_id: Target chat ID
-        message_id: Message ID to edit
-        media: Media object (e.g., {"type": "photo", "media": "file_id"})
-        reply_markup: 2D list of button dicts from styled_button()
-        
-    Returns:
-        Message dict if successful, None if failed (use Pyrogram fallback)
-    """
-    data = {
+    """Edit message media + buttons with COLORS via Bot API HTTP."""
+    payload = {
         "chat_id": chat_id,
         "message_id": message_id,
         "media": media
     }
     
     if reply_markup:
-        data["reply_markup"] = {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+        payload["reply_markup"] = {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
     
-    return await _bot_api_call("editMessageMedia", data)
+    return await _bot_api_call("editMessageMedia", payload)
 
 
 # ═══════════════════════════════════════════════════════════
