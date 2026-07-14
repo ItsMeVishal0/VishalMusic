@@ -29,7 +29,7 @@ from VISHALMUSIC.utils.decorators.language import LanguageStart
 from VISHALMUSIC.utils.formatters import get_readable_time
 from VISHALMUSIC.utils.inline.help import first_page
 from VISHALMUSIC.utils.inline.start import private_panel, start_panel
-from VISHALMUSIC.utils.colored_buttons import send_photo_colored
+from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
 from config import BANNED_USERS
 from strings import get_string
 
@@ -186,7 +186,7 @@ async def start_pm(client, message: Message, _):
         # Original start.py buttons for private
         out = private_panel(_)
         
-        # Log FIRST (so we know function executed)
+        # Log FIRST
         if await is_on_off(2):
             username = f"@{message.from_user.username}" if message.from_user.username else "None"
             try:
@@ -197,30 +197,12 @@ async def start_pm(client, message: Message, _):
             except:
                 pass
         
-        # Try colored buttons first
-        try:
-            await send_photo_colored(
-                chat_id=message.chat.id,
-                photo=start_photo,
-                caption=_["start_2"].format(message.from_user.mention, app.mention),
-                reply_markup=out,
-            )
-        except Exception as e:
-            # Fallback to regular Pyrogram if colored buttons fail
-            try:
-                from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-                await message.reply_photo(
-                    photo=start_photo,
-                    caption=_["start_2"].format(message.from_user.mention, app.mention),
-                    reply_markup=buttons_to_inline_markup(out),
-                )
-            except Exception as fallback_error:
-                # Last resort: text-only message with buttons
-                from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-                await message.reply_text(
-                    _["start_2"].format(message.from_user.mention, app.mention),
-                    reply_markup=buttons_to_inline_markup(out),
-                )
+        # Send start message - EXACTLY like play.py (no try-except, direct await)
+        await message.reply_photo(
+            photo=start_photo,
+            caption=_["start_2"].format(message.from_user.mention, app.mention),
+            reply_markup=buttons_to_inline_markup(out) if hasattr(out, '__iter__') else out,
+        )
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
@@ -261,29 +243,12 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # Try colored buttons first
-    try:
-        await send_photo_colored(
-            chat_id=message.chat.id,
-            photo=start_photo,
-            caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-            reply_markup=out,
-        )
-    except Exception as e:
-        # Fallback to regular Pyrogram
-        try:
-            from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-            await message.reply_photo(
-                photo=start_photo,
-                caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-                reply_markup=buttons_to_inline_markup(out),
-            )
-        except Exception:
-            # Last resort: text message
-            await message.reply_text(
-                f"⚠️ Image load failed.\n\n{_['start_1'].format(app.mention, get_readable_time(uptime))}",
-                reply_markup=buttons_to_inline_markup(out),
-            )
+    # Direct reply - simple Pyrogram (no colored buttons complexity for groups)
+    await message.reply_photo(
+        photo=start_photo,
+        caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+        reply_markup=buttons_to_inline_markup(out) if hasattr(out, '__iter__') else out,
+    )
     
     return await add_served_chat(message.chat.id)
 
