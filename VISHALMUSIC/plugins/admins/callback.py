@@ -49,11 +49,6 @@ from VISHALMUSIC.utils.inline import close_markup, stream_markup
 from VISHALMUSIC.utils.inline.play import stream_markup_timer, generate_progress_bar
 from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
-    edit_reply_markup_colored,
-    edit_message_text_colored,
-    edit_message_caption_colored,
-    send_message_colored,
-    send_photo_colored,
     buttons_to_inline_markup,
 )
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
@@ -114,7 +109,7 @@ async def handle_upvote(callback: CallbackQuery, chat_id: int, counter, _):
             style="primary",
         )]]
         await callback.answer(_["admin_40"], show_alert=True)
-        await edit_reply_markup_colored(callback.message.chat.id, callback.message.id, reply_markup=markup)
+        await callback.message.edit_reply_markup(reply_markup=buttons_to_inline_markup(markup))
         return None, None
 
 
@@ -582,30 +577,22 @@ async def _now_playing_timer():
                 )
 
                 if buttons:
-                    # Single API call — caption + markup together = zero blink
-                    result = await edit_message_caption_colored(
-                        chat_id=m_chat_id,
-                        message_id=m_id,
-                        caption=new_caption,
-                        reply_markup=buttons,
-                    )
-                    if not result:
-                        # Fallback: Pyrogram (no colors, but at least updates)
-                        if not isinstance(mystic, dict):
-                            try:
-                                await mystic.edit_caption(
-                                    caption=new_caption,
-                                    reply_markup=buttons_to_inline_markup(buttons),
-                                )
-                            except Exception:
-                                pass
+                    # Direct Pyrogram edit (Telegram native colored buttons)
+                    if not isinstance(mystic, dict):
+                        try:
+                            await mystic.edit_caption(
+                                caption=new_caption,
+                                reply_markup=buttons_to_inline_markup(buttons),
+                            )
+                        except Exception:
+                            pass
                 else:
                     # Timer throttled — only update caption (no markup change)
-                    await edit_message_caption_colored(
-                        chat_id=m_chat_id,
-                        message_id=m_id,
-                        caption=new_caption,
-                    )
+                    if not isinstance(mystic, dict):
+                        try:
+                            await mystic.edit_caption(caption=new_caption)
+                        except Exception:
+                            pass
             except Exception:
                 continue
 

@@ -11,29 +11,17 @@ from VISHALMUSIC.utils.decorators import AdminRightsCheck
 from VISHALMUSIC.utils.inline import close_markup, stream_markup
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
-from VISHALMUSIC.utils.colored_buttons import send_message_colored, send_photo_colored, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from config import BANNED_USERS
 
 
 async def _skip_send_photo(chat_id, message, photo, caption, buttons, db_ref, chat_id_ref, markup_type):
     from VISHALMUSIC.misc import db
-    run_data = await send_photo_colored(
-        chat_id=chat_id,
+    run = await message.reply_photo(
         photo=photo,
         caption=caption,
-        reply_markup=buttons,
+        reply_markup=buttons_to_inline_markup(buttons),
     )
-    if run_data and run_data.get("message_id"):
-        try:
-            run = await app.get_messages(chat_id, run_data["message_id"])
-        except Exception:
-            run = run_data
-    else:
-        run = await message.reply_photo(
-            photo=photo,
-            caption=caption,
-            reply_markup=buttons_to_inline_markup(buttons),
-        )
     db[chat_id_ref][0]["mystic"] = run
     db[chat_id_ref][0]["markup"] = markup_type
     return run
@@ -67,13 +55,12 @@ async def skip(cli, message: Message, _, chat_id):
                                 await auto_clean(popped)
                             if not check:
                                 try:
-                                    await send_message_colored(
-                                        message.chat.id,
+                                    await message.reply_text(
                                         text=_["admin_6"].format(
                                             message.from_user.mention,
                                             message.chat.title,
                                         ),
-                                        reply_markup=close_markup(_),
+                                        reply_markup=buttons_to_inline_markup(close_markup(_)),
                                     )
                                     await VISHAL.stop_stream(chat_id)
                                 except:
@@ -111,12 +98,11 @@ async def skip(cli, message: Message, _, chat_id):
                         return
                     except Exception:
                         pass
-                await send_message_colored(
-                    message.chat.id,
+                await message.reply_text(
                     text=_["admin_6"].format(
                         message.from_user.mention, message.chat.title
                     ),
-                    reply_markup=close_markup(_),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 try:
                     return await VISHAL.stop_stream(chat_id)
@@ -124,12 +110,11 @@ async def skip(cli, message: Message, _, chat_id):
                     return
         except:
             try:
-                await send_message_colored(
-                    message.chat.id,
+                await message.reply_text(
                     text=_["admin_6"].format(
                         message.from_user.mention, message.chat.title
                     ),
-                    reply_markup=close_markup(_),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 return await VISHAL.stop_stream(chat_id)
             except:

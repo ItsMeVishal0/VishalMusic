@@ -29,7 +29,7 @@ from VISHALMUSIC.utils.inline.settings import (
     vote_mode_markup,
 )
 from VISHALMUSIC.utils.inline.start import private_panel
-from VISHALMUSIC.utils.colored_buttons import send_message_colored, edit_message_text_colored, edit_reply_markup_colored
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from config import BANNED_USERS, OWNER_ID
 
 # ─── SETTINGS MESSAGE ──────────────────────────────────────────────
@@ -38,18 +38,10 @@ from config import BANNED_USERS, OWNER_ID
 @language
 async def settings_mar(client, message: Message, _):
     buttons = setting_markup(_)
-    result = await send_message_colored(
-        message.chat.id,
+    await message.reply_text(
         _["setting_1"].format(app.mention, message.chat.id, message.chat.title),
-        reply_markup=buttons,
+        reply_markup=buttons_to_inline_markup(buttons),
     )
-    # Fallback to Pyrogram if Bot API fails
-    if not result:
-        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-        await message.reply_text(
-            _["setting_1"].format(app.mention, message.chat.id, message.chat.title),
-            reply_markup=buttons_to_inline_markup(buttons),
-        )
 
 # ─── SETTINGS CALLBACK (HELPER) ─────────────────────────────────────
 
@@ -61,18 +53,10 @@ async def settings_cb(client, callback: CallbackQuery, _):
     except Exception:
         pass
     buttons = setting_markup(_)
-    result = await edit_message_text_colored(
-        callback.message.chat.id, callback.message.id,
+    await callback.message.edit_text(
         _["setting_1"].format(app.mention, callback.message.chat.id, callback.message.chat.title),
-        reply_markup=buttons,
+        reply_markup=buttons_to_inline_markup(buttons),
     )
-    # Fallback to Pyrogram if Bot API fails
-    if not result:
-        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-        await callback.message.edit_text(
-            _["setting_1"].format(app.mention, callback.message.chat.id, callback.message.chat.title),
-            reply_markup=buttons_to_inline_markup(buttons),
-        )
 
 # ─── SETTINGS BACK (PRIVATE vs. GROUP) ──────────────────────────────
 
@@ -87,18 +71,10 @@ async def settings_back_markup(client, callback: CallbackQuery, _):
     if callback.message.chat.type == ChatType.PRIVATE:
         await app.resolve_peer(OWNER_ID)
         buttons = private_panel(_)
-        result = await edit_message_text_colored(
-            callback.message.chat.id, callback.message.id,
+        await callback.message.edit_text(
             _["start_2"].format(callback.from_user.mention, app.mention),
-            reply_markup=buttons,
+            reply_markup=buttons_to_inline_markup(buttons),
         )
-        # Fallback to Pyrogram if Bot API fails
-        if not result:
-            from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-            await callback.message.edit_text(
-                _["start_2"].format(callback.from_user.mention, app.mention),
-                reply_markup=buttons_to_inline_markup(buttons),
-            )
     else:
         buttons = setting_markup(_)
         result = await edit_reply_markup_colored(
