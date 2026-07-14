@@ -42,6 +42,13 @@ API_URL = getenv("API_URL")        # optional
 API_KEY = getenv("API_KEY")        # optional 
 DEEP_API = getenv("DEEP_API")      # optional
 
+# ── Telegram Bot API (Local Server for colored buttons support) ───────────────
+# If you run a local Telegram Bot API server, set this to its URL.
+# Example: http://localhost:8081  or  http://127.0.0.1:8081
+# Without this, button color (style) fields will be ignored by Telegram.
+# Setup guide: https://github.com/tdlib/telegram-bot-api
+LOCAL_BOT_API_URL = getenv("LOCAL_BOT_API_URL", "").rstrip("/")
+
 # ── Hosting / deployment ───────────────────────────────────────────────────────
 HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
 HEROKU_API_KEY = getenv("HEROKU_API_KEY")

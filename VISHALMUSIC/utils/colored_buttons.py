@@ -6,9 +6,17 @@
 # ═══════════════════════════════════════════════════════════
 
 """
-Kurigram/Pyrogram uses MTProto which doesn't support the 'style'
-field on buttons yet. This module sends messages via Bot API HTTP
-to enable colored inline keyboard buttons.
+Telegram's official Bot API (api.telegram.org) silently ignores the
+'style' field on inline keyboard buttons.
+
+Button colors ONLY work when requests go through a Telegram Bot API
+Local Server (https://github.com/tdlib/telegram-bot-api).
+
+Set LOCAL_BOT_API_URL in your .env to enable colors:
+    LOCAL_BOT_API_URL=http://localhost:8081
+
+Without it, this module still works — buttons show normally, just
+without color styling.
 
 Styles: "primary" (blue), "success" (green), "danger" (red)
 """
@@ -23,9 +31,19 @@ import config
 
 LOGGER = logging.getLogger(__name__)
 
-if not config.BOT_TOKEN:
-    LOGGER.error("❌ BOT_TOKEN is not set! Colors will not work.")
-BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
+# ── Determine which Bot API endpoint to use ──────────────────────────────────
+# If LOCAL_BOT_API_URL is configured → colored buttons work.
+# Otherwise fall back to standard api.telegram.org (no color, but fully functional).
+_local_url = getattr(config, "LOCAL_BOT_API_URL", "").strip().rstrip("/")
+if _local_url:
+    BOT_API_BASE = f"{_local_url}/bot{config.BOT_TOKEN}"
+    LOGGER.info("✅ Using Local Bot API server — colored buttons enabled: %s", _local_url)
+else:
+    BOT_API_BASE = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
+    LOGGER.warning(
+        "⚠️  LOCAL_BOT_API_URL not set — button 'style' field will be ignored by Telegram. "
+        "Set LOCAL_BOT_API_URL in .env to enable colored buttons."
+    )
 
 _session: Optional[aiohttp.ClientSession] = None
 
@@ -47,7 +65,7 @@ async def _bot_api_post(endpoint: str, payload: dict, retries: int = 3) -> Optio
     last_error = None
     for attempt in range(retries):
         try:
-            async with session.post(f"{BOT_API_URL}/{endpoint}", data=payload) as resp:
+            async with session.post(f"{BOT_API_BASE}/{endpoint}", data=payload) as resp:
                 if resp.status == 200:
                     result = await resp.json()
                     return result.get("result")
@@ -63,7 +81,7 @@ async def _bot_api_post(endpoint: str, payload: dict, retries: int = 3) -> Optio
 
 
 def buttons_to_inline_markup(buttons: List[List[dict]]):
-    """Convert dict-style colored buttons back to Pyrogram InlineKeyboardMarkup for fallback."""
+    """Convert dict-style colored buttons to Pyrogram InlineKeyboardMarkup (fallback, no color)."""
     from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
     kb = []
     for row in buttons:
@@ -79,10 +97,18 @@ def buttons_to_inline_markup(buttons: List[List[dict]]):
     return InlineKeyboardMarkup(kb)
 
 
-def styled_button(text: str, callback_data: str = None, url: str = None, style: str = None):
-    """Create a button dict with optional style (color).
+def styled_button(text: str, callback_data: str = None, url: str = None, style: str = None) -> dict:
+    """
+    Create a button dict with optional style (color).
 
-    style: "primary" (blue), "success" (green), "danger" (red), or None (default)
+    style values:
+        "primary"  → blue
+        "success"  → green
+        "danger"   → red
+        None       → default (grey)
+
+    Note: 'style' only takes effect when LOCAL_BOT_API_URL is configured.
+    Without a local server, buttons appear without color but work normally.
     """
     btn = {"text": text}
     if callback_data:
@@ -101,6 +127,12 @@ async def send_photo_colored(
     reply_markup: List[List[dict]] = None,
     parse_mode: str = "HTML",
 ) -> Optional[dict]:
+    """Send a photo with (optionally colored) inline keyboard via Bot API HTTP.
+
+    photo: local file path OR URL/file_id
+    reply_markup: list of rows, each row is a list of styled_button() dicts
+    Returns: sent message dict from Telegram, or None on failure
+    """
     session = await _get_session()
 
     if reply_markup:
@@ -119,9 +151,8 @@ async def send_photo_colored(
                 data.add_field("reply_markup", markup_json)
             f = open(photo, "rb")
             data.add_field("photo", f, filename=os.path.basename(photo))
-
             try:
-                async with session.post(f"{BOT_API_URL}/sendPhoto", data=data) as resp:
+                async with session.post(f"{BOT_API_BASE}/sendPhoto", data=data) as resp:
                     if resp.status == 200:
                         result = await resp.json()
                         return result.get("result")
@@ -139,7 +170,6 @@ async def send_photo_colored(
         }
         if markup_json:
             payload["reply_markup"] = markup_json
-
         return await _bot_api_post("sendPhoto", payload)
 
 
