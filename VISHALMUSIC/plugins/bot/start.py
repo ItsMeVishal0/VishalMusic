@@ -183,16 +183,25 @@ async def start_pm(client, message: Message, _):
         if not start_photo:
             start_photo = random.choice(config.START_IMGS)
         
-        # Get buttons with Telegram native colored button support
+        # Get buttons with colored support
         out = private_panel(_)
-        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+        from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
         
-        # Direct Pyrogram (Telegram natively handles colors now!)
-        await message.reply_photo(
+        # Try colored buttons first via Bot API
+        result = await send_photo_colored(
+            chat_id=message.chat.id,
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=buttons_to_inline_markup(out),
+            reply_markup=out
         )
+        
+        # Fallback to Pyrogram if Bot API fails
+        if not result:
+            await message.reply_photo(
+                photo=start_photo,
+                caption=_["start_2"].format(message.from_user.mention, app.mention),
+                reply_markup=buttons_to_inline_markup(out),
+            )
         
         # Log
         if await is_on_off(2):
