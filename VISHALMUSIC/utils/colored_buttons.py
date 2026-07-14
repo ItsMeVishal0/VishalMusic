@@ -25,7 +25,14 @@ LOGGER = logging.getLogger(__name__)
 
 if not config.BOT_TOKEN:
     LOGGER.error("❌ BOT_TOKEN is not set! Colors will not work.")
-BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
+
+# Use Local Bot API URL if configured, otherwise fall back to Telegram API
+if config.LOCAL_BOT_API_URL:
+    BOT_API_URL = f"{config.LOCAL_BOT_API_URL}/bot{config.BOT_TOKEN or ''}"
+    LOGGER.info(f"✅ Using Local Bot API: {config.LOCAL_BOT_API_URL} (colored buttons enabled)")
+else:
+    BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
+    LOGGER.warning("⚠️ LOCAL_BOT_API_URL not set - colored buttons will NOT work! Using standard Telegram API.")
 
 _session: Optional[aiohttp.ClientSession] = None
 
