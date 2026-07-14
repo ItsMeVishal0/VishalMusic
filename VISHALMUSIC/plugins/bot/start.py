@@ -186,6 +186,17 @@ async def start_pm(client, message: Message, _):
         # Original start.py buttons for private
         out = private_panel(_)
         
+        # Log FIRST (so we know function executed)
+        if await is_on_off(2):
+            username = f"@{message.from_user.username}" if message.from_user.username else "None"
+            try:
+                await app.send_message(
+                    chat_id=config.LOGGER_ID,
+                    text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}",
+                )
+            except:
+                pass
+        
         # Try colored buttons first
         try:
             await send_photo_colored(
@@ -204,19 +215,12 @@ async def start_pm(client, message: Message, _):
                     reply_markup=buttons_to_inline_markup(out),
                 )
             except Exception as fallback_error:
-                # Last resort: text-only message
+                # Last resort: text-only message with buttons
+                from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
                 await message.reply_text(
-                    f"⚠️ Image load failed.\n\n{_['start_2'].format(message.from_user.mention, app.mention)}",
+                    _["start_2"].format(message.from_user.mention, app.mention),
                     reply_markup=buttons_to_inline_markup(out),
                 )
-        
-        # Log
-        if await is_on_off(2):
-            username = f"@{message.from_user.username}" if message.from_user.username else "None"
-            await app.send_message(
-                chat_id=config.LOGGER_ID,
-                text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}",
-            )
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
