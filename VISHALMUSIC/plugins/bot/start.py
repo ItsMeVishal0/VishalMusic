@@ -186,11 +186,14 @@ async def start_pm(client, message: Message, _):
         # Original start.py buttons for private
         out = private_panel(_)
         
+        # Import helper to convert dict buttons to Pyrogram format
+        from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+        
         # Send start message with IMAGE (user photo or fallback)
         await message.reply_photo(
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=InlineKeyboardMarkup(out),
+            reply_markup=buttons_to_inline_markup(out),
         )
         
         # Log
@@ -240,11 +243,14 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
+    # Import helper to convert dict buttons to Pyrogram format
+    from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+    
     # Direct reply with IMAGE for groups
     await message.reply_photo(
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=InlineKeyboardMarkup(out),
+        reply_markup=buttons_to_inline_markup(out),
     )
     
     return await add_served_chat(message.chat.id)
