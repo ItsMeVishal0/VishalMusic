@@ -197,11 +197,12 @@ async def start_pm(client, message: Message, _):
             except:
                 pass
         
-        # Send start message - EXACTLY like play.py (no try-except, direct await)
-        await message.reply_photo(
+        # USE COLORED BUTTONS (Bot API HTTP) - exactly like play.py
+        await send_photo_colored(
+            chat_id=message.chat.id,
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=buttons_to_inline_markup(out) if hasattr(out, '__iter__') else out,
+            reply_markup=out,
         )
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
@@ -243,11 +244,12 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # Direct reply - simple Pyrogram (no colored buttons complexity for groups)
-    await message.reply_photo(
+    # USE COLORED BUTTONS (Bot API HTTP)
+    await send_photo_colored(
+        chat_id=message.chat.id,
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=buttons_to_inline_markup(out) if hasattr(out, '__iter__') else out,
+        reply_markup=out,
     )
     
     return await add_served_chat(message.chat.id)
