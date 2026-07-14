@@ -186,13 +186,29 @@ async def start_pm(client, message: Message, _):
         # Original start.py buttons for private
         out = private_panel(_)
         
-        # Send start message with IMAGE (user photo or fallback)
-        await send_photo_colored(
-            chat_id=message.chat.id,
-            photo=start_photo,
-            caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=out,
-        )
+        # Try colored buttons first
+        try:
+            await send_photo_colored(
+                chat_id=message.chat.id,
+                photo=start_photo,
+                caption=_["start_2"].format(message.from_user.mention, app.mention),
+                reply_markup=out,
+            )
+        except Exception as e:
+            # Fallback to regular Pyrogram if colored buttons fail
+            try:
+                from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+                await message.reply_photo(
+                    photo=start_photo,
+                    caption=_["start_2"].format(message.from_user.mention, app.mention),
+                    reply_markup=buttons_to_inline_markup(out),
+                )
+            except Exception as fallback_error:
+                # Last resort: text-only message
+                await message.reply_text(
+                    f"⚠️ Image load failed.\n\n{_['start_2'].format(message.from_user.mention, app.mention)}",
+                    reply_markup=buttons_to_inline_markup(out),
+                )
         
         # Log
         if await is_on_off(2):
@@ -241,13 +257,29 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # Direct reply with IMAGE for groups
-    await send_photo_colored(
-        chat_id=message.chat.id,
-        photo=start_photo,
-        caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=out,
-    )
+    # Try colored buttons first
+    try:
+        await send_photo_colored(
+            chat_id=message.chat.id,
+            photo=start_photo,
+            caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+            reply_markup=out,
+        )
+    except Exception as e:
+        # Fallback to regular Pyrogram
+        try:
+            from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+            await message.reply_photo(
+                photo=start_photo,
+                caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+                reply_markup=buttons_to_inline_markup(out),
+            )
+        except Exception:
+            # Last resort: text message
+            await message.reply_text(
+                f"⚠️ Image load failed.\n\n{_['start_1'].format(app.mention, get_readable_time(uptime))}",
+                reply_markup=buttons_to_inline_markup(out),
+            )
     
     return await add_served_chat(message.chat.id)
 
