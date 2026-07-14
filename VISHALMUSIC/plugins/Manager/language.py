@@ -14,7 +14,7 @@ from pyrogram.types import (
 )
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_reply_markup_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from VISHALMUSIC.utils.database import get_lang, set_lang
 from VISHALMUSIC.utils.decorators import ActualAdminCB, language, languageCB
 from config import BANNED_USERS

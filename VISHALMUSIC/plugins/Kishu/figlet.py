@@ -3,7 +3,7 @@ from random import choice
 from pyrogram import filters
 from pyrogram.types import CallbackQuery
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_text_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 import base64
 

@@ -23,7 +23,7 @@ from pyrogram.types import (
 from pyrogram.enums import ChatMemberStatus, ChatMembersFilter
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from VISHALMUSIC.utils.permissions import is_owner_or_sudoer, mention
 
 MASS_CMDS = ["kickall", "banall", "unbanall", "muteall", "unmuteall", "unpinall"]

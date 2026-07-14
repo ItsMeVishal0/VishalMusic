@@ -3,7 +3,7 @@ from io import StringIO, BytesIO
 from pyrogram import filters
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.admin_filters import admin_filter
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 async def collect_members(chat_id, processing_msg):
     members_list = []

@@ -5,7 +5,7 @@ from pyrogram.types import ChatMemberUpdated
 from pyrogram.errors import TopicClosed
 from VISHALMUSIC import app
 from VISHALMUSIC.mongo.welcomedb import is_on, bump, cool, auto_on
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_photo_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 BG_PATH = "VISHALMUSIC/assets/VISHAL/welcome.png"
 FALLBACK_PIC = "VISHALMUSIC/assets/upic.png"

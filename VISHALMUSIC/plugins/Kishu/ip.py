@@ -1,6 +1,6 @@
 from pyrogram import filters
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, edit_message_text_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 import asyncio
 import httpx
