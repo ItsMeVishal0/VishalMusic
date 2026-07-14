@@ -107,6 +107,66 @@ async def send_photo_colored(
         except Exception:
             return None
 
+async def send_message_colored(
+    chat_id: Union[int, str],
+    text: str,
+    reply_markup: List[List[dict]] = None,
+    parse_mode: str = "HTML",
+    disable_web_page_preview: bool = False,
+) -> Optional[dict]:
+    """Send a text message with colored inline keyboard buttons via Bot API HTTP.
+    
+    reply_markup: list of rows, each row is a list of styled_button() dicts
+    Returns: the sent message dict from Telegram, or None on failure
+    """
+    session = await _get_session()
+    
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": parse_mode,
+        "disable_web_page_preview": disable_web_page_preview,
+    }
+    if reply_markup:
+        payload["reply_markup"] = json.dumps({"inline_keyboard": reply_markup})
+    
+    try:
+        async with session.post(f"{BOT_API_URL}/sendMessage", data=payload) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                return result.get("result")
+            return None
+    except Exception:
+        return None
+
+async def edit_message_caption_colored(
+    chat_id: Union[int, str],
+    message_id: int,
+    caption: str,
+    reply_markup: List[List[dict]] = None,
+    parse_mode: str = "HTML",
+) -> Optional[dict]:
+    """Edit message caption with colored buttons."""
+    session = await _get_session()
+    
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "caption": caption,
+        "parse_mode": parse_mode,
+    }
+    if reply_markup:
+        payload["reply_markup"] = json.dumps({"inline_keyboard": reply_markup})
+    
+    try:
+        async with session.post(f"{BOT_API_URL}/editMessageCaption", data=payload) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                return result.get("result")
+            return None
+    except Exception:
+        return None
+
 async def edit_reply_markup_colored(
     chat_id: Union[int, str],
     message_id: int,
@@ -133,6 +193,22 @@ async def edit_reply_markup_colored(
             return None
     except Exception:
         return None
+
+def buttons_to_inline_markup(buttons: List[List[dict]]):
+    """Convert dict-style colored buttons to Pyrogram InlineKeyboardMarkup (fallback helper)."""
+    from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+    kb = []
+    for row in buttons:
+        kb_row = []
+        for btn in row:
+            kwargs = {"text": btn["text"]}
+            if "callback_data" in btn:
+                kwargs["callback_data"] = btn["callback_data"]
+            if "url" in btn:
+                kwargs["url"] = btn["url"]
+            kb_row.append(InlineKeyboardButton(**kwargs))
+        kb.append(kb_row)
+    return InlineKeyboardMarkup(kb)
 
 # ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎
