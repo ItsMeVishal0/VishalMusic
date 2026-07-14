@@ -2,7 +2,11 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatAction, ParseMode
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button, 
+    buttons_to_inline_markup,
+    send_message_colored
+)
 import pyshorteners
 import httpx
 

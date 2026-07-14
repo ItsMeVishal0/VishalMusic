@@ -1,6 +1,10 @@
 from pyrogram import filters
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button, 
+    buttons_to_inline_markup,
+    send_photo_colored
+)
 from config import BOT_USERNAME
 
 repo_caption = """**

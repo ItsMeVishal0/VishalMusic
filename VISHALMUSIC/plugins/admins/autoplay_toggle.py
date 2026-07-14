@@ -4,7 +4,11 @@ from pyrogram.types import CallbackQuery
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.stream.autoplay import toggle_autoplay
 from VISHALMUSIC.utils.decorators import ActualAdminCB
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button, 
+    buttons_to_inline_markup,
+    edit_reply_markup_colored
+)
 from strings import get_string
 from VISHALMUSIC.utils.database import get_lang
 
@@ -38,7 +42,19 @@ async def autoplay_toggle_callback(client, callback: CallbackQuery, _):
             styled_button("▢", callback_data=f"ADMIN Stop|{chat_id}", style="danger"),
         ]
         new_markup = [control_row, [toggle_btn], [close_btn]]
-        await callback.message.edit_reply_markup(reply_markup=buttons_to_inline_markup(new_markup))
+        
+        # Try colored buttons via Bot API first
+        result = await edit_reply_markup_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            reply_markup=new_markup
+        )
+        
+        # Fallback to Pyrogram if Bot API fails
+        if not result:
+            await callback.message.edit_reply_markup(
+                reply_markup=buttons_to_inline_markup(new_markup)
+            )
     except Exception:
         pass
 

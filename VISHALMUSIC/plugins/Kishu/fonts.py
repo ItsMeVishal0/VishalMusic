@@ -1,7 +1,12 @@
 from pyrogram import filters
 from VISHALMUSIC.utils.font_styles import Fonts
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button, 
+    buttons_to_inline_markup,
+    send_message_colored,
+    edit_reply_markup_colored
+)
 
 
 @app.on_message(filters.command(["font", "fonts"]))
