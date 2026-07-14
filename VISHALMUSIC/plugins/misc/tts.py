@@ -9,7 +9,7 @@ from pyrogram.enums import ChatAction, ParseMode
 from pyrogram.types import CallbackQuery, Message
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_text_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 # ---------------------------------------------------------------------------
 # Global caches & constants

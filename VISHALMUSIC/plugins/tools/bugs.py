@@ -6,7 +6,7 @@ from pyrogram.types import (
 )
 from config import OWNER_ID
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 
 def extract_bug_content(msg: Message) -> str | None:

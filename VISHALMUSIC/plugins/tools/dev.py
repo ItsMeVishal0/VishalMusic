@@ -11,7 +11,7 @@ from pyrogram.types import Message
 
 from config import OWNER_ID
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_text_colored, edit_reply_markup_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 
 async def aexec(code, client, message):

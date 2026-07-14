@@ -23,7 +23,7 @@ from VISHALMUSIC.utils.database import (
     is_maintenance,
 )
 from VISHALMUSIC.utils.inline import botplaylist_markup
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, send_photo_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 links = {}
 

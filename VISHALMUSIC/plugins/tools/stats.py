@@ -15,7 +15,7 @@ from VISHALMUSIC.misc import SUDOERS, mongodb
 from VISHALMUSIC.plugins import ALL_MODULES
 from VISHALMUSIC.utils.database import get_served_chats, get_served_users, get_sudoers
 from VISHALMUSIC.utils.decorators.language import language, languageCB
-from VISHALMUSIC.utils.colored_buttons import send_message_colored, edit_message_text_colored, edit_message_media_colored, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from VISHALMUSIC.utils.inline.stats import back_stats_buttons, stats_buttons
 from config import BANNED_USERS
 

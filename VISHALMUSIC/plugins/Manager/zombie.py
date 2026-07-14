@@ -12,7 +12,7 @@ from pyrogram.types import (
 
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.admin_filters import is_admin
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 
 chatQueue: set[int] = set()

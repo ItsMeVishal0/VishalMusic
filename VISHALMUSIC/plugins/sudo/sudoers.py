@@ -11,7 +11,7 @@ from pyrogram.types import CallbackQuery, Message
 from config import BANNED_USERS, OWNER_ID
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored, edit_message_caption_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from VISHALMUSIC.utils.database import add_sudo, remove_sudo
 from VISHALMUSIC.utils.decorators.language import language
 from VISHALMUSIC.utils.formatters import extract_user

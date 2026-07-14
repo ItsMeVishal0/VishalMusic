@@ -4,7 +4,7 @@ from unidecode import unidecode
 
 from VISHALMUSIC import app
 from VISHALMUSIC.misc import SUDOERS
-from VISHALMUSIC.utils.colored_buttons import styled_button, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 from VISHALMUSIC.utils.database import (
     get_active_chats,
     get_active_video_chats,
