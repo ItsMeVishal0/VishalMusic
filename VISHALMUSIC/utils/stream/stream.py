@@ -44,45 +44,21 @@ def _store_mystic(chat_id, run, markup_type, caption=None):
 
 
 async def _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, db_ref, chat_id, markup_type):
-    """Send photo with colored buttons via Bot API, fallback to Pyrogram if it fails."""
-    run_data = await send_photo_colored(
-        chat_id=original_chat_id,
-        photo=img,
-        caption=caption,
-        reply_markup=colored_buttons,
-    )
-    if run_data and run_data.get("message_id"):
-        try:
-            run = await app.get_messages(original_chat_id, run_data["message_id"])
-            _store_mystic(chat_id, run, markup_type, caption)
-        except Exception:
-            _store_mystic(chat_id, run_data, markup_type, caption)
-    else:
-        # Fallback to Pyrogram (no button colors)
-        try:
-            run = await app.send_photo(
-                original_chat_id,
-                photo=img,
-                caption=caption,
-                reply_markup=buttons_to_inline_markup(colored_buttons),
-            )
-            _store_mystic(chat_id, run, markup_type, caption)
-        except Exception:
-            pass
+    """Send photo with buttons using direct Pyrogram."""
+    try:
+        run = await app.send_photo(
+            original_chat_id,
+            photo=img,
+            caption=caption,
+            reply_markup=buttons_to_inline_markup(colored_buttons),
+        )
+        _store_mystic(chat_id, run, markup_type, caption)
+    except Exception:
+        pass
 
 
 async def _send_or_fallback_message(chat_id, text, colored_buttons):
-    """Send message with colored buttons via Bot API, fallback to Pyrogram if it fails."""
-    result = await send_message_colored(
-        chat_id=chat_id,
-        text=text,
-        reply_markup=colored_buttons,
-    )
-    if result and result.get("message_id"):
-        try:
-            return await app.get_messages(chat_id, result["message_id"])
-        except Exception:
-            return result
+    """Send message with buttons using direct Pyrogram."""
     return await app.send_message(
         chat_id=chat_id,
         text=text,
