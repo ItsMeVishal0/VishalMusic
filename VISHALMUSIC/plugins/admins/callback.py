@@ -567,8 +567,8 @@ async def _now_playing_timer():
                 bar = generate_progress_bar(played_sec, dur_sec)
                 played_str = seconds_to_min(played_sec)
 
-                # Build updated caption with embedded progress bar
-                new_caption = f"{base_caption}\n\n⏳ <code>{played_str} {bar} {dur}</code>"
+                # Build updated caption WITHOUT progress bar (progress bar is in inline button)
+                new_caption = base_caption
 
                 # Build updated inline buttons (rate-limited inside should_update_progress)
                 _lang = get_string(await get_lang(chat_id))
