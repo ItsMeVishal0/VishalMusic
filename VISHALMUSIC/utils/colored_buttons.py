@@ -48,8 +48,8 @@ def styled_button(text: str, callback_data: str = None, url: str = None, style: 
 def buttons_to_inline_markup(buttons: List[List[dict]]) -> InlineKeyboardMarkup:
     """Convert styled button dicts to Pyrogram InlineKeyboardMarkup.
     
-    Telegram's native colored button support means Pyrogram automatically
-    handles the 'style' field - no custom Bot API calls needed!
+    Note: Pyrogram doesn't yet support Telegram's native 'style' field,
+    so we strip it out for now. Colors will work once Pyrogram is updated.
     
     Args:
         buttons: List of button rows, each containing styled_button dicts
@@ -61,15 +61,13 @@ def buttons_to_inline_markup(buttons: List[List[dict]]) -> InlineKeyboardMarkup:
     for row in buttons:
         kb_row = []
         for btn in row:
-            # Pyrogram InlineKeyboardButton now accepts 'style' parameter
+            # Create button without 'style' - Pyrogram doesn't support it yet
             kwargs = {"text": btn["text"]}
             if "callback_data" in btn:
                 kwargs["callback_data"] = btn["callback_data"]
             if "url" in btn:
                 kwargs["url"] = btn["url"]
-            # Include style if present (Telegram native support)
-            if "style" in btn:
-                kwargs["style"] = btn["style"]
+            # Skip 'style' parameter - Pyrogram InlineKeyboardButton doesn't accept it
             kb_row.append(InlineKeyboardButton(**kwargs))
         kb.append(kb_row)
     return InlineKeyboardMarkup(kb)
