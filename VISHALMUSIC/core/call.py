@@ -6,6 +6,7 @@
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Union
@@ -37,8 +38,10 @@ from VISHALMUSIC.utils.database import (
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.formatters import check_duration, seconds_to_min, speed_converter
 from VISHALMUSIC.utils.inline.play import stream_markup
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_photo_colored
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
+
+logger = logging.getLogger(__name__)
 from VISHALMUSIC.utils.thumbnails import get_thumb
 from VISHALMUSIC.utils.errors import capture_internal_err, send_large_error
 from VISHALMUSIC.utils.pastebin import VISHALBIN
@@ -57,24 +60,30 @@ def dynamic_media_stream(path: str, video: bool = False, ffmpeg_params: str = No
     )
 
 async def _colored_send_photo(original_chat_id, photo, caption, buttons, db_ref, chat_id, markup_type):
+    """Send photo with colored buttons. Falls back to Pyrogram if Bot API fails."""
     run_data = await send_photo_colored(
         chat_id=original_chat_id,
         photo=photo,
         caption=caption,
         reply_markup=buttons,
     )
+    
     if run_data and run_data.get("message_id"):
+        # ✅ Bot API success - colors WORKING!
         try:
             run = await app.get_messages(original_chat_id, run_data["message_id"])
         except Exception:
             run = run_data
     else:
+        # ❌ Bot API failed - fallback to Pyrogram (NO COLORS)
+        logger.warning(f"⚠️ Bot API failed for chat {original_chat_id}, using Pyrogram fallback (no colors)")
         run = await app.send_photo(
             chat_id=original_chat_id,
             photo=photo,
             caption=caption,
             reply_markup=buttons_to_inline_markup(buttons),
         )
+    
     playlist = db.get(chat_id)
     if playlist and len(playlist) > 0:
         playlist[0]["mystic"] = run
