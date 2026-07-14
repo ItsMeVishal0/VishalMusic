@@ -5,7 +5,7 @@ from VISHALMUSIC.utils.colored_buttons import styled_button
 def botplaylist_markup(_):
     buttons = [
         [
-            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT, style="primary"
+            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT, style="primary"),
             styled_button(text=_["CLOSE_BUTTON"], callback_data="close", style="danger"),
         ],
     ]
@@ -23,6 +23,6 @@ def close_markup(_):
 def supp_markup(_):
     return [
         [
-            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT, style="primary"
+            styled_button(text=_["S_B_4"], url=SUPPORT_CHAT, style="primary"),
         ],
     ]
