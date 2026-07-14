@@ -18,7 +18,8 @@ from VISHALMUSIC.utils.inline.start import private_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
     send_photo_colored,
-    edit_message_caption_colored
+    edit_message_caption_colored,
+    edit_message_text_colored
 )
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
@@ -110,11 +111,22 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if not help_text:
         return await CallbackQuery.answer("Invalid help topic.", show_alert=True)
 
-    await CallbackQuery.message.edit_text(
+    # Try Bot API with colored buttons
+    result = await edit_message_text_colored(
+        chat_id=CallbackQuery.message.chat.id,
+        message_id=CallbackQuery.message.id,
         text=help_text,
-        reply_markup=buttons_to_inline_markup(help_back_markup(_, current_page)),
+        reply_markup=help_back_markup(_, current_page),
         disable_web_page_preview=True
     )
+    
+    # Fallback to Pyrogram if Bot API fails
+    if not result:
+        await CallbackQuery.message.edit_text(
+            text=help_text,
+            reply_markup=buttons_to_inline_markup(help_back_markup(_, current_page)),
+            disable_web_page_preview=True
+        )
 
 # ─────────────────────────────────────────  pagination callbacks ─────
 
@@ -122,11 +134,22 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_next_2":
-        await CallbackQuery.message.edit_text(
+        # Try Bot API with colored buttons
+        result = await edit_message_text_colored(
+            chat_id=CallbackQuery.message.chat.id,
+            message_id=CallbackQuery.message.id,
             text=_["help_1"].format(SUPPORT_CHAT),
-            reply_markup=buttons_to_inline_markup(second_page(_)),
+            reply_markup=second_page(_),
             disable_web_page_preview=True
         )
+        
+        # Fallback to Pyrogram
+        if not result:
+            await CallbackQuery.message.edit_text(
+                text=_["help_1"].format(SUPPORT_CHAT),
+                reply_markup=buttons_to_inline_markup(second_page(_)),
+                disable_web_page_preview=True
+            )
     else:
         await CallbackQuery.answer("No more pages.", show_alert=True)
 
@@ -134,11 +157,22 @@ async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_prev_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_prev_1":
-        await CallbackQuery.message.edit_text(
+        # Try Bot API with colored buttons
+        result = await edit_message_text_colored(
+            chat_id=CallbackQuery.message.chat.id,
+            message_id=CallbackQuery.message.id,
             text=_["help_1"].format(SUPPORT_CHAT),
-            reply_markup=buttons_to_inline_markup(first_page(_)),
+            reply_markup=first_page(_),
             disable_web_page_preview=True
         )
+        
+        # Fallback to Pyrogram
+        if not result:
+            await CallbackQuery.message.edit_text(
+                text=_["help_1"].format(SUPPORT_CHAT),
+                reply_markup=buttons_to_inline_markup(first_page(_)),
+                disable_web_page_preview=True
+            )
     else:
         await CallbackQuery.answer("No previous page.", show_alert=True)
 
@@ -153,11 +187,22 @@ async def help_back_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     else:
         return await CallbackQuery.answer("Invalid page.", show_alert=True)
 
-    await CallbackQuery.message.edit_text(
+    # Try Bot API with colored buttons
+    result = await edit_message_text_colored(
+        chat_id=CallbackQuery.message.chat.id,
+        message_id=CallbackQuery.message.id,
         text=_["help_1"].format(SUPPORT_CHAT),
-        reply_markup=buttons_to_inline_markup(keyboard),
+        reply_markup=keyboard,
         disable_web_page_preview=True
     )
+    
+    # Fallback to Pyrogram
+    if not result:
+        await CallbackQuery.message.edit_text(
+            text=_["help_1"].format(SUPPORT_CHAT),
+            reply_markup=buttons_to_inline_markup(keyboard),
+            disable_web_page_preview=True
+        )
 
 # ────────────────────────────────────────  sub-topic buttons (Action) ─
 

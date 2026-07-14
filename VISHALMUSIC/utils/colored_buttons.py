@@ -280,6 +280,7 @@ async def _send_photo_with_file(
         if caption:
             form.add_field("caption", caption)
         
+        # Try with parse_mode first
         if parse_mode:
             form.add_field("parse_mode", parse_mode)
         
@@ -298,6 +299,12 @@ async def _send_photo_with_file(
                 return data.get("result")
             else:
                 error = data.get("description", "Unknown error")
+                
+                # If parse error, retry without parse_mode
+                if "can't parse entities" in error and parse_mode:
+                    logger.warning(f"⚠️ HTML parse error, retrying without parse_mode")
+                    return await _send_photo_with_file(chat_id, file_path, caption, reply_markup, parse_mode=None)
+                
                 logger.warning(f"❌ Bot API sendPhoto (file upload) failed: {error}")
                 return None
     
