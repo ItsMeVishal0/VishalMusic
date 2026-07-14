@@ -240,7 +240,9 @@ async def send_photo_colored(
         }
         
         if caption:
-            payload["caption"] = caption
+            # Remove unsupported HTML tags for Bot API compatibility
+            clean_caption = caption.replace("<blockquote>", "").replace("</blockquote>", "")
+            payload["caption"] = clean_caption
         
         if reply_markup:
             payload["reply_markup"] = {
@@ -278,7 +280,10 @@ async def _send_photo_with_file(
         form.add_field("photo", open(file_path, "rb"), filename=os.path.basename(file_path))
         
         if caption:
-            form.add_field("caption", caption)
+            # Remove unsupported HTML tags for Bot API compatibility
+            # Bot API doesn't support <blockquote> properly
+            clean_caption = caption.replace("<blockquote>", "").replace("</blockquote>", "")
+            form.add_field("caption", clean_caption)
         
         # Try with parse_mode first
         if parse_mode:
@@ -356,7 +361,9 @@ async def edit_message_caption_colored(
     }
     
     if caption:
-        payload["caption"] = caption
+        # Remove unsupported HTML tags
+        clean_caption = caption.replace("<blockquote>", "").replace("</blockquote>", "")
+        payload["caption"] = clean_caption
     
     if reply_markup:
         payload["reply_markup"] = {
@@ -364,6 +371,48 @@ async def edit_message_caption_colored(
         }
     
     return await _bot_api_call("editMessageCaption", payload)
+
+
+async def edit_message_smart_colored(
+    message,
+    text: str = None,
+    caption: str = None,
+    reply_markup: List[List[Dict]] = None,
+    parse_mode: str = "HTML",
+    disable_web_page_preview: bool = False
+) -> Optional[Dict]:
+    """Smart edit - auto-detect if message has text or caption, then use appropriate API.
+    
+    Args:
+        message: Pyrogram Message object
+        text: New text (for text messages)
+        caption: New caption (for photo/video messages)
+        reply_markup: Colored button markup
+        parse_mode: HTML or Markdown
+        disable_web_page_preview: For text messages
+        
+    Returns:
+        Bot API result or None
+    """
+    chat_id = message.chat.id
+    message_id = message.id
+    
+    # Check if message has photo/video (caption-based) or text
+    has_media = message.photo or message.video or message.animation or message.document
+    
+    if has_media:
+        # Use editMessageCaption
+        content = caption if caption else text
+        return await edit_message_caption_colored(
+            chat_id, message_id, content, reply_markup, parse_mode
+        )
+    else:
+        # Use editMessageText
+        content = text if text else caption
+        return await edit_message_text_colored(
+            chat_id, message_id, content, reply_markup, parse_mode, disable_web_page_preview
+        )
+
 
 
 async def edit_message_caption_colored(

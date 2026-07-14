@@ -18,8 +18,7 @@ from VISHALMUSIC.utils.inline.start import private_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
     send_photo_colored,
-    edit_message_caption_colored,
-    edit_message_text_colored
+    edit_message_smart_colored
 )
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
@@ -111,10 +110,9 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if not help_text:
         return await CallbackQuery.answer("Invalid help topic.", show_alert=True)
 
-    # Try Bot API with colored buttons
-    result = await edit_message_text_colored(
-        chat_id=CallbackQuery.message.chat.id,
-        message_id=CallbackQuery.message.id,
+    # Try Bot API with colored buttons (smart edit - auto-detect text vs caption)
+    result = await edit_message_smart_colored(
+        message=CallbackQuery.message,
         text=help_text,
         reply_markup=help_back_markup(_, current_page),
         disable_web_page_preview=True
@@ -134,10 +132,9 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_next_2":
-        # Try Bot API with colored buttons
-        result = await edit_message_text_colored(
-            chat_id=CallbackQuery.message.chat.id,
-            message_id=CallbackQuery.message.id,
+        # Try Bot API with colored buttons (smart edit)
+        result = await edit_message_smart_colored(
+            message=CallbackQuery.message,
             text=_["help_1"].format(SUPPORT_CHAT),
             reply_markup=second_page(_),
             disable_web_page_preview=True
@@ -157,10 +154,9 @@ async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_prev_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_prev_1":
-        # Try Bot API with colored buttons
-        result = await edit_message_text_colored(
-            chat_id=CallbackQuery.message.chat.id,
-            message_id=CallbackQuery.message.id,
+        # Try Bot API with colored buttons (smart edit)
+        result = await edit_message_smart_colored(
+            message=CallbackQuery.message,
             text=_["help_1"].format(SUPPORT_CHAT),
             reply_markup=first_page(_),
             disable_web_page_preview=True
@@ -187,10 +183,9 @@ async def help_back_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     else:
         return await CallbackQuery.answer("Invalid page.", show_alert=True)
 
-    # Try Bot API with colored buttons
-    result = await edit_message_text_colored(
-        chat_id=CallbackQuery.message.chat.id,
-        message_id=CallbackQuery.message.id,
+    # Try Bot API with colored buttons (smart edit)
+    result = await edit_message_smart_colored(
+        message=CallbackQuery.message,
         text=_["help_1"].format(SUPPORT_CHAT),
         reply_markup=keyboard,
         disable_web_page_preview=True
