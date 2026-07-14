@@ -15,7 +15,7 @@ from VISHALMUSIC.utils.inline.help import (
     second_page,
 )
 from VISHALMUSIC.utils.inline.start import private_panel
-from VISHALMUSIC.utils.colored_buttons import send_photo_colored, edit_message_caption_colored, edit_message_text_colored, send_message_colored
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
 
@@ -34,14 +34,15 @@ async def helper_private(client: Client, update: Union[Message, types.CallbackQu
 
     if is_cb:
         await update.answer()
-        await edit_message_caption_colored(update.message.chat.id, update.message.id, caption, reply_markup=keyboard)
+        await update.message.edit_caption(
+            caption=caption, 
+            reply_markup=buttons_to_inline_markup(keyboard)
+        )
     else:
-        await update.delete()
-        await send_photo_colored(
-            chat_id=update.chat.id,
+        await update.reply_photo(
             photo=HELP_IMG_URL,
             caption=caption,
-            reply_markup=keyboard,
+            reply_markup=buttons_to_inline_markup(keyboard),
         )
 
 # ────────────────────────────────────────────────  group /help notice ─
@@ -50,10 +51,9 @@ async def helper_private(client: Client, update: Union[Message, types.CallbackQu
 @LanguageStart
 async def help_com_group(client: Client, message: Message, _):
     keyboard = private_help_panel(_)
-    await send_message_colored(
-        message.chat.id,
-        _["help_2"],
-        reply_markup=keyboard,
+    await message.reply_text(
+        text=_["help_2"],
+        reply_markup=buttons_to_inline_markup(keyboard),
         disable_web_page_preview=True,
     )
 
@@ -71,10 +71,9 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 
     #── Action (1) gets its own sub-menu
     if number == 1:
-        await edit_message_text_colored(
-            CallbackQuery.message.chat.id, CallbackQuery.message.id,
-            _["S_B_M"],
-            reply_markup=action_sub_menu(_, current_page),
+        await CallbackQuery.message.edit_text(
+            text=_["S_B_M"],
+            reply_markup=buttons_to_inline_markup(action_sub_menu(_, current_page)),
             disable_web_page_preview=True,
         )
         return
@@ -84,9 +83,9 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if not help_text:
         return await CallbackQuery.answer("Invalid help topic.", show_alert=True)
 
-    await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-        help_text,
-        reply_markup=help_back_markup(_, current_page),
+    await CallbackQuery.message.edit_text(
+        text=help_text,
+        reply_markup=buttons_to_inline_markup(help_back_markup(_, current_page)),
         disable_web_page_preview=True
     )
 
@@ -96,9 +95,9 @@ async def helper_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_next_2":
-        await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-            _["help_1"].format(SUPPORT_CHAT),
-            reply_markup=second_page(_),
+        await CallbackQuery.message.edit_text(
+            text=_["help_1"].format(SUPPORT_CHAT),
+            reply_markup=buttons_to_inline_markup(second_page(_)),
             disable_web_page_preview=True
         )
     else:
@@ -108,9 +107,9 @@ async def help_next_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def help_prev_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     if CallbackQuery.data == "help_prev_1":
-        await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-            _["help_1"].format(SUPPORT_CHAT),
-            reply_markup=first_page(_),
+        await CallbackQuery.message.edit_text(
+            text=_["help_1"].format(SUPPORT_CHAT),
+            reply_markup=buttons_to_inline_markup(first_page(_)),
             disable_web_page_preview=True
         )
     else:
@@ -127,9 +126,9 @@ async def help_back_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     else:
         return await CallbackQuery.answer("Invalid page.", show_alert=True)
 
-    await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-        _["help_1"].format(SUPPORT_CHAT),
-        reply_markup=keyboard,
+    await CallbackQuery.message.edit_text(
+        text=_["help_1"].format(SUPPORT_CHAT),
+        reply_markup=buttons_to_inline_markup(keyboard),
         disable_web_page_preview=True
     )
 
@@ -138,18 +137,18 @@ async def help_back_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @app.on_callback_query(filters.regex("action_prom_1") & ~BANNED_USERS)
 @languageCB
 async def action_prom_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
-    await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-        helpers.HELP_1_PROMO,
-        reply_markup=help_back_markup(_, 1),
+    await CallbackQuery.message.edit_text(
+        text=helpers.HELP_1_PROMO,
+        reply_markup=buttons_to_inline_markup(help_back_markup(_, 1)),
         disable_web_page_preview=True
     )
 
 @app.on_callback_query(filters.regex("action_pun_1") & ~BANNED_USERS)
 @languageCB
 async def action_pun_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
-    await edit_message_text_colored(CallbackQuery.message.chat.id, CallbackQuery.message.id, 
-        helpers.HELP_1_PUNISH,
-        reply_markup=help_back_markup(_, 1),
+    await CallbackQuery.message.edit_text(
+        text=helpers.HELP_1_PUNISH,
+        reply_markup=buttons_to_inline_markup(help_back_markup(_, 1)),
         disable_web_page_preview=True
     )
 
@@ -159,10 +158,9 @@ async def action_pun_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def back_to_main_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     out = private_panel(_)
-    await edit_message_caption_colored(
-        CallbackQuery.message.chat.id, CallbackQuery.message.id,
-        _["start_2"].format(
+    await CallbackQuery.message.edit_caption(
+        caption=_["start_2"].format(
             CallbackQuery.from_user.mention, app.mention
         ),
-        reply_markup=out,
+        reply_markup=buttons_to_inline_markup(out),
     )
