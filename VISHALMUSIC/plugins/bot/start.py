@@ -10,7 +10,7 @@ import asyncio
 import random
 from pyrogram import filters
 from pyrogram.enums import ChatType
-from pyrogram.types import Message
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from py_yt import VideosSearch
 
 import config
@@ -29,7 +29,6 @@ from VISHALMUSIC.utils.decorators.language import LanguageStart
 from VISHALMUSIC.utils.formatters import get_readable_time
 from VISHALMUSIC.utils.inline.help import first_page
 from VISHALMUSIC.utils.inline.start import private_panel, start_panel
-from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
 from config import BANNED_USERS
 from strings import get_string
 
@@ -99,13 +98,11 @@ async def start_pm(client, message: Message, _):
                 pass
             # Image for help command
             start_photo = random.choice(config.START_IMGS)
-            await send_photo_colored(
-                chat_id=message.chat.id,
+            return await message.reply_photo(
                 photo=start_photo,
                 caption=_["help_1"].format(config.SUPPORT_CHAT),
                 reply_markup=keyboard,
             )
-            return
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
             if await is_on_off(2):
@@ -132,13 +129,16 @@ async def start_pm(client, message: Message, _):
             searched_text = _["start_6"].format(
                 title, duration, views, published, channellink, channel, app.mention
             )
-            from VISHALMUSIC.utils.colored_buttons import styled_button
-            key = [[
-                styled_button(text=_["S_B_6"], url=link),
-                styled_button(text=_["S_B_4"], url=config.SUPPORT_CHAT),
-            ]]
+            key = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(text=_["S_B_6"], url=link),
+                        InlineKeyboardButton(text=_["S_B_4"], url=config.SUPPORT_CHAT),
+                    ],
+                ]
+            )
             await m.delete()
-            await send_photo_colored(
+            await app.send_photo(
                 chat_id=message.chat.id,
                 photo=thumbnail,
                 caption=searched_text,
@@ -186,24 +186,20 @@ async def start_pm(client, message: Message, _):
         # Original start.py buttons for private
         out = private_panel(_)
         
-        # Log FIRST
-        if await is_on_off(2):
-            username = f"@{message.from_user.username}" if message.from_user.username else "None"
-            try:
-                await app.send_message(
-                    chat_id=config.LOGGER_ID,
-                    text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}",
-                )
-            except:
-                pass
-        
-        # USE COLORED BUTTONS (Bot API HTTP) - exactly like play.py
-        await send_photo_colored(
-            chat_id=message.chat.id,
+        # Send start message with IMAGE (user photo or fallback)
+        await message.reply_photo(
             photo=start_photo,
             caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=out,
+            reply_markup=InlineKeyboardMarkup(out),
         )
+        
+        # Log
+        if await is_on_off(2):
+            username = f"@{message.from_user.username}" if message.from_user.username else "None"
+            await app.send_message(
+                chat_id=config.LOGGER_ID,
+                text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}",
+            )
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
@@ -244,12 +240,11 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # USE COLORED BUTTONS (Bot API HTTP)
-    await send_photo_colored(
-        chat_id=message.chat.id,
+    # Direct reply with IMAGE for groups
+    await message.reply_photo(
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=out,
+        reply_markup=InlineKeyboardMarkup(out),
     )
     
     return await add_served_chat(message.chat.id)
@@ -303,8 +298,7 @@ async def welcome(client, message: Message):
                 if not welcome_photo:
                     welcome_photo = random.choice(config.START_IMGS)
                 
-                await send_photo_colored(
-                    chat_id=message.chat.id,
+                await message.reply_photo(
                     photo=welcome_photo,
                     caption=_["start_3"].format(
                         message.from_user.first_name,
@@ -312,7 +306,7 @@ async def welcome(client, message: Message):
                         message.chat.title,
                         app.mention,
                     ),
-                    reply_markup=out,
+                    reply_markup=InlineKeyboardMarkup(out),
                 )
                 await add_served_chat(message.chat.id)
                 await message.stop_propagation()
