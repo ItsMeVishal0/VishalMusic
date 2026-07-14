@@ -15,7 +15,11 @@ from VISHALMUSIC.utils.inline.help import (
     second_page,
 )
 from VISHALMUSIC.utils.inline.start import private_panel
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    send_photo_colored,
+    edit_message_caption_colored
+)
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
 
@@ -34,18 +38,39 @@ async def helper_private(client: Client, update: Union[Message, types.CallbackQu
 
     if is_cb:
         await update.answer()
-        # Telegram native colored button support - direct edit
-        await update.message.edit_caption(
-            caption=caption, 
-            reply_markup=buttons_to_inline_markup(keyboard)
+        # Try Bot API for colored buttons
+        chat_id = update.message.chat.id
+        message_id = update.message.id
+        
+        result = await edit_message_caption_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            caption=caption,
+            reply_markup=keyboard
         )
+        
+        # Fallback to Pyrogram if Bot API fails
+        if not result:
+            await update.message.edit_caption(
+                caption=caption, 
+                reply_markup=buttons_to_inline_markup(keyboard)
+            )
     else:
-        # Direct Pyrogram send
-        await update.reply_photo(
+        # Try Bot API with colored buttons
+        result = await send_photo_colored(
+            chat_id=update.chat.id,
             photo=HELP_IMG_URL,
             caption=caption,
-            reply_markup=buttons_to_inline_markup(keyboard),
+            reply_markup=keyboard
         )
+        
+        # Fallback to Pyrogram if Bot API fails
+        if not result:
+            await update.reply_photo(
+                photo=HELP_IMG_URL,
+                caption=caption,
+                reply_markup=buttons_to_inline_markup(keyboard),
+            )
 
 # ────────────────────────────────────────────────  group /help notice ─
 

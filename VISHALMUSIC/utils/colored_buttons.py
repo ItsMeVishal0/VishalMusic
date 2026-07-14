@@ -216,22 +216,97 @@ async def send_photo_colored(
     reply_markup: List[List[Dict]] = None,
     parse_mode: str = "HTML"
 ) -> Optional[Dict]:
-    """Send photo with COLORED buttons via Bot API HTTP."""
-    payload = {
-        "chat_id": chat_id,
-        "photo": photo,
-        "parse_mode": parse_mode
-    }
+    """Send photo with COLORED buttons via Bot API HTTP.
     
-    if caption:
-        payload["caption"] = caption
+    Supports:
+    - file_id (string starting with any non-http char)
+    - HTTP URL (http:// or https://)
+    - Local file path (uploads as multipart/form-data)
+    """
     
-    if reply_markup:
-        payload["reply_markup"] = {
-            "inline_keyboard": _build_inline_keyboard(reply_markup)
+    # Check if photo is URL or file_id
+    is_url = photo.startswith("http://") or photo.startswith("https://")
+    is_local_file = not is_url and ("/" in photo or "\\" in photo)
+    
+    if is_local_file:
+        # Upload local file as multipart/form-data
+        return await _send_photo_with_file(chat_id, photo, caption, reply_markup, parse_mode)
+    else:
+        # Use JSON for URL or file_id
+        payload = {
+            "chat_id": chat_id,
+            "photo": photo,
+            "parse_mode": parse_mode
         }
+        
+        if caption:
+            payload["caption"] = caption
+        
+        if reply_markup:
+            payload["reply_markup"] = {
+                "inline_keyboard": _build_inline_keyboard(reply_markup)
+            }
+        
+        return await _bot_api_call("sendPhoto", payload)
+
+
+async def _send_photo_with_file(
+    chat_id: Union[int, str],
+    file_path: str,
+    caption: str = None,
+    reply_markup: List[List[Dict]] = None,
+    parse_mode: str = "HTML"
+) -> Optional[Dict]:
+    """Send photo by uploading local file with multipart/form-data."""
+    import os
     
-    return await _bot_api_call("sendPhoto", payload)
+    if not os.path.exists(file_path):
+        logger.error(f"❌ Photo file not found: {file_path}")
+        return None
+    
+    if not config.BOT_TOKEN:
+        logger.error("❌ BOT_TOKEN not set!")
+        return None
+    
+    url = f"{BOT_API_URL}/sendPhoto"
+    session = await _get_session()
+    
+    try:
+        # Build form data
+        form = aiohttp.FormData()
+        form.add_field("chat_id", str(chat_id))
+        form.add_field("photo", open(file_path, "rb"), filename=os.path.basename(file_path))
+        
+        if caption:
+            form.add_field("caption", caption)
+        
+        if parse_mode:
+            form.add_field("parse_mode", parse_mode)
+        
+        if reply_markup:
+            import json as json_lib
+            reply_markup_json = json_lib.dumps({
+                "inline_keyboard": _build_inline_keyboard(reply_markup)
+            })
+            form.add_field("reply_markup", reply_markup_json)
+        
+        async with session.post(url, data=form) as resp:
+            data = await resp.json()
+            
+            if data.get("ok"):
+                logger.debug(f"✅ Bot API sendPhoto (file upload) success")
+                return data.get("result")
+            else:
+                error = data.get("description", "Unknown error")
+                logger.warning(f"❌ Bot API sendPhoto (file upload) failed: {error}")
+                return None
+    
+    except asyncio.TimeoutError:
+        logger.error(f"⏱️ Bot API sendPhoto timeout")
+        return None
+    except Exception as e:
+        logger.error(f"💥 Bot API sendPhoto exception: {e}")
+        return None
 
 
 async def edit_message_text_colored(
@@ -257,6 +332,31 @@ async def edit_message_text_colored(
         }
     
     return await _bot_api_call("editMessageText", payload)
+
+
+async def edit_message_caption_colored(
+    chat_id: Union[int, str],
+    message_id: int,
+    caption: str = None,
+    reply_markup: List[List[Dict]] = None,
+    parse_mode: str = "HTML"
+) -> Optional[Dict]:
+    """Edit message caption + buttons with COLORS via Bot API HTTP."""
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "parse_mode": parse_mode
+    }
+    
+    if caption:
+        payload["caption"] = caption
+    
+    if reply_markup:
+        payload["reply_markup"] = {
+            "inline_keyboard": _build_inline_keyboard(reply_markup)
+        }
+    
+    return await _bot_api_call("editMessageCaption", payload)
 
 
 async def edit_message_caption_colored(

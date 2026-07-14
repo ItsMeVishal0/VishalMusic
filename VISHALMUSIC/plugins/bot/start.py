@@ -29,6 +29,10 @@ from VISHALMUSIC.utils.decorators.language import LanguageStart
 from VISHALMUSIC.utils.formatters import get_readable_time
 from VISHALMUSIC.utils.inline.help import first_page
 from VISHALMUSIC.utils.inline.start import private_panel, start_panel
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    send_photo_colored
+)
 from config import BANNED_USERS
 from strings import get_string
 
@@ -96,13 +100,24 @@ async def start_pm(client, message: Message, _):
                 await message.reply_sticker(random.choice(STICKERS))
             except Exception:
                 pass
-            # Image for help command
+            
+            # Try Bot API with colored buttons
             start_photo = random.choice(config.START_IMGS)
-            return await message.reply_photo(
+            result = await send_photo_colored(
+                chat_id=message.chat.id,
                 photo=start_photo,
                 caption=_["help_1"].format(config.SUPPORT_CHAT),
-                reply_markup=buttons_to_inline_markup(keyboard),
+                reply_markup=keyboard
             )
+            
+            # Fallback to Pyrogram if Bot API fails
+            if not result:
+                return await message.reply_photo(
+                    photo=start_photo,
+                    caption=_["help_1"].format(config.SUPPORT_CHAT),
+                    reply_markup=buttons_to_inline_markup(keyboard),
+                )
+            return
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
             if await is_on_off(2):
