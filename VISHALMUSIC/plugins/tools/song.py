@@ -36,7 +36,7 @@ async def song_command_group(client, message: Message, lang):
     await send_message_colored(
         chat_id=message.chat.id,
         text=lang["song_1"],
-        reply_markup=[[styled_button(lang["SG_B_1"], url=f"https://t.me/{app.username}?start=song")]],, style="primary"
+        reply_markup=[[styled_button(lang["SG_B_1"], url=f"https://t.me/{app.username}?start=song", style="primary")]],
     )
 
 

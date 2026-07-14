@@ -29,6 +29,7 @@ def queue_markup(
             styled_button(
                 text=_["QU_B_2"].format(played, dur),
                 callback_data="GetTimer",
+                style="success",
             )
         ],
         [

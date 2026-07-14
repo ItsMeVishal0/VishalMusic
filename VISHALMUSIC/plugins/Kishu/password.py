@@ -30,7 +30,7 @@ async def password(bot, message):
         f"<b>Pᴀꜱꜱᴡᴏʀᴅ:</b> <code>{generated_password}</code>"
     )
 
-    buttons = [[styled_button("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")]]
+    buttons = [[styled_button("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{BOT_USERNAME}?startgroup=true", style="success")]]
 
     await edit_message_text_colored(
         chat_id=processing.chat.id,

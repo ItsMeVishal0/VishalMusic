@@ -105,7 +105,7 @@ async def join_watcher(_, message: Message):
             reply_markup = None
             if _is_valid_url(invite_link):
                 reply_markup = buttons_to_inline_markup(
-                    [[styled_button("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip())]]
+                    [[styled_button("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip(), style="primary")]]
                 )
 
             await safe_send_photo(

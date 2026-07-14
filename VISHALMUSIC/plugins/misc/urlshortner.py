@@ -32,8 +32,8 @@ async def short_urls(bot: Client, message: Message):
         clck = shortener.clckru.short(link)
 
         buttons = [
-            [styled_button("🔗 TinyURL", url=tiny)],, style="primary"
-            [styled_button("🔗 Dagd", url=dagd), styled_button("🔗 Clck.ru", url=clck)],, style="primary"
+            [styled_button("🔗 TinyURL", url=tiny, style="primary")],
+            [styled_button("🔗 Dagd", url=dagd, style="primary"), styled_button("🔗 Clck.ru", url=clck, style="primary")],
         ]
 
         await send_message_colored(chat_id=message.chat.id, text="🔍 Here are your shortened URLs:", reply_markup=buttons)
@@ -60,7 +60,7 @@ async def unshort_url(bot: Client, message: Message):
             response = await client.get(short_link)
             final_url = str(response.url)
 
-        buttons = [[styled_button("🔗 View Final URL", url=final_url)]]
+        buttons = [[styled_button("🔗 View Final URL", url=final_url, style="primary")]]
         await send_message_colored(chat_id=message.chat.id, text=f"✅ **Unshortened URL:**\n`{final_url}`", reply_markup=buttons)
 
     except Exception as e:

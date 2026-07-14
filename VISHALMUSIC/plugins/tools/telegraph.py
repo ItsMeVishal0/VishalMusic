@@ -53,7 +53,7 @@ async def telegraph_handler(_, message: Message):
                 chat_id=status.chat.id,
                 message_id=status.id,
                 text=f"✅ **Uploaded successfully!**\n🔗 [Click to View]({result})",
-                reply_markup=[[styled_button("📎 Open Telegraph", url=result)]],, style="primary"
+                reply_markup=[[styled_button("📎 Open Telegraph", url=result, style="primary")]],
             )
         else:
             await status.edit(f"❌ **Upload failed:**\n`{result}`")

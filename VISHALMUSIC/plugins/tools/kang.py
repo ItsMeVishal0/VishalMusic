@@ -219,7 +219,7 @@ async def kang(client, message):
             f"ᴄᴏᴜɴᴛ: {count}\n"
             f"ᴇᴍᴏᴊɪ: {emoji}",
             reply_markup=buttons_to_inline_markup(
-                [[styled_button("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}")]]
+                [[styled_button("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}", style="success")]]
             )
         )
 

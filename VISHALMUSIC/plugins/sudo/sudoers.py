@@ -75,7 +75,7 @@ async def view_sudo_list_callback(client, callback_query: CallbackQuery):
 
     owner = await app.get_users(OWNER_ID)
     caption = f"**˹ʟɪsᴛ ᴏғ ʙᴏᴛ ᴍᴏᴅᴇʀᴀᴛᴏʀs˼**\n\n**🌹Oᴡɴᴇʀ** ➥ {owner.mention}\n\n"
-    buttons = [[styled_button("๏ ᴠɪᴇᴡ ᴏᴡɴᴇʀ ๏", url=f"tg://openmessage?user_id={OWNER_ID}")]]
+    buttons = [[styled_button("๏ ᴠɪᴇᴡ ᴏᴡɴᴇʀ ๏", url=f"tg://openmessage?user_id={OWNER_ID}", style="primary")]]
 
     count = 0
     for user_id in SUDOERS:

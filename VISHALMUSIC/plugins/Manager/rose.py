@@ -143,7 +143,7 @@ async def goodbye_handler(client, update: ChatMemberUpdated):
         mention=user.mention, name=user.first_name, uid=user.id, uname=user.username or "No Username",
     )
     try:
-        await send_message_colored(cid, text, [[styled_button("👋", url=f"tg://openmessage?user_id={user.id}")]], style="primary")
+        await send_message_colored(cid, text, [[styled_button("👋", url=f"tg://openmessage?user_id={user.id}", style="primary")]])
     except Exception:
         try:
             await client.send_message(cid, text)
@@ -186,7 +186,7 @@ async def captcha_join(client, update: ChatMemberUpdated):
     random.shuffle(opts)
     key = f"{cid}_{user.id}"
     _captcha_pending[key] = int(answer)
-    btns = [[styled_button(o, callback_data=f"rose_captcha_{user.id}_{o}")] for o in opts]
+    btns = [[styled_button(o, callback_data=f"rose_captcha_{user.id}_{o}", style="primary")] for o in opts]
     try:
         msg = await send_message_colored(
             cid,

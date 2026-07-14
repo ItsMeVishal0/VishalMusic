@@ -5,7 +5,7 @@ from VISHALMUSIC import app
 from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
 
 SUPPORT_CHAT = "ItsMeVishalSupport"
-SUPPORT_BTN = [[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_CHAT}")]]
+SUPPORT_BTN = [[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_CHAT}", style="primary")]]
 
 CUTE_VIDEO = "https://files.catbox.moe/qibmue.mp4"
 

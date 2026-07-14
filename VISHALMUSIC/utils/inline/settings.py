@@ -24,7 +24,7 @@ def setting_markup(_):
 def vote_mode_markup(_, current, mode: Union[bool, str] = None):
     buttons = [
         [
-            styled_button(text="Vᴏᴛɪɴɢ ᴍᴏᴅᴇ ➜", callback_data="VOTEANSWER"),, style="primary"
+            styled_button(text="Vᴏᴛɪɴɢ ᴍᴏᴅᴇ ➜", callback_data="VOTEANSWER", style="primary"),
             styled_button(
                 text=_["ST_B_5"] if mode == True else _["ST_B_6"],
                 callback_data="VOMODECHANGE",
@@ -33,7 +33,7 @@ def vote_mode_markup(_, current, mode: Union[bool, str] = None):
         ],
         [
             styled_button(text="-2", callback_data="FERRARIUDTI M", style="primary"),
-            styled_button(text=f"ᴄᴜʀʀᴇɴᴛ : {current}", callback_data="ANSWERVOMODE"),, style="primary"
+            styled_button(text=f"ᴄᴜʀʀᴇɴᴛ : {current}", callback_data="ANSWERVOMODE", style="primary"),
             styled_button(text="+2", callback_data="FERRARIUDTI A", style="primary"),
         ],
         [
@@ -47,7 +47,7 @@ def vote_mode_markup(_, current, mode: Union[bool, str] = None):
 def auth_users_markup(_, status: Union[bool, str] = None):
     buttons = [
         [
-            styled_button(text=_["ST_B_7"], callback_data="AUTHANSWER"),, style="primary"
+            styled_button(text=_["ST_B_7"], callback_data="AUTHANSWER", style="primary"),
             styled_button(
                 text=_["ST_B_8"] if status == True else _["ST_B_9"],
                 callback_data="AUTH",
@@ -73,7 +73,7 @@ def playmode_users_markup(
 ):
     buttons = [
         [
-            styled_button(text=_["ST_B_10"], callback_data="SEARCHANSWER"),, style="primary"
+            styled_button(text=_["ST_B_10"], callback_data="SEARCHANSWER", style="primary"),
             styled_button(
                 text=_["ST_B_11"] if Direct == True else _["ST_B_12"],
                 callback_data="MODECHANGE",
@@ -81,7 +81,7 @@ def playmode_users_markup(
             ),
         ],
         [
-            styled_button(text=_["ST_B_13"], callback_data="AUTHANSWER"),, style="primary"
+            styled_button(text=_["ST_B_13"], callback_data="AUTHANSWER", style="primary"),
             styled_button(
                 text=_["ST_B_8"] if Group == True else _["ST_B_9"],
                 callback_data="CHANNELMODECHANGE",
@@ -89,7 +89,7 @@ def playmode_users_markup(
             ),
         ],
         [
-            styled_button(text=_["ST_B_14"], callback_data="PLAYTYPEANSWER"),, style="primary"
+            styled_button(text=_["ST_B_14"], callback_data="PLAYTYPEANSWER", style="primary"),
             styled_button(
                 text=_["ST_B_8"] if Playtype == True else _["ST_B_9"],
                 callback_data="PLAYTYPECHANGE",
@@ -114,21 +114,21 @@ def audio_quality_markup(
             styled_button(
                 text=_["ST_B_8"].format("✅") if low == True else _["ST_B_8"].format(""),
                 callback_data="LQA",
-                style="success" if low == True else None,
+                style="success" if low == True else "primary",
             )
         ],
         [
             styled_button(
                 text=_["ST_B_9"].format("✅") if medium == True else _["ST_B_9"].format(""),
                 callback_data="MQA",
-                style="success" if medium == True else None,
+                style="success" if medium == True else "primary",
             )
         ],
         [
             styled_button(
                 text=_["ST_B_10"].format("✅") if high == True else _["ST_B_10"].format(""),
                 callback_data="HQA",
-                style="success" if high == True else None,
+                style="success" if high == True else "primary",
             )
         ],
         [
@@ -150,21 +150,21 @@ def video_quality_markup(
             styled_button(
                 text=_["ST_B_11"].format("✅") if low == True else _["ST_B_11"].format(""),
                 callback_data="LQV",
-                style="success" if low == True else None,
+                style="success" if low == True else "primary",
             )
         ],
         [
             styled_button(
                 text=_["ST_B_12"].format("✅") if medium == True else _["ST_B_12"].format(""),
                 callback_data="MQV",
-                style="success" if medium == True else None,
+                style="success" if medium == True else "primary",
             )
         ],
         [
             styled_button(
                 text=_["ST_B_13"].format("✅") if high == True else _["ST_B_13"].format(""),
                 callback_data="HQV",
-                style="success" if high == True else None,
+                style="success" if high == True else "primary",
             )
         ],
         [

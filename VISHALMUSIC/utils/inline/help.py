@@ -66,6 +66,6 @@ def help_back_markup(_, current_page: int):
 def private_help_panel(_):
     return [
         [
-            styled_button(text=_["S_B_3"], url=f"https://t.me/{app.username}?start=help"),, style="primary"
+            styled_button(text=_["S_B_3"], url=f"https://t.me/{app.username}?start=help", style="primary"
         ],
     ]
