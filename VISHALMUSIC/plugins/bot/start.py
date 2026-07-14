@@ -101,7 +101,7 @@ async def start_pm(client, message: Message, _):
             return await message.reply_photo(
                 photo=start_photo,
                 caption=_["help_1"].format(config.SUPPORT_CHAT),
-                reply_markup=keyboard,
+                reply_markup=buttons_to_inline_markup(keyboard),
             )
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
@@ -142,7 +142,7 @@ async def start_pm(client, message: Message, _):
                 chat_id=message.chat.id,
                 photo=thumbnail,
                 caption=searched_text,
-                reply_markup=key,
+                reply_markup=buttons_to_inline_markup(key),
             )
             if await is_on_off(2):
                 username = f"@{message.from_user.username}" if message.from_user.username else "None"
@@ -310,7 +310,7 @@ async def welcome(client, message: Message):
                         message.chat.title,
                         app.mention,
                     ),
-                    reply_markup=InlineKeyboardMarkup(out),
+                    reply_markup=buttons_to_inline_markup(out),
                 )
                 await add_served_chat(message.chat.id)
                 await message.stop_propagation()

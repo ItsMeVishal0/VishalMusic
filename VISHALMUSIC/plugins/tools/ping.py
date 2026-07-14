@@ -23,8 +23,7 @@ async def ping_com(client, message: Message, _):
     pytgping = await VISHAL.ping()
     UP, CPU, RAM, DISK = await bot_sys_stats()
     resp = (datetime.now() - start).microseconds / 1000
-    await edit_message_text_colored(
-        chat_id=response.chat.id, message_id=response.id,
+    await response.edit_text(
         text=_["ping_2"].format(resp, app.mention, UP, RAM, CPU, DISK, pytgping),
-        reply_markup=supp_markup(_),
+        reply_markup=buttons_to_inline_markup(supp_markup(_)),
     )
