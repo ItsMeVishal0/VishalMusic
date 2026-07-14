@@ -139,6 +139,36 @@ async def send_message_colored(
     except Exception:
         return None
 
+async def edit_message_text_colored(
+    chat_id: Union[int, str],
+    message_id: int,
+    text: str,
+    reply_markup: List[List[dict]] = None,
+    parse_mode: str = "HTML",
+    disable_web_page_preview: bool = False,
+) -> Optional[dict]:
+    """Edit message text with colored buttons."""
+    session = await _get_session()
+    
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "text": text,
+        "parse_mode": parse_mode,
+        "disable_web_page_preview": disable_web_page_preview,
+    }
+    if reply_markup:
+        payload["reply_markup"] = json.dumps({"inline_keyboard": reply_markup})
+    
+    try:
+        async with session.post(f"{BOT_API_URL}/editMessageText", data=payload) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                return result.get("result")
+            return None
+    except Exception:
+        return None
+
 async def edit_message_caption_colored(
     chat_id: Union[int, str],
     message_id: int,
@@ -160,6 +190,33 @@ async def edit_message_caption_colored(
     
     try:
         async with session.post(f"{BOT_API_URL}/editMessageCaption", data=payload) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                return result.get("result")
+            return None
+    except Exception:
+        return None
+
+async def edit_message_media_colored(
+    chat_id: Union[int, str],
+    message_id: int,
+    media: dict = None,
+    reply_markup: List[List[dict]] = None,
+) -> Optional[dict]:
+    """Edit message media with colored buttons."""
+    session = await _get_session()
+    
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+    }
+    if media:
+        payload["media"] = json.dumps(media)
+    if reply_markup:
+        payload["reply_markup"] = json.dumps({"inline_keyboard": reply_markup})
+    
+    try:
+        async with session.post(f"{BOT_API_URL}/editMessageMedia", data=payload) as resp:
             if resp.status == 200:
                 result = await resp.json()
                 return result.get("result")
