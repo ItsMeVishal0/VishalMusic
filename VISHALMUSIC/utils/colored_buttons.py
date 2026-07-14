@@ -30,11 +30,9 @@ if not config.BOT_TOKEN:
 if config.LOCAL_BOT_API_URL:
     BOT_API_URL = f"{config.LOCAL_BOT_API_URL}/bot{config.BOT_TOKEN or ''}"
     LOGGER.info(f"✅ Using Local Bot API: {config.LOCAL_BOT_API_URL} (colored buttons enabled)")
-    COLORED_BUTTONS_ENABLED = True
 else:
     BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
-    LOGGER.info("ℹ️ LOCAL_BOT_API_URL not set - using standard Pyrogram buttons (no colors)")
-    COLORED_BUTTONS_ENABLED = False
+    LOGGER.warning("⚠️ LOCAL_BOT_API_URL not set - colored buttons will NOT work! Using standard Telegram API.")
 
 _session: Optional[aiohttp.ClientSession] = None
 
@@ -50,10 +48,6 @@ async def _get_session() -> aiohttp.ClientSession:
 
 
 async def _bot_api_post(endpoint: str, payload: dict, retries: int = 3) -> Optional[dict]:
-    # Skip if colored buttons not enabled (no Local Bot API)
-    if not COLORED_BUTTONS_ENABLED:
-        return None
-        
     if not config.BOT_TOKEN:
         return None
     session = await _get_session()
@@ -114,10 +108,6 @@ async def send_photo_colored(
     reply_markup: List[List[dict]] = None,
     parse_mode: str = "HTML",
 ) -> Optional[dict]:
-    # Skip if colored buttons not enabled
-    if not COLORED_BUTTONS_ENABLED:
-        return None
-        
     session = await _get_session()
 
     if reply_markup:
