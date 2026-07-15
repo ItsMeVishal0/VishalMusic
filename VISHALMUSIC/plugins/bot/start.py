@@ -210,12 +210,17 @@ async def start_pm(client, message: Message, _):
         out = private_panel(_)
         from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
         
+        # Create HTML mention links
+        user_mention = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+        bot_mention = f'<a href="tg://user?id={app.id}">{app.first_name}</a>'
+        
         # Try colored buttons first via Bot API
         result = await send_photo_colored(
             chat_id=message.chat.id,
             photo=start_photo,
-            caption=_["start_2"].format(message.from_user.mention, app.mention),
-            reply_markup=out
+            caption=_["start_2"].format(user_mention, bot_mention),
+            reply_markup=out,
+            parse_mode="HTML"
         )
         
         # Fallback to Pyrogram if Bot API fails
@@ -223,7 +228,7 @@ async def start_pm(client, message: Message, _):
             from pyrogram import enums
             await message.reply_photo(
                 photo=start_photo,
-                caption=_["start_2"].format(message.from_user.mention, app.mention),
+                caption=_["start_2"].format(user_mention, bot_mention),
                 parse_mode=enums.ParseMode.HTML,
                 reply_markup=buttons_to_inline_markup(out),
             )
