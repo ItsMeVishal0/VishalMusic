@@ -5,9 +5,9 @@ from VISHALMUSIC import app
 from VISHALMUSIC.utils.stream.autoplay import toggle_autoplay
 from VISHALMUSIC.utils.decorators import ActualAdminCB
 from VISHALMUSIC.utils.colored_buttons import (
-    styled_button, 
+    styled_button,
     buttons_to_inline_markup,
-    edit_reply_markup_colored
+    edit_reply_markup_colored,
 )
 from strings import get_string
 from VISHALMUSIC.utils.database import get_lang

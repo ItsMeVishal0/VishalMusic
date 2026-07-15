@@ -145,3 +145,6 @@ cache/
 # Session files
 *.session
 *.session-journal
+
+# Runtime logs from testing
+log.txt

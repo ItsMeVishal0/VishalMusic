@@ -31,9 +31,9 @@ from VISHALMUSIC.utils.inline.settings import (
 from VISHALMUSIC.utils.inline.start import private_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
-    edit_message_text_colored,
+    smart_edit_message_text as edit_message_text_colored,
     edit_reply_markup_colored,
-    styled_button
+    styled_button,
 )
 from config import BANNED_USERS, OWNER_ID
 

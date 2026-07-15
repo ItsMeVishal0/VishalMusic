@@ -419,6 +419,161 @@ async def edit_message_media_colored(
 
 
 # ═══════════════════════════════════════════════════════════
+#  SMART WRAPPERS — Bot API first (colors), Pyrogram fallback
+#  ⭐ Use these EVERYWHERE. They guarantee delivery even if Bot API fails.
+# ═══════════════════════════════════════════════════════════
+
+async def smart_send_message(
+    chat_id: Union[int, str],
+    text: str,
+    reply_markup: Optional[List[List[Dict]]] = None,
+    parse_mode: str = "HTML",
+    disable_web_page_preview: bool = False,
+):
+    """Send a message with colored buttons. Falls back to Pyrogram on failure."""
+    from VISHALMUSIC import app
+    from pyrogram import enums
+
+    # Try Bot API first
+    try:
+        data = await send_message_colored(
+            chat_id, text,
+            reply_markup=reply_markup or [],
+            parse_mode=parse_mode,
+            disable_web_page_preview=disable_web_page_preview,
+        )
+        if data and data.get("message_id"):
+            try:
+                return await app.get_messages(chat_id, data["message_id"])
+            except Exception:
+                return data
+    except Exception as e:
+        logger.debug(f"smart_send_message Bot API path failed: {e}")
+
+    # Pyrogram fallback (no colors but delivery guaranteed)
+    return await app.send_message(
+        chat_id=chat_id,
+        text=text,
+        parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+        disable_web_page_preview=disable_web_page_preview,
+        reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+    )
+
+
+async def smart_send_photo(
+    chat_id: Union[int, str],
+    photo: str,
+    caption: Optional[str] = None,
+    reply_markup: Optional[List[List[Dict]]] = None,
+    parse_mode: str = "HTML",
+):
+    """Send a photo with colored buttons. Falls back to Pyrogram on failure."""
+    from VISHALMUSIC import app
+    from pyrogram import enums
+
+    try:
+        data = await send_photo_colored(
+            chat_id=chat_id,
+            photo=photo,
+            caption=caption,
+            reply_markup=reply_markup or [],
+            parse_mode=parse_mode,
+        )
+        if data and data.get("message_id"):
+            try:
+                return await app.get_messages(chat_id, data["message_id"])
+            except Exception:
+                return data
+    except Exception as e:
+        logger.debug(f"smart_send_photo Bot API path failed: {e}")
+
+    return await app.send_photo(
+        chat_id=chat_id,
+        photo=photo,
+        caption=caption,
+        parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+        reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+    )
+
+
+async def smart_edit_message_text(
+    chat_id: Union[int, str],
+    message_id: int,
+    text: str,
+    reply_markup: Optional[List[List[Dict]]] = None,
+    parse_mode: str = "HTML",
+    disable_web_page_preview: bool = False,
+):
+    """Edit a text message with colored buttons. Falls back to Pyrogram on failure."""
+    from VISHALMUSIC import app
+    from pyrogram import enums
+
+    try:
+        data = await edit_message_text_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+            disable_web_page_preview=disable_web_page_preview,
+        )
+        if data:
+            return data
+    except Exception as e:
+        logger.debug(f"smart_edit_message_text Bot API path failed: {e}")
+
+    try:
+        return await app.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            disable_web_page_preview=disable_web_page_preview,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_edit_message_text both paths failed: {e}")
+        return None
+
+
+async def smart_edit_message_caption(
+    chat_id: Union[int, str],
+    message_id: int,
+    caption: str,
+    reply_markup: Optional[List[List[Dict]]] = None,
+    parse_mode: str = "HTML",
+):
+    """Edit caption + buttons. Falls back to Pyrogram on failure."""
+    from VISHALMUSIC import app
+    from pyrogram import enums
+
+    try:
+        data = await edit_message_caption_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            caption=caption,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+        if data:
+            return data
+    except Exception as e:
+        logger.debug(f"smart_edit_message_caption Bot API path failed: {e}")
+
+    try:
+        return await app.edit_message_caption(
+            chat_id=chat_id,
+            message_id=message_id,
+            caption=caption,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_edit_message_caption both paths failed: {e}")
+        return None
+
+
+# ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

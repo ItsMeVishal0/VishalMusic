@@ -50,11 +50,11 @@ from VISHALMUSIC.utils.inline.play import colored_stream_markup, colored_stream_
 from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
     buttons_to_inline_markup,
-    send_message_colored,
-    send_photo_colored,
-    edit_message_text_colored,
-    edit_message_caption_colored,
     edit_reply_markup_colored,
+    smart_send_message as send_message_colored,
+    smart_send_photo as send_photo_colored,
+    smart_edit_message_text as edit_message_text_colored,
+    smart_edit_message_caption as edit_message_caption_colored,
 )
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
@@ -239,35 +239,13 @@ async def manage_callback(client, callback: CallbackQuery, _):
 
 
 async def _colored_reply_photo(callback, photo, caption, buttons, db_ref, chat_id, markup_type):
-    """Send a new photo reply with colored buttons. Bot API first, Pyrogram fallback."""
-    from pyrogram import enums
-
-    run = None
-    # Try Bot API for colored buttons
-    try:
-        run_data = await send_photo_colored(
-            chat_id=callback.message.chat.id,
-            photo=photo,
-            caption=caption,
-            reply_markup=buttons,
-        )
-        if run_data and run_data.get("message_id"):
-            try:
-                run = await app.get_messages(callback.message.chat.id, run_data["message_id"])
-            except Exception:
-                run = run_data
-    except Exception:
-        run = None
-
-    # Fallback to Pyrogram
-    if run is None:
-        run = await callback.message.reply_photo(
-            photo=photo,
-            caption=caption,
-            parse_mode=enums.ParseMode.HTML,
-            reply_markup=buttons_to_inline_markup(buttons),
-        )
-
+    """Send a photo reply with colored buttons via smart wrapper."""
+    run = await send_photo_colored(
+        chat_id=callback.message.chat.id,
+        photo=photo,
+        caption=caption,
+        reply_markup=buttons,
+    )
     playlist = db.get(chat_id)
     if playlist and len(playlist) > 0:
         playlist[0]["mystic"] = run

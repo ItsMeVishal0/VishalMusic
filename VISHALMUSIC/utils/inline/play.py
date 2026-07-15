@@ -2,19 +2,27 @@
 #        😎  VISHAL MUSIC BOT  😎
 #   GitHub : github.com/ItsMeVishal0/VishalMusic
 #   Developer : @ItsMeVishalBots | Telegram
-#   Module : Inline Play Buttons (Colored + Plain variants)
+#   Module : Inline Play Buttons (ALL COLORED via Bot API 9.4)
+# ═══════════════════════════════════════════════════════════
+#
+# Every button here returns a styled_button DICT with a "style"
+# field so the Bot API 9.4 renders them in color.
+# The plain names (track_markup, stream_markup, etc.) are kept
+# for backward compatibility with existing callers, but they now
+# also return colored dicts.
+#
 # ═══════════════════════════════════════════════════════════
 
 import time
-from pyrogram.types import InlineKeyboardButton
 from VISHALMUSIC.utils.formatters import time_to_seconds
 from VISHALMUSIC.utils.colored_buttons import styled_button
 
 LAST_UPDATE_TIME = {}
 UPDATE_INTERVAL = 6  # seconds between progress bar updates
 
+
 # ═══════════════════════════════════════════════════════════
-#   HELPER FUNCTIONS (Shared by both colored & plain)
+#   HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════
 
 def should_update_progress(chat_id):
@@ -24,6 +32,7 @@ def should_update_progress(chat_id):
         LAST_UPDATE_TIME[chat_id] = now
         return True
     return False
+
 
 def generate_progress_bar(played_sec, duration_sec):
     if duration_sec == 0:
@@ -42,143 +51,13 @@ def generate_progress_bar(played_sec, duration_sec):
     else:
         return "ꨄ" + "𓂃" * remaining
 
-# ═══════════════════════════════════════════════════════════
-#   PLAIN PYROGRAM BUTTONS (Backward Compatibility)
-# ═══════════════════════════════════════════════════════════
 
-def track_markup(_, videoid, user_id, channel, fplay):
-    return [
-        [
-            InlineKeyboardButton(
-                text=_["P_B_1"],
-                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text=_["P_B_2"],
-                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=_["CLOSE_BUTTON"],
-                callback_data=f"forceclose {videoid}|{user_id}"
-            )
-        ],
-    ]
-
-def autoplay_button(chat_id: int, status: bool) -> InlineKeyboardButton:
-    if status:
-        label = "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅"
-    else:
-        label = "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌"
-    return InlineKeyboardButton(
-        text=label,
-        callback_data=f"AUTOPLAY_TOGGLE {chat_id}",
-    )
+# ═══════════════════════════════════════════════════════════
+#   SHARED COMPONENTS (colored dicts)
+# ═══════════════════════════════════════════════════════════
 
 def control_buttons(_, chat_id):
-    return [[
-        InlineKeyboardButton(text="▷", callback_data=f"ADMIN Resume|{chat_id}"),
-        InlineKeyboardButton(text="II", callback_data=f"ADMIN Pause|{chat_id}"),
-        InlineKeyboardButton(text="↻", callback_data=f"ADMIN Replay|{chat_id}"),
-        InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
-        InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
-    ]]
-
-def stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
-    if not should_update_progress(chat_id):
-        return None
-
-    played_sec = time_to_seconds(played)
-    duration_sec = time_to_seconds(dur)
-    bar = generate_progress_bar(played_sec, duration_sec)
-
-    return (
-        [[InlineKeyboardButton(text=f"{played} {bar} {dur}", callback_data="GetTimer")]]
-        + control_buttons(_, chat_id)
-        + [[autoplay_button(chat_id, autoplay_status)]]
-        + [[InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data="close")]]
-    )
-
-def stream_markup(_, chat_id, autoplay_status: bool = False):
-    return (
-        control_buttons(_, chat_id)
-        + [[autoplay_button(chat_id, autoplay_status)]]
-        + [[InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data="close")]]
-    )
-
-def playlist_markup(_, videoid, user_id, ptype, channel, fplay):
-    buttons = [
-        [
-            InlineKeyboardButton(
-                text=_["P_B_1"],
-                callback_data=f"VishalPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}"
-            ),
-            InlineKeyboardButton(
-                text=_["P_B_2"],
-                callback_data=f"VishalPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=_["CLOSE_BUTTON"],
-                callback_data=f"forceclose {videoid}|{user_id}"
-            ),
-        ],
-    ]
-    return buttons
-
-def livestream_markup(_, videoid, user_id, mode, channel, fplay):
-    return [
-        [
-            InlineKeyboardButton(
-                text=_["P_B_3"],
-                callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text=_["CLOSE_BUTTON"],
-                callback_data=f"forceclose {videoid}|{user_id}"
-            )
-        ],
-    ]
-
-def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
-    short_query = query[:20]
-    return [
-        [
-            InlineKeyboardButton(
-                text=_["P_B_1"],
-                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text=_["P_B_2"],
-                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="◁",
-                callback_data=f"slider B|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text=_["CLOSE_BUTTON"],
-                callback_data=f"forceclose {short_query}|{user_id}",
-            ),
-            InlineKeyboardButton(
-                text="▷",
-                callback_data=f"slider F|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
-            ),
-        ],
-    ]
-
-# ═══════════════════════════════════════════════════════════
-#   COLORED BUTTON VARIANTS (Bot API HTTP - style support)
-# ═══════════════════════════════════════════════════════════
-
-def colored_control_buttons(_, chat_id):
-    """Control row with colored styles."""
+    """Playback control row with colors."""
     return [[
         styled_button("▷", callback_data=f"ADMIN Resume|{chat_id}", style="success"),
         styled_button("II", callback_data=f"ADMIN Pause|{chat_id}", style="primary"),
@@ -187,22 +66,152 @@ def colored_control_buttons(_, chat_id):
         styled_button("▢", callback_data=f"ADMIN Stop|{chat_id}", style="danger"),
     ]]
 
-def colored_autoplay_button(chat_id: int, status: bool) -> dict:
-    if status:
-        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="success")
-    else:
-        return styled_button("🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌", callback_data=f"AUTOPLAY_TOGGLE {chat_id}", style="danger")
 
-def colored_stream_markup(_, chat_id, autoplay_status: bool = False):
-    """Stream 'Now Playing' buttons with colors."""
+def autoplay_button(chat_id: int, status: bool) -> dict:
+    """Autoplay toggle - green when ON, red when OFF."""
+    if status:
+        return styled_button(
+            "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏɴ ✅",
+            callback_data=f"AUTOPLAY_TOGGLE {chat_id}",
+            style="success",
+        )
+    return styled_button(
+        "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌",
+        callback_data=f"AUTOPLAY_TOGGLE {chat_id}",
+        style="danger",
+    )
+
+
+# Colored aliases (kept for callers that already use the "colored_" name)
+colored_control_buttons = control_buttons
+colored_autoplay_button = autoplay_button
+
+
+# ═══════════════════════════════════════════════════════════
+#   TRACK / SEARCH BUTTONS  (colored)
+# ═══════════════════════════════════════════════════════════
+
+def track_markup(_, videoid, user_id, channel, fplay):
+    """Audio/Video pick after a track search — colored."""
+    return [
+        [
+            styled_button(
+                _["P_B_1"],
+                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
+                style="primary",
+            ),
+            styled_button(
+                _["P_B_2"],
+                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
+                style="success",
+            ),
+        ],
+        [
+            styled_button(
+                _["CLOSE_BUTTON"],
+                callback_data=f"forceclose {videoid}|{user_id}",
+                style="danger",
+            )
+        ],
+    ]
+
+
+def playlist_markup(_, videoid, user_id, ptype, channel, fplay):
+    """Playlist Audio/Video pick — colored."""
+    return [
+        [
+            styled_button(
+                _["P_B_1"],
+                callback_data=f"VishalPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}",
+                style="primary",
+            ),
+            styled_button(
+                _["P_B_2"],
+                callback_data=f"VishalPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}",
+                style="success",
+            ),
+        ],
+        [
+            styled_button(
+                _["CLOSE_BUTTON"],
+                callback_data=f"forceclose {videoid}|{user_id}",
+                style="danger",
+            ),
+        ],
+    ]
+
+
+def livestream_markup(_, videoid, user_id, mode, channel, fplay):
+    """Livestream single-button — colored."""
+    return [
+        [
+            styled_button(
+                _["P_B_3"],
+                callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
+                style="success",
+            )
+        ],
+        [
+            styled_button(
+                _["CLOSE_BUTTON"],
+                callback_data=f"forceclose {videoid}|{user_id}",
+                style="danger",
+            )
+        ],
+    ]
+
+
+def slider_markup(_, videoid, user_id, query, query_type, channel, fplay):
+    """Search results slider with nav arrows — colored."""
+    short_query = query[:20]
+    return [
+        [
+            styled_button(
+                _["P_B_1"],
+                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
+                style="primary",
+            ),
+            styled_button(
+                _["P_B_2"],
+                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
+                style="success",
+            ),
+        ],
+        [
+            styled_button(
+                "◁",
+                callback_data=f"slider B|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
+                style="primary",
+            ),
+            styled_button(
+                _["CLOSE_BUTTON"],
+                callback_data=f"forceclose {short_query}|{user_id}",
+                style="danger",
+            ),
+            styled_button(
+                "▷",
+                callback_data=f"slider F|{query_type}|{short_query}|{user_id}|{channel}|{fplay}",
+                style="primary",
+            ),
+        ],
+    ]
+
+
+# ═══════════════════════════════════════════════════════════
+#   STREAM ("NOW PLAYING") BUTTONS  (colored)
+# ═══════════════════════════════════════════════════════════
+
+def stream_markup(_, chat_id, autoplay_status: bool = False):
+    """Now Playing keyboard — colored."""
     return (
-        colored_control_buttons(_, chat_id)
-        + [[colored_autoplay_button(chat_id, autoplay_status)]]
+        control_buttons(_, chat_id)
+        + [[autoplay_button(chat_id, autoplay_status)]]
         + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
     )
 
-def colored_stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
-    """Stream buttons with progress bar and colors."""
+
+def stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
+    """Now Playing keyboard with progress bar — colored (throttled)."""
     if not should_update_progress(chat_id):
         return None
 
@@ -211,11 +220,21 @@ def colored_stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool =
     bar = generate_progress_bar(played_sec, duration_sec)
 
     return (
-        [[styled_button(f"{played} {bar} {dur}", callback_data="GetTimer")]]
-        + colored_control_buttons(_, chat_id)
-        + [[colored_autoplay_button(chat_id, autoplay_status)]]
+        [[styled_button(
+            f"{played} {bar} {dur}",
+            callback_data="GetTimer",
+            style="primary",
+        )]]
+        + control_buttons(_, chat_id)
+        + [[autoplay_button(chat_id, autoplay_status)]]
         + [[styled_button(_["CLOSE_BUTTON"], callback_data="close", style="danger")]]
     )
+
+
+# Colored aliases (kept for callers already using the "colored_" name)
+colored_stream_markup = stream_markup
+colored_stream_markup_timer = stream_markup_timer
+
 
 # ═══════════════════════════════════════════════════════════
 #        😎  VISHAL MUSIC BOT  😎

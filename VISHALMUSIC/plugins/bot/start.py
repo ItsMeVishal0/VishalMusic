@@ -31,7 +31,7 @@ from VISHALMUSIC.utils.inline.help import first_page
 from VISHALMUSIC.utils.inline.start import private_panel, start_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
-    send_photo_colored
+    smart_send_photo as send_photo_colored,
 )
 from config import BANNED_USERS
 from strings import get_string
@@ -220,7 +220,6 @@ async def start_pm(client, message: Message, _):
         
         # Get buttons with colored support
         out = private_panel(_)
-        from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
         
         # Build caption with proper HTML mention formatting
         user_mention = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'

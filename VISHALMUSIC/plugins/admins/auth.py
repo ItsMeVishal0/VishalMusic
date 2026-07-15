@@ -18,6 +18,7 @@ from VISHALMUSIC.utils.database import (
 )
 from VISHALMUSIC.utils.decorators import AdminActual, language
 from VISHALMUSIC.utils.inline import close_markup
+from VISHALMUSIC.utils.colored_buttons import smart_edit_message_text as edit_message_text_colored
 from config import BANNED_USERS, adminlist
 
 

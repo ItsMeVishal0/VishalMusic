@@ -17,9 +17,9 @@ from VISHALMUSIC.utils.inline.help import (
 from VISHALMUSIC.utils.inline.start import private_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
-    send_photo_colored,
-    edit_message_caption_colored,
-    edit_message_text_colored
+    smart_send_photo as send_photo_colored,
+    smart_edit_message_caption as edit_message_caption_colored,
+    smart_edit_message_text as edit_message_text_colored,
 )
 from config import BANNED_USERS, HELP_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers

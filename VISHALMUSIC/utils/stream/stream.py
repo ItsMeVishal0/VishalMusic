@@ -18,7 +18,11 @@ from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.database import add_active_video_chat, is_active_chat
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.inline import aq_markup, close_markup
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    smart_send_photo,
+    smart_send_message,
+)
 from VISHALMUSIC.utils.pastebin import VISHALBIN
 from VISHALMUSIC.utils.stream.queue import put_queue, put_queue_index
 from VISHALMUSIC.utils.thumbnails import get_thumb
@@ -44,69 +48,25 @@ def _store_mystic(chat_id, run, markup_type, caption=None):
 
 
 async def _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, db_ref, chat_id, markup_type):
-    """Send photo with colored buttons via Bot API, fallback to Pyrogram if fails."""
-    from VISHALMUSIC.utils.colored_buttons import send_photo_colored
-    from pyrogram import enums
-
-    run = None
-    # Try Bot API first (with colors)
+    """Send photo with colored buttons (Bot API first, Pyrogram fallback)."""
     try:
-        run_data = await send_photo_colored(
+        run = await smart_send_photo(
             chat_id=original_chat_id,
             photo=img,
             caption=caption,
             reply_markup=colored_buttons,
         )
-        if run_data and run_data.get("message_id"):
-            try:
-                run = await app.get_messages(original_chat_id, run_data["message_id"])
-            except Exception:
-                run = run_data
-    except Exception:
-        run = None
-
-    # Fallback to Pyrogram if Bot API failed
-    if run is None:
-        try:
-            run = await app.send_photo(
-                original_chat_id,
-                photo=img,
-                caption=caption,
-                parse_mode=enums.ParseMode.HTML,
-                reply_markup=buttons_to_inline_markup(colored_buttons),
-            )
-        except Exception:
-            return
-
-    _store_mystic(chat_id, run, markup_type, caption)
-
-
-async def _send_or_fallback_message(chat_id, text, colored_buttons):
-    """Send message with colored buttons via Bot API, fallback to Pyrogram."""
-    from VISHALMUSIC.utils.colored_buttons import send_message_colored
-    from pyrogram import enums
-
-    # Try Bot API first (with colors)
-    try:
-        run_data = await send_message_colored(
-            chat_id=chat_id,
-            text=text,
-            reply_markup=colored_buttons,
-        )
-        if run_data and run_data.get("message_id"):
-            try:
-                return await app.get_messages(chat_id, run_data["message_id"])
-            except Exception:
-                return run_data
+        _store_mystic(chat_id, run, markup_type, caption)
     except Exception:
         pass
 
-    # Fallback to Pyrogram
-    return await app.send_message(
+
+async def _send_or_fallback_message(chat_id, text, colored_buttons):
+    """Send message with colored buttons (Bot API first, Pyrogram fallback)."""
+    return await smart_send_message(
         chat_id=chat_id,
         text=text,
-        parse_mode=enums.ParseMode.HTML,
-        reply_markup=buttons_to_inline_markup(colored_buttons),
+        reply_markup=colored_buttons,
     )
 
 

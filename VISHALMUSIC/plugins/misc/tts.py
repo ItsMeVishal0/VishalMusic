@@ -12,8 +12,8 @@ from VISHALMUSIC import app
 from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
     buttons_to_inline_markup,
-    send_message_colored,
-    edit_message_text_colored,
+    smart_send_message as send_message_colored,
+    smart_edit_message_text as edit_message_text_colored,
 )
 
 # ---------------------------------------------------------------------------

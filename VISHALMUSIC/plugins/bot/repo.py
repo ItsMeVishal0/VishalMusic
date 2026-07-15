@@ -1,9 +1,9 @@
 from pyrogram import filters
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.colored_buttons import (
-    styled_button, 
+    styled_button,
     buttons_to_inline_markup,
-    send_photo_colored
+    smart_send_photo as send_photo_colored,
 )
 from config import BOT_USERNAME
 
