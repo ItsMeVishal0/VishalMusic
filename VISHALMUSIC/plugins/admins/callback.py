@@ -45,8 +45,8 @@ from VISHALMUSIC.utils.database import (
 )
 from VISHALMUSIC.utils.decorators import ActualAdminCB, languageCB
 from VISHALMUSIC.utils.formatters import seconds_to_min, time_to_seconds
-from VISHALMUSIC.utils.inline import close_markup, stream_markup
-from VISHALMUSIC.utils.inline.play import stream_markup_timer, generate_progress_bar
+from VISHALMUSIC.utils.inline import close_markup
+from VISHALMUSIC.utils.inline.play import colored_stream_markup, colored_stream_markup_timer, generate_progress_bar
 from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
     buttons_to_inline_markup,
@@ -335,7 +335,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             await VISHAL.skip_stream(chat_id, new_link, video=status, image=image)
         except Exception:
             return await callback.message.reply_text(_["call_6"])
-        buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+        buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
         await _colored_reply_photo(
             callback, img,
@@ -358,7 +358,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             await VISHAL.skip_stream(chat_id, file_path, video=status, image=image)
         except Exception:
             return await mystic.edit_text(_["call_6"])
-        buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+        buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
         await _colored_reply_photo(
             callback, img,
@@ -373,7 +373,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
             await VISHAL.skip_stream(chat_id, videoid, video=status)
         except Exception:
             return await callback.message.reply_text(_["call_6"])
-        buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+        buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         await _colored_reply_photo(callback, STREAM_IMG_URL, _["stream_2"].format(user), buttons, None, chat_id, "tg")
         await edit_message_text_colored(callback.message.chat.id, callback.message.id, text_msg, reply_markup=close_markup(_))
 
@@ -390,7 +390,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
         except Exception:
             return await callback.message.reply_text(_["call_6"])
         if videoid == "telegram":
-            buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             photo = TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL
             await _colored_reply_photo(
                 callback, photo,
@@ -398,7 +398,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 buttons, None, chat_id, "tg",
             )
         elif videoid == "soundcloud":
-            buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             photo = SOUNCLOUD_IMG_URL if str(streamtype) == "audio" else TELEGRAM_VIDEO_URL
             await _colored_reply_photo(
                 callback, photo,
@@ -406,7 +406,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 buttons, None, chat_id, "tg",
             )
         else:
-            buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             img = await get_thumb(videoid)
             await _colored_reply_photo(
                 callback, img,
@@ -551,7 +551,7 @@ async def _now_playing_timer():
                 # Build updated inline buttons (rate-limited inside should_update_progress)
                 _lang = get_string(await get_lang(chat_id))
                 ap_status = await is_autoplay_on(chat_id)
-                buttons = stream_markup_timer(
+                buttons = colored_stream_markup_timer(
                     _lang,
                     chat_id,
                     played_str,

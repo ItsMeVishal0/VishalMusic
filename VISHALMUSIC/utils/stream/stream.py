@@ -17,7 +17,7 @@ from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.database import add_active_video_chat, is_active_chat
 from VISHALMUSIC.utils.exceptions import AssistantErr
-from VISHALMUSIC.utils.inline import aq_markup, close_markup, stream_markup
+from VISHALMUSIC.utils.inline import aq_markup, close_markup
 from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
 from VISHALMUSIC.utils.pastebin import VISHALBIN
 from VISHALMUSIC.utils.stream.queue import put_queue, put_queue_index
@@ -174,7 +174,8 @@ async def stream(
                 except Exception:
                     img = await get_thumb(vidid)
                 ap_status = await is_autoplay_on(chat_id)
-                colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+                from VISHALMUSIC.utils.inline.play import colored_stream_markup
+                colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                 caption = _["stream_1"].format(
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     title[:23],
@@ -278,7 +279,8 @@ async def stream(
             except Exception:
                 img = await get_thumb(vidid)
             ap_status = await is_autoplay_on(chat_id)
-            colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            from VISHALMUSIC.utils.inline.play import colored_stream_markup
+            colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             caption = _["stream_1"].format(
                 f"https://t.me/{app.username}?start=info_{vidid}",
                 title[:23],
@@ -332,7 +334,8 @@ async def stream(
                 forceplay=forceplay,
             )
             ap_status = await is_autoplay_on(chat_id)
-            colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            from VISHALMUSIC.utils.inline.play import colored_stream_markup
+            colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             caption = _["stream_1"].format(
                 config.SUPPORT_CHAT, title[:23], duration_min, user_name
             )
@@ -395,7 +398,8 @@ async def stream(
             if is_video:
                 await add_active_video_chat(chat_id)
             ap_status = await is_autoplay_on(chat_id)
-            colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            from VISHALMUSIC.utils.inline.play import colored_stream_markup
+            colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             caption = _["stream_1"].format(link, title[:23], duration_min, user_name)
             await _send_or_fallback_photo(
                 _,
@@ -470,7 +474,8 @@ async def stream(
             except Exception:
                 img = await get_thumb(vidid)
             ap_status = await is_autoplay_on(chat_id)
-            colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            from VISHALMUSIC.utils.inline.play import colored_stream_markup
+            colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             caption = _["stream_1"].format(
                 f"https://t.me/{app.username}?start=info_{vidid}",
                 title[:23],

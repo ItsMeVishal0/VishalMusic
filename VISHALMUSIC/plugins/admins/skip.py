@@ -8,7 +8,8 @@ from VISHALMUSIC.misc import db
 from VISHALMUSIC.utils.database import get_loop
 from VISHALMUSIC.utils.stream.autoplay import is_autoplay_on
 from VISHALMUSIC.utils.decorators import AdminRightsCheck
-from VISHALMUSIC.utils.inline import close_markup, stream_markup
+from VISHALMUSIC.utils.inline import close_markup
+from VISHALMUSIC.utils.inline.play import colored_stream_markup
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
 from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
@@ -144,7 +145,8 @@ async def skip(cli, message: Message, _, chat_id):
             await VISHAL.skip_stream(chat_id, link, video=status, image=image)
         except:
             return await message.reply_text(_["call_6"])
-        button = stream_markup(_, chat_id)
+        ap_status = await is_autoplay_on(chat_id)
+        button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
         await _skip_send_photo(
             message.chat.id, message, img,
@@ -165,7 +167,8 @@ async def skip(cli, message: Message, _, chat_id):
             await VISHAL.skip_stream(chat_id, file_path, video=status, image=image)
         except:
             return await mystic.edit_text(_["call_6"])
-        button = stream_markup(_, chat_id)
+        ap_status = await is_autoplay_on(chat_id)
+        button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
         await _skip_send_photo(
             message.chat.id, message, img,
@@ -178,7 +181,8 @@ async def skip(cli, message: Message, _, chat_id):
             await VISHAL.skip_stream(chat_id, videoid, video=status)
         except:
             return await message.reply_text(_["call_6"])
-        button = stream_markup(_, chat_id)
+        ap_status = await is_autoplay_on(chat_id)
+        button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         await _skip_send_photo(
             message.chat.id, message, config.STREAM_IMG_URL,
             _["stream_2"].format(user),
@@ -198,8 +202,9 @@ async def skip(cli, message: Message, _, chat_id):
             await VISHAL.skip_stream(chat_id, queued, video=status, image=image)
         except:
             return await message.reply_text(_["call_6"])
+        ap_status = await is_autoplay_on(chat_id)
         if videoid == "telegram":
-            button = stream_markup(_, chat_id)
+            button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             photo = config.TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
             await _skip_send_photo(
                 message.chat.id, message, photo,
@@ -207,7 +212,7 @@ async def skip(cli, message: Message, _, chat_id):
                 button, None, chat_id, "tg",
             )
         elif videoid == "soundcloud":
-            button = stream_markup(_, chat_id)
+            button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             photo = config.SOUNCLOUD_IMG_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
             await _skip_send_photo(
                 message.chat.id, message, photo,
