@@ -112,9 +112,11 @@ async def start_pm(client, message: Message, _):
             
             # Fallback to Pyrogram if Bot API fails
             if not result:
+                from pyrogram import enums
                 return await message.reply_photo(
                     photo=start_photo,
                     caption=_["help_1"].format(config.SUPPORT_CHAT),
+                    parse_mode=enums.ParseMode.HTML,
                     reply_markup=buttons_to_inline_markup(keyboard),
                 )
             return
@@ -157,10 +159,12 @@ async def start_pm(client, message: Message, _):
             ]
             
             await m.delete()
+            from pyrogram import enums
             await app.send_photo(
                 chat_id=message.chat.id,
                 photo=thumbnail,
                 caption=searched_text,
+                parse_mode=enums.ParseMode.HTML,
                 reply_markup=buttons_to_inline_markup(key),
             )
             if await is_on_off(2):
@@ -216,9 +220,11 @@ async def start_pm(client, message: Message, _):
         
         # Fallback to Pyrogram if Bot API fails
         if not result:
+            from pyrogram import enums
             await message.reply_photo(
                 photo=start_photo,
                 caption=_["start_2"].format(message.from_user.mention, app.mention),
+                parse_mode=enums.ParseMode.HTML,
                 reply_markup=buttons_to_inline_markup(out),
             )
         
@@ -271,11 +277,13 @@ async def start_gp(client, message: Message, _):
     
     # Get buttons with Telegram native colored button support
     from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+    from pyrogram import enums
     
     # Direct Pyrogram (Telegram natively handles colors!)
     await message.reply_photo(
         photo=start_photo,
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+        parse_mode=enums.ParseMode.HTML,
         reply_markup=buttons_to_inline_markup(out),
     )
     
@@ -330,6 +338,7 @@ async def welcome(client, message: Message):
                 if not welcome_photo:
                     welcome_photo = random.choice(config.START_IMGS)
                 
+                from pyrogram import enums
                 await message.reply_photo(
                     photo=welcome_photo,
                     caption=_["start_3"].format(
@@ -338,6 +347,7 @@ async def welcome(client, message: Message):
                         message.chat.title,
                         app.mention,
                     ),
+                    parse_mode=enums.ParseMode.HTML,
                     reply_markup=buttons_to_inline_markup(out),
                 )
                 await add_served_chat(message.chat.id)
