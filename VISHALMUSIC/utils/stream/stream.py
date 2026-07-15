@@ -44,24 +44,68 @@ def _store_mystic(chat_id, run, markup_type, caption=None):
 
 
 async def _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, db_ref, chat_id, markup_type):
-    """Send photo with buttons using direct Pyrogram."""
+    """Send photo with colored buttons via Bot API, fallback to Pyrogram if fails."""
+    from VISHALMUSIC.utils.colored_buttons import send_photo_colored
+    from pyrogram import enums
+
+    run = None
+    # Try Bot API first (with colors)
     try:
-        run = await app.send_photo(
-            original_chat_id,
+        run_data = await send_photo_colored(
+            chat_id=original_chat_id,
             photo=img,
             caption=caption,
-            reply_markup=buttons_to_inline_markup(colored_buttons),
+            reply_markup=colored_buttons,
         )
-        _store_mystic(chat_id, run, markup_type, caption)
+        if run_data and run_data.get("message_id"):
+            try:
+                run = await app.get_messages(original_chat_id, run_data["message_id"])
+            except Exception:
+                run = run_data
     except Exception:
-        pass
+        run = None
+
+    # Fallback to Pyrogram if Bot API failed
+    if run is None:
+        try:
+            run = await app.send_photo(
+                original_chat_id,
+                photo=img,
+                caption=caption,
+                parse_mode=enums.ParseMode.HTML,
+                reply_markup=buttons_to_inline_markup(colored_buttons),
+            )
+        except Exception:
+            return
+
+    _store_mystic(chat_id, run, markup_type, caption)
 
 
 async def _send_or_fallback_message(chat_id, text, colored_buttons):
-    """Send message with buttons using direct Pyrogram."""
+    """Send message with colored buttons via Bot API, fallback to Pyrogram."""
+    from VISHALMUSIC.utils.colored_buttons import send_message_colored
+    from pyrogram import enums
+
+    # Try Bot API first (with colors)
+    try:
+        run_data = await send_message_colored(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=colored_buttons,
+        )
+        if run_data and run_data.get("message_id"):
+            try:
+                return await app.get_messages(chat_id, run_data["message_id"])
+            except Exception:
+                return run_data
+    except Exception:
+        pass
+
+    # Fallback to Pyrogram
     return await app.send_message(
         chat_id=chat_id,
         text=text,
+        parse_mode=enums.ParseMode.HTML,
         reply_markup=buttons_to_inline_markup(colored_buttons),
     )
 
@@ -528,7 +572,8 @@ async def stream(
                 forceplay=forceplay,
             )
             ap_status = await is_autoplay_on(chat_id)
-            colored_buttons = stream_markup(_, chat_id, autoplay_status=ap_status)
+            from VISHALMUSIC.utils.inline.play import colored_stream_markup
+            colored_buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             caption = _["stream_2"].format(user_name)
             await _send_or_fallback_photo(
                 _,

@@ -37,7 +37,7 @@ from VISHALMUSIC.utils.database import (
 )
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.formatters import check_duration, seconds_to_min, speed_converter
-from VISHALMUSIC.utils.inline.play import stream_markup, colored_stream_markup, colored_stream_markup_timer
+from VISHALMUSIC.utils.inline.play import colored_stream_markup, colored_stream_markup_timer
 from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_photo_colored
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 

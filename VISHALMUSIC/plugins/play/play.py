@@ -703,19 +703,20 @@ async def play_playlists_command(client, CallbackQuery, _):
             internal_type = "playlist"
             log_label = "Youtube playlist"
         elif ptype == "spplay":
-            result, _ = await Spotify.playlist(videoid)
+            # Don't shadow language dict `_` — use throwaway var
+            result, _spotify_meta = await Spotify.playlist(videoid)
             internal_type = "playlist"
             log_label = "Spotify playlist"
         elif ptype == "spalbum":
-            result, _ = await Spotify.album(videoid)
+            result, _spotify_meta = await Spotify.album(videoid)
             internal_type = "playlist"
             log_label = "Spotify album"
         elif ptype == "spartist":
-            result, _ = await Spotify.artist(videoid)
+            result, _spotify_meta = await Spotify.artist(videoid)
             internal_type = "playlist"
             log_label = "Spotify artist"
         elif ptype == "apple":
-            result, _ = await Apple.playlist(videoid, True)
+            result, _apple_meta = await Apple.playlist(videoid, True)
             internal_type = "playlist"
             log_label = "Apple Music playlist"
         else:

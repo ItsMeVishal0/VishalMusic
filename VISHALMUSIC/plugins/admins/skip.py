@@ -12,19 +12,46 @@ from VISHALMUSIC.utils.inline import close_markup
 from VISHALMUSIC.utils.inline.play import colored_stream_markup
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_photo_colored
 from config import BANNED_USERS
 
 
 async def _skip_send_photo(chat_id, message, photo, caption, buttons, db_ref, chat_id_ref, markup_type):
+    """Send photo with colored buttons. Bot API first, Pyrogram fallback."""
     from VISHALMUSIC.misc import db
-    run = await message.reply_photo(
-        photo=photo,
-        caption=caption,
-        reply_markup=buttons_to_inline_markup(buttons),
-    )
-    db[chat_id_ref][0]["mystic"] = run
-    db[chat_id_ref][0]["markup"] = markup_type
+    from pyrogram import enums
+
+    run = None
+    # Try Bot API first (with colors)
+    try:
+        run_data = await send_photo_colored(
+            chat_id=chat_id,
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons,
+        )
+        if run_data and run_data.get("message_id"):
+            try:
+                run = await app.get_messages(chat_id, run_data["message_id"])
+            except Exception:
+                run = run_data
+    except Exception:
+        run = None
+
+    # Fallback to Pyrogram
+    if run is None:
+        run = await message.reply_photo(
+            photo=photo,
+            caption=caption,
+            parse_mode=enums.ParseMode.HTML,
+            reply_markup=buttons_to_inline_markup(buttons),
+        )
+
+    try:
+        db[chat_id_ref][0]["mystic"] = run
+        db[chat_id_ref][0]["markup"] = markup_type
+    except Exception:
+        pass
     return run
 
 
@@ -220,7 +247,7 @@ async def skip(cli, message: Message, _, chat_id):
                 button, None, chat_id, "tg",
             )
         else:
-            button = stream_markup(_, chat_id)
+            button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
             img = await get_thumb(videoid)
             await _skip_send_photo(
                 message.chat.id, message, img,

@@ -50,6 +50,11 @@ from VISHALMUSIC.utils.inline.play import colored_stream_markup, colored_stream_
 from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
     buttons_to_inline_markup,
+    send_message_colored,
+    send_photo_colored,
+    edit_message_text_colored,
+    edit_message_caption_colored,
+    edit_reply_markup_colored,
 )
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 from VISHALMUSIC.utils.thumbnails import get_thumb
@@ -234,12 +239,35 @@ async def manage_callback(client, callback: CallbackQuery, _):
 
 
 async def _colored_reply_photo(callback, photo, caption, buttons, db_ref, chat_id, markup_type):
-    """Send a new photo reply with colored buttons using direct Pyrogram."""
-    run = await callback.message.reply_photo(
-        photo=photo,
-        caption=caption,
-        reply_markup=buttons_to_inline_markup(buttons),
-    )
+    """Send a new photo reply with colored buttons. Bot API first, Pyrogram fallback."""
+    from pyrogram import enums
+
+    run = None
+    # Try Bot API for colored buttons
+    try:
+        run_data = await send_photo_colored(
+            chat_id=callback.message.chat.id,
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons,
+        )
+        if run_data and run_data.get("message_id"):
+            try:
+                run = await app.get_messages(callback.message.chat.id, run_data["message_id"])
+            except Exception:
+                run = run_data
+    except Exception:
+        run = None
+
+    # Fallback to Pyrogram
+    if run is None:
+        run = await callback.message.reply_photo(
+            photo=photo,
+            caption=caption,
+            parse_mode=enums.ParseMode.HTML,
+            reply_markup=buttons_to_inline_markup(buttons),
+        )
+
     playlist = db.get(chat_id)
     if playlist and len(playlist) > 0:
         playlist[0]["mystic"] = run
@@ -559,12 +587,28 @@ async def _now_playing_timer():
                     autoplay_status=ap_status,
                 )
 
+                from pyrogram import enums
+
                 if buttons:
-                    # Direct Pyrogram edit (Telegram native colored buttons)
-                    if not isinstance(mystic, dict):
+                    # Try Bot API first (colored buttons persist)
+                    api_ok = False
+                    try:
+                        result = await edit_message_caption_colored(
+                            chat_id=m_chat_id,
+                            message_id=m_id,
+                            caption=new_caption,
+                            reply_markup=buttons,
+                        )
+                        api_ok = bool(result)
+                    except Exception:
+                        api_ok = False
+
+                    # Fallback: direct Pyrogram edit (no colors, HTML parsed)
+                    if not api_ok and not isinstance(mystic, dict):
                         try:
                             await mystic.edit_caption(
                                 caption=new_caption,
+                                parse_mode=enums.ParseMode.HTML,
                                 reply_markup=buttons_to_inline_markup(buttons),
                             )
                         except Exception:
@@ -573,7 +617,10 @@ async def _now_playing_timer():
                     # Timer throttled — only update caption (no markup change)
                     if not isinstance(mystic, dict):
                         try:
-                            await mystic.edit_caption(caption=new_caption)
+                            await mystic.edit_caption(
+                                caption=new_caption,
+                                parse_mode=enums.ParseMode.HTML,
+                            )
                         except Exception:
                             pass
             except Exception:

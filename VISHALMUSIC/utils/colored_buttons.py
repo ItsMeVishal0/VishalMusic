@@ -269,11 +269,24 @@ async def _send_photo_with_file(
     url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendPhoto"
     session = await _get_session()
     
+    # Open file safely with `with` to prevent handle leak
+    try:
+        with open(file_path, "rb") as fh:
+            file_bytes = fh.read()
+    except Exception as e:
+        logger.error(f"❌ Failed reading photo file {file_path}: {e}")
+        return None
+    
     try:
         # Build form data
         form = aiohttp.FormData()
         form.add_field("chat_id", str(chat_id))
-        form.add_field("photo", open(file_path, "rb"), filename=os.path.basename(file_path))
+        form.add_field(
+            "photo",
+            file_bytes,
+            filename=os.path.basename(file_path),
+            content_type="application/octet-stream",
+        )
         
         if caption:
             form.add_field("caption", caption)
@@ -355,29 +368,6 @@ async def edit_message_caption_colored(
     
     if caption:
         payload["caption"] = caption
-    
-    if reply_markup:
-        payload["reply_markup"] = {
-            "inline_keyboard": _build_inline_keyboard(reply_markup)
-        }
-    
-    return await _bot_api_call("editMessageCaption", payload)
-
-
-async def edit_message_caption_colored(
-    chat_id: Union[int, str],
-    message_id: int,
-    caption: str,
-    reply_markup: List[List[Dict]] = None,
-    parse_mode: str = "HTML"
-) -> Optional[Dict]:
-    """Edit message caption + buttons with COLORS via Bot API HTTP."""
-    payload = {
-        "chat_id": chat_id,
-        "message_id": message_id,
-        "caption": caption,
-        "parse_mode": parse_mode
-    }
     
     if reply_markup:
         payload["reply_markup"] = {
