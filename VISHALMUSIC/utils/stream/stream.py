@@ -286,6 +286,7 @@ async def stream(
                 user_name,
             )
             await _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, None, chat_id, "stream")
+            await mystic.delete()
 
     elif streamtype == "soundcloud":
         file_path = result["filepath"]
@@ -477,7 +478,8 @@ async def stream(
                 duration_min,
                 user_name,
             )
-            await _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, None, chat_id, "tg")
+            await _send_or_fallback_photo(_, original_chat_id, img, caption, colored_buttons, None, chat_id, "stream")
+            await mystic.delete()
 
     elif streamtype == "index":
         link = result
