@@ -311,6 +311,12 @@ class Call:
                 await set_loop(chat_id, loop)
             await auto_clean(popped)
             if not check:
+                    # Store popped data BEFORE _clear_() because _clear_() wipes db[chat_id]
+                    last_title = popped.get("title", "") if popped else ""
+                    last_vidid = popped.get("vidid", "") if popped else ""
+                    last_chat_id = popped.get("chat_id", chat_id) if popped else chat_id
+                    last_video = (popped.get("streamtype") == "video") if popped else False
+                    
                     # _clear_() marks the chat inactive in DB (is_active_chat()=False).
                     # This is intentional: stream() inside auto_play_next() checks
                     # is_active_chat() to decide whether to "just queue" or to
@@ -322,35 +328,36 @@ class Call:
                     await _clear_(chat_id)
 
                     autoplay_started = False
-                    if popped:
+                    if last_title and await is_autoplay_on(chat_id):
                         try:
-                            if await is_autoplay_on(chat_id):
-                                from VISHALMUSIC.utils.stream.autoplay import auto_play_next
-                                from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
+                            from VISHALMUSIC.utils.stream.autoplay import auto_play_next
+                            from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
 
-                                autoplay_started = await auto_play_next(
-                                    chat_id,
-                                    popped.get("chat_id", chat_id),
-                                    popped.get("title", ""),
-                                    popped.get("vidid", ""),
-                                    video=(popped.get("streamtype") == "video"),
-                                )
+                            autoplay_started = await auto_play_next(
+                                chat_id,
+                                last_chat_id,
+                                last_title,
+                                last_vidid,
+                                video=last_video,
+                            )
 
-                                # Verify the stream actually started.
-                                # auto_play_next() can return True even when stream()
-                                # silently failed — join_call() has @capture_internal_err
-                                # which swallows its internal AssistantErr and returns
-                                # None. stream() then still runs put_queue() and sends
-                                # a "now playing" photo, but nothing is actually playing.
-                                # A successful join_call() always calls add_active_chat(),
-                                # so is_active_chat()=False means the join silently failed.
-                                if autoplay_started and not await _is_chat_active(chat_id):
-                                    autoplay_started = False
+                            # Verify the stream actually started.
+                            # auto_play_next() can return True even when stream()
+                            # silently failed — join_call() has @capture_internal_err
+                            # which swallows its internal AssistantErr and returns
+                            # None. stream() then still runs put_queue() and sends
+                            # a "now playing" photo, but nothing is actually playing.
+                            # A successful join_call() always calls add_active_chat(),
+                            # so is_active_chat()=False means the join silently failed.
+                            if autoplay_started and not await _is_chat_active(chat_id):
+                                autoplay_started = False
 
                         except Exception:
                             autoplay_started = False
 
-                    if not autoplay_started:
+                    # DON'T leave call if autoplay failed - assistant should stay in VC
+                    # Only leave if autoplay is disabled (not attempted)
+                    if not autoplay_started and not await is_autoplay_on(chat_id):
                         if chat_id in self.active_calls:
                             try:
                                 await client.leave_call(chat_id)
