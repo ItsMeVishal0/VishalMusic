@@ -4,9 +4,10 @@ from VISHALMUSIC.utils.colored_buttons import styled_button
 
 
 def start_panel(_):
+    # Add me = success (green, positive CTA), Channel = primary (blue, info)
     buttons = [
         [
-            styled_button(text=_["S_B_1"], url=f"https://t.me/{app.username}?startgroup=true", style="primary"),
+            styled_button(text=_["S_B_1"], url=f"https://t.me/{app.username}?startgroup=true", style="success"),
             styled_button(text=_["S_B_2"], url=config.SUPPORT_CHANNEL, style="primary"),
         ],
     ]
@@ -14,16 +15,17 @@ def start_panel(_):
 
 
 def private_panel(_):
+    # Add me = success (green CTA), Owner + Support = primary (blue), Help = success (green)
     buttons = [
         [
-            styled_button(text=_["S_B_1"], url=f"https://t.me/{app.username}?startgroup=true", style="primary"),
+            styled_button(text=_["S_B_1"], url=f"https://t.me/{app.username}?startgroup=true", style="success"),
         ],
         [
             styled_button(text=_["S_B_7"], url=f"tg://user?id={config.OWNER_ID}", style="primary"),
             styled_button(text=_["S_B_4"], url=config.SUPPORT_CHAT, style="primary"),
         ],
         [
-            styled_button(text=_["S_B_3"], callback_data="open_help", style="primary"),
+            styled_button(text=_["S_B_3"], callback_data="open_help", style="success"),
         ],
     ]
     return buttons
