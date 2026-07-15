@@ -77,10 +77,12 @@ async def _colored_send_photo(original_chat_id, photo, caption, buttons, db_ref,
     else:
         # ❌ Bot API failed - fallback to Pyrogram (NO COLORS)
         logger.warning(f"⚠️ Bot API failed for chat {original_chat_id}, using Pyrogram fallback (no colors)")
+        from pyrogram import enums
         run = await app.send_photo(
             chat_id=original_chat_id,
             photo=photo,
             caption=caption,
+            parse_mode=enums.ParseMode.HTML,
             reply_markup=buttons_to_inline_markup(buttons),
         )
     
@@ -483,14 +485,23 @@ class Call:
                             run = run_data
                     else:
                         try:
+                            from pyrogram import enums
                             run = await app.send_photo(
-                                chat_id=original_chat_id, photo=img, caption=caption, reply_markup=buttons_to_inline_markup(button),
+                                chat_id=original_chat_id, 
+                                photo=img, 
+                                caption=caption, 
+                                parse_mode=enums.ParseMode.HTML,
+                                reply_markup=buttons_to_inline_markup(button),
                             )
                         except FloodWait as e:
                             LOGGER(__name__).warning(f"FloodWait: Sleeping for {e.value}")
                             await asyncio.sleep(e.value)
                             run = await app.send_photo(
-                                chat_id=original_chat_id, photo=img, caption=caption, reply_markup=buttons_to_inline_markup(button),
+                                chat_id=original_chat_id, 
+                                photo=img, 
+                                caption=caption, 
+                                parse_mode=enums.ParseMode.HTML,
+                                reply_markup=buttons_to_inline_markup(button),
                             )
                     playlist = db.get(chat_id)
                     if playlist and len(playlist) > 0:
