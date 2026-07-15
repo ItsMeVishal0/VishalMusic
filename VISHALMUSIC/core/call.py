@@ -42,7 +42,7 @@ from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_pho
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 
 logger = logging.getLogger(__name__)
-from VISHALMUSIC.utils.thumbnails import get_thumb
+from VISHALMUSIC.utils.thumbnails import get_thumb, get_thumb_url
 from VISHALMUSIC.utils.errors import capture_internal_err, send_large_error
 from VISHALMUSIC.utils.pastebin import VISHALBIN
 
@@ -397,7 +397,7 @@ class Call:
                 except Exception:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
-                img = await get_thumb(videoid)
+                img = await get_thumb_url(videoid)  # Use URL for colored buttons
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
                 await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
@@ -426,7 +426,7 @@ class Call:
                 except:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
-                img = await get_thumb(videoid)
+                img = await get_thumb_url(videoid)  # Use URL for colored buttons
                 button = stream_markup(_, chat_id, autoplay_status=ap_status)
                 await mystic.delete()
                 await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
@@ -467,7 +467,7 @@ class Call:
                         ), button, None, chat_id, "tg")
 
                 else:
-                    img = await get_thumb(videoid)
+                    img = await get_thumb_url(videoid)  # Use URL for colored buttons
                     button = stream_markup(_, chat_id, autoplay_status=ap_status)
                     caption = _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",

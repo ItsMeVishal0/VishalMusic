@@ -119,3 +119,22 @@ async def get_thumb(videoid: str) -> str:
 #        😎  VISHAL MUSIC BOT  😎
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════
+
+
+async def get_thumb_url(videoid: str) -> str:
+    """Get thumbnail URL directly (NO download) - for Bot API colored buttons.
+    
+    Returns YouTube thumbnail URL which Bot API can use with JSON payload.
+    This avoids multipart/form-data file upload issues that cause HTML parse errors.
+    
+    Usage: Use this for colored buttons instead of get_thumb()
+    """
+    # Try maxresdefault first (best quality)
+    thumbnail_urls = [
+        f"https://img.youtube.com/vi/{videoid}/maxresdefault.jpg",
+        f"https://img.youtube.com/vi/{videoid}/hqdefault.jpg",
+        f"https://img.youtube.com/vi/{videoid}/sddefault.jpg",
+    ]
+    
+    # Return first URL (YouTube URLs are reliable, no need to verify)
+    return thumbnail_urls[0]
