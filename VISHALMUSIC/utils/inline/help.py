@@ -4,12 +4,12 @@ from VISHALMUSIC.utils.colored_buttons import styled_button
 
 TOTAL_SECTIONS = 29
 
-# Cycle button colors so rows look mixed (blue → green → default → blue → green → default)
-_STYLE_CYCLE = ["primary", "success", None]
+# Alternate button colors: green → blue → green → blue ...
+_STYLE_CYCLE = ["success", "primary"]
 
 
 def generate_help_buttons(_, start: int, end: int, current_page: int):
-    """Return category buttons with cycling colors so rows look varied."""
+    """Return category buttons with alternating green/blue colors."""
     buttons, per_row = [], 3
     for idx, i in enumerate(range(start, end + 1)):
         if idx % per_row == 0:
