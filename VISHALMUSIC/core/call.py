@@ -37,7 +37,7 @@ from VISHALMUSIC.utils.database import (
 )
 from VISHALMUSIC.utils.exceptions import AssistantErr
 from VISHALMUSIC.utils.formatters import check_duration, seconds_to_min, speed_converter
-from VISHALMUSIC.utils.inline.play import stream_markup
+from VISHALMUSIC.utils.inline.play import stream_markup, colored_stream_markup, colored_stream_markup_timer
 from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_photo_colored
 from VISHALMUSIC.utils.stream.autoclear import auto_clean
 
@@ -398,7 +398,7 @@ class Call:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
                 img = await get_thumb_url(videoid)  # Use URL for colored buttons
-                button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                 await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
                         title[:23],
@@ -427,7 +427,7 @@ class Call:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
                 img = await get_thumb_url(videoid)  # Use URL for colored buttons
-                button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                 await mystic.delete()
                 await _colored_send_photo(original_chat_id, img, _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
@@ -443,7 +443,7 @@ class Call:
                 except:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
-                button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                 await _colored_send_photo(original_chat_id, config.STREAM_IMG_URL, _["stream_2"].format(user), button, None, chat_id, "tg")
 
             else:
@@ -454,21 +454,21 @@ class Call:
                     return await app.send_message(original_chat_id, text=_["call_6"])
 
                 if videoid == "telegram":
-                    button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                    button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                     photo = config.TELEGRAM_AUDIO_URL if str(streamtype) == "audio" else config.TELEGRAM_VIDEO_URL
                     await _colored_send_photo(original_chat_id, photo, _["stream_1"].format(
                             config.SUPPORT_CHAT, title[:23], check[0]["dur"], user,
                         ), button, None, chat_id, "tg")
 
                 elif videoid == "soundcloud":
-                    button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                    button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                     await _colored_send_photo(original_chat_id, config.SOUNCLOUD_IMG_URL, _["stream_1"].format(
                             config.SUPPORT_CHAT, title[:23], check[0]["dur"], user,
                         ), button, None, chat_id, "tg")
 
                 else:
                     img = await get_thumb_url(videoid)  # Use URL for colored buttons
-                    button = stream_markup(_, chat_id, autoplay_status=ap_status)
+                    button = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
                     caption = _["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{videoid}",
                         title[:23], check[0]["dur"], user,
