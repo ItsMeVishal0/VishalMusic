@@ -44,9 +44,6 @@ import config
 
 logger = logging.getLogger(__name__)
 
-# Telegram Bot API base URL
-BOT_API_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN or ''}"
-
 # Global aiohttp session
 _session: Optional[aiohttp.ClientSession] = None
 
@@ -77,10 +74,11 @@ async def _bot_api_call(method: str, payload: dict) -> Optional[dict]:
         Response 'result' field if successful, None otherwise
     """
     if not config.BOT_TOKEN:
-        logger.error("❌ BOT_TOKEN not set! Colored buttons will NOT work.")
+        logger.warning("⚠️ BOT_TOKEN not set! Colored buttons will NOT work.")
         return None
     
-    url = f"{BOT_API_URL}/{method}"
+    # Build URL dynamically to get fresh BOT_TOKEN
+    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/{method}"
     session = await _get_session()
     
     try:
@@ -268,7 +266,7 @@ async def _send_photo_with_file(
         logger.error("❌ BOT_TOKEN not set!")
         return None
     
-    url = f"{BOT_API_URL}/sendPhoto"
+    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendPhoto"
     session = await _get_session()
     
     try:
