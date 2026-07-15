@@ -504,10 +504,18 @@ async def smart_edit_message_text(
     parse_mode: str = "HTML",
     disable_web_page_preview: bool = False,
 ):
-    """Edit a text message with colored buttons. Falls back to Pyrogram on failure."""
+    """Edit a message (text OR photo caption) with colored buttons preserved.
+
+    Order of attempts (all keep 'style' field, so colors survive on tap):
+      1. Bot API editMessageText  — succeeds if original message was TEXT
+      2. Bot API editMessageCaption — succeeds if original message was PHOTO
+      3. Pyrogram edit_message_text — last-resort fallback (colors lost)
+      4. Pyrogram edit_message_caption — last-resort fallback (colors lost)
+    """
     from VISHALMUSIC import app
     from pyrogram import enums
 
+    # 1. Try editMessageText via Bot API (colored)
     try:
         data = await edit_message_text_colored(
             chat_id=chat_id,
@@ -520,8 +528,24 @@ async def smart_edit_message_text(
         if data:
             return data
     except Exception as e:
-        logger.debug(f"smart_edit_message_text Bot API path failed: {e}")
+        logger.debug(f"smart_edit_message_text: editMessageText failed: {e}")
 
+    # 2. If message is a photo, editMessageText fails ("no text to edit").
+    #    Try editMessageCaption which supports colored buttons too.
+    try:
+        data = await edit_message_caption_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            caption=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+        if data:
+            return data
+    except Exception as e:
+        logger.debug(f"smart_edit_message_text: editMessageCaption fallback failed: {e}")
+
+    # 3. Pyrogram text edit (no colors)
     try:
         return await app.edit_message_text(
             chat_id=chat_id,
@@ -532,7 +556,52 @@ async def smart_edit_message_text(
             reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
         )
     except Exception as e:
-        logger.warning(f"smart_edit_message_text both paths failed: {e}")
+        logger.debug(f"smart_edit_message_text: Pyrogram text edit failed: {e}")
+
+    # 4. Pyrogram caption edit (no colors) — final fallback
+    try:
+        return await app.edit_message_caption(
+            chat_id=chat_id,
+            message_id=message_id,
+            caption=text,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_edit_message_text: all 4 paths failed: {e}")
+        return None
+
+
+async def smart_edit_reply_markup(
+    chat_id: Union[int, str],
+    message_id: int,
+    reply_markup: List[List[Dict]],
+):
+    """Edit ONLY the buttons of a message with colors preserved.
+
+    Bot API editMessageReplyMarkup keeps 'style' field. Pyrogram fallback loses colors.
+    """
+    from VISHALMUSIC import app
+
+    try:
+        data = await edit_reply_markup_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=reply_markup,
+        )
+        if data:
+            return data
+    except Exception as e:
+        logger.debug(f"smart_edit_reply_markup Bot API path failed: {e}")
+
+    try:
+        return await app.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_edit_reply_markup both paths failed: {e}")
         return None
 
 
@@ -543,10 +612,15 @@ async def smart_edit_message_caption(
     reply_markup: Optional[List[List[Dict]]] = None,
     parse_mode: str = "HTML",
 ):
-    """Edit caption + buttons. Falls back to Pyrogram on failure."""
+    """Edit caption OR text message with colored buttons preserved.
+
+    Order: editMessageCaption -> editMessageText (both via Bot API to keep colors)
+    -> Pyrogram fallbacks (colors lost).
+    """
     from VISHALMUSIC import app
     from pyrogram import enums
 
+    # 1. editMessageCaption (photo case)
     try:
         data = await edit_message_caption_colored(
             chat_id=chat_id,
@@ -558,8 +632,23 @@ async def smart_edit_message_caption(
         if data:
             return data
     except Exception as e:
-        logger.debug(f"smart_edit_message_caption Bot API path failed: {e}")
+        logger.debug(f"smart_edit_message_caption: editMessageCaption failed: {e}")
 
+    # 2. editMessageText (text case)
+    try:
+        data = await edit_message_text_colored(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=caption,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+        if data:
+            return data
+    except Exception as e:
+        logger.debug(f"smart_edit_message_caption: editMessageText fallback failed: {e}")
+
+    # 3. Pyrogram caption fallback (no colors)
     try:
         return await app.edit_message_caption(
             chat_id=chat_id,
@@ -569,7 +658,19 @@ async def smart_edit_message_caption(
             reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
         )
     except Exception as e:
-        logger.warning(f"smart_edit_message_caption both paths failed: {e}")
+        logger.debug(f"smart_edit_message_caption: Pyrogram caption failed: {e}")
+
+    # 4. Pyrogram text fallback
+    try:
+        return await app.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=caption,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_edit_message_caption: all 4 paths failed: {e}")
         return None
 
 

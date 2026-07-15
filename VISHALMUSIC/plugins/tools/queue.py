@@ -13,9 +13,9 @@ from VISHALMUSIC.utils.database import get_cmode, is_active_chat, is_music_playi
 from VISHALMUSIC.utils.decorators.language import language, languageCB
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
-    send_photo_colored,
-    edit_message_text_colored,
-    edit_reply_markup_colored
+    smart_send_photo as send_photo_colored,
+    smart_edit_message_text as edit_message_text_colored,
+    smart_edit_reply_markup as edit_reply_markup_colored,
 )
 from VISHALMUSIC.utils.inline import queue_back_markup, queue_markup
 from config import BANNED_USERS

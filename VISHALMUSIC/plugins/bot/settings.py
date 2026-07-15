@@ -32,7 +32,7 @@ from VISHALMUSIC.utils.inline.start import private_panel
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
     smart_edit_message_text as edit_message_text_colored,
-    edit_reply_markup_colored,
+    smart_edit_reply_markup as edit_reply_markup_colored,
     styled_button,
 )
 from config import BANNED_USERS, OWNER_ID
@@ -58,9 +58,11 @@ async def settings_cb(client, callback: CallbackQuery, _):
     except Exception:
         pass
     buttons = setting_markup(_)
-    await callback.message.edit_text(
-        _["setting_1"].format(app.mention, callback.message.chat.id, callback.message.chat.title),
-        reply_markup=buttons_to_inline_markup(buttons),
+    await edit_message_text_colored(
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.id,
+        text=_["setting_1"].format(app.mention, callback.message.chat.id, callback.message.chat.title),
+        reply_markup=buttons,
     )
 
 # ─── SETTINGS BACK (PRIVATE vs. GROUP) ──────────────────────────────
@@ -76,14 +78,24 @@ async def settings_back_markup(client, callback: CallbackQuery, _):
     if callback.message.chat.type == ChatType.PRIVATE:
         await app.resolve_peer(OWNER_ID)
         buttons = private_panel(_)
-        await callback.message.edit_text(
-            _["start_2"].format(callback.from_user.mention, app.mention),
-            reply_markup=buttons_to_inline_markup(buttons),
+        # Build proper HTML mentions (Pyrogram .mention breaks in edit path)
+        user_mention = (
+            f'<a href="tg://user?id={callback.from_user.id}">'
+            f'{callback.from_user.first_name}</a>'
+        )
+        bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
+        await edit_message_text_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            text=_["start_2"].format(user_mention, bot_mention),
+            reply_markup=buttons,
         )
     else:
         buttons = setting_markup(_)
-        await callback.message.edit_reply_markup(
-            reply_markup=buttons_to_inline_markup(buttons),
+        await edit_reply_markup_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            reply_markup=buttons,
         )
 
 # ─── CALLBACK WITHOUT ADMIN RIGHTS ──────────────────────────────────
