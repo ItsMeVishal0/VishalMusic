@@ -9,6 +9,7 @@ try:
 except ImportError:
     _unidecode = None
 
+import config
 from VISHALMUSIC import LOGGER, app
 from VISHALMUSIC.core.mongo import mongodb
 from VISHALMUSIC.misc import db
@@ -1089,6 +1090,11 @@ async def auto_play_next(
         # Fix: after stream(), verify is_active_chat(). A successful join_call()
         # always calls add_active_chat(). If it's still False, the join failed.
 
+        # Capture message coordinates BEFORE stream() so we can delete via
+        # Bot API even if the Pyrogram Message object gets stale mid-stream.
+        _msg_chat_id = msg.chat.id
+        _msg_id = msg.id
+
         await stream(
             _,
             msg,
@@ -1108,24 +1114,56 @@ async def auto_play_next(
         )
 
         from VISHALMUSIC.utils.database import is_active_chat as _verify_stream_active
-        if not await _verify_stream_active(chat_id):
+        stream_ok = await _verify_stream_active(chat_id)
+
+        # Always attempt to delete the "Fetching next song..." message.
+        # Try Pyrogram first, then Bot API as a hard fallback.
+        async def _hard_delete_fetching_msg():
+            try:
+                await msg.delete()
+                return True
+            except Exception:
+                pass
+            # Bot API fallback (works even if Pyrogram reference went stale)
+            try:
+                import aiohttp
+                url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/deleteMessage"
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as s:
+                    async with s.post(
+                        url, json={"chat_id": _msg_chat_id, "message_id": _msg_id}
+                    ) as r:
+                        data = await r.json()
+                        return bool(data.get("ok"))
+            except Exception:
+                return False
+
+        if not stream_ok:
+            # Stream failed — show error instead of deleting
             try:
                 await msg.edit_text(_["autoplay_7"])
             except Exception:
                 pass
             return False
 
-        # Log autoplay song
+        # Success path: delete "Fetching next song..." NOW so user only sees
+        # the "Now Playing" photo. Don't wait for logging.
+        await _hard_delete_fetching_msg()
+
+        # Log autoplay song (non-blocking style — errors ignored)
         try:
             chat = await app.get_chat(original_chat_id)
             chat_title = chat.title if chat.title else chat.first_name
         except Exception:
             chat_title = str(chat_id)
-        LOGGER.info("Autoplay — Chat: %s (%d) | Title: %s | Dur: %s | Video: %s",
-                     chat_title, chat_id,
-                     details.get('title', '—'),
-                     details.get('duration_min', '—'),
-                     vidid)
+        LOGGER.info(
+            "Autoplay — Chat: %s (%d) | Title: %s | Dur: %s | Video: %s",
+            chat_title, chat_id,
+            details.get('title', '—'),
+            details.get('duration_min', '—'),
+            vidid,
+        )
         try:
             from config import LOGGER_ID
             from VISHALMUSIC.utils.database import is_on_off
@@ -1140,11 +1178,6 @@ async def auto_play_next(
                     f"<b>ᴠɪᴅᴇᴏ ɪᴅ :</b> <code>{vidid}</code>"
                 )
                 await app.send_message(chat_id=LOGGER_ID, text=log_text)
-        except Exception:
-            pass
-
-        try:
-            await msg.delete()
         except Exception:
             pass
 
