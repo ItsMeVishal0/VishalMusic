@@ -143,8 +143,10 @@ async def start_pm(client, message: Message, _):
                 channel = result["channel"]["name"]
                 link = result["link"]
                 published = result["publishedTime"]
+            # Build bot mention properly
+            bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
             searched_text = _["start_6"].format(
-                title, duration, views, published, channellink, channel, app.mention
+                title, duration, views, published, channellink, channel, bot_mention
             )
             
             # Import colored button functions
@@ -176,6 +178,9 @@ async def start_pm(client, message: Message, _):
     else:
         # Airbeats.py style animation - PRIVATE CHAT ONLY
         try:
+            # Build user mention for animation
+            user_mention = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+            
             # Welcome animation
             welcome_msgs = [
                 "𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐁𝐚𝐛𝐲 ꨄ︎ {}.. ❣️",
@@ -186,10 +191,17 @@ async def start_pm(client, message: Message, _):
                 "𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐁𝐚𝐛𝐲 ꨄ {}............. 💞",
             ]
             
-            lol = await message.reply_text(welcome_msgs[0].format(message.from_user.mention))
+            from pyrogram import enums
+            lol = await message.reply_text(
+                welcome_msgs[0].format(user_mention),
+                parse_mode=enums.ParseMode.HTML
+            )
             for msg in welcome_msgs[1:]:
                 await asyncio.sleep(0.3)
-                await lol.edit_text(msg.format(message.from_user.mention))
+                await lol.edit_text(
+                    msg.format(user_mention),
+                    parse_mode=enums.ParseMode.HTML
+                )
             await lol.delete()
                 
         except Exception:
@@ -210,11 +222,16 @@ async def start_pm(client, message: Message, _):
         out = private_panel(_)
         from VISHALMUSIC.utils.colored_buttons import send_photo_colored, buttons_to_inline_markup
         
+        # Build caption with proper HTML mention formatting
+        user_mention = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+        bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
+        caption = _["start_2"].format(user_mention, bot_mention)
+        
         # Try colored buttons first via Bot API
         result = await send_photo_colored(
             chat_id=message.chat.id,
             photo=start_photo,
-            caption=_["start_2"].format(message.from_user.mention, app.mention),
+            caption=caption,
             reply_markup=out
         )
         
@@ -223,7 +240,7 @@ async def start_pm(client, message: Message, _):
             from pyrogram import enums
             await message.reply_photo(
                 photo=start_photo,
-                caption=_["start_2"].format(message.from_user.mention, app.mention),
+                caption=caption,
                 parse_mode=enums.ParseMode.HTML,
                 reply_markup=buttons_to_inline_markup(out),
             )
@@ -279,10 +296,14 @@ async def start_gp(client, message: Message, _):
     from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
     from pyrogram import enums
     
+    # Build caption with proper HTML mention
+    bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
+    caption = _["start_1"].format(bot_mention, get_readable_time(uptime))
+    
     # Direct Pyrogram (Telegram natively handles colors!)
     await message.reply_photo(
         photo=start_photo,
-        caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+        caption=caption,
         parse_mode=enums.ParseMode.HTML,
         reply_markup=buttons_to_inline_markup(out),
     )
