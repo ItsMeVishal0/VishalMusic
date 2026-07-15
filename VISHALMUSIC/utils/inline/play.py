@@ -11,6 +11,7 @@ from VISHALMUSIC.utils.formatters import time_to_seconds
 from VISHALMUSIC.utils.colored_buttons import styled_button
 
 LAST_UPDATE_TIME = {}
+UPDATE_INTERVAL = 6  # seconds between progress bar updates
 
 # ═══════════════════════════════════════════════════════════
 #   HELPER FUNCTIONS (Shared by both colored & plain)
@@ -19,7 +20,7 @@ LAST_UPDATE_TIME = {}
 def should_update_progress(chat_id):
     now = time.time()
     last = LAST_UPDATE_TIME.get(chat_id, 0)
-    if now - last >= 6:
+    if now - last >= UPDATE_INTERVAL:
         LAST_UPDATE_TIME[chat_id] = now
         return True
     return False
