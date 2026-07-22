@@ -103,23 +103,24 @@ def keep_alive():
 
         @fapp.route('/')
         def home():
-            uptime_sec = int(time.time() - _start_time)
-            hours, remainder = divmod(uptime_sec, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            uptime_str = f"{hours}h {minutes}m {seconds}s"
+            try:
+                uptime_sec = int(time.time() - _start_time)
+                hours, remainder = divmod(uptime_sec, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                uptime_str = f"{hours}h {minutes}m {seconds}s"
 
-            total_users = total_chats = total_banned = total_sudoers = 0
-            if _sync_db:
-                try:
-                    total_users = _sync_db.tgusersdb.count_documents({})
-                    total_chats = _sync_db.chats.count_documents({})
-                    total_banned = _sync_db.blockedusers.count_documents({})
-                    sudo_data = _sync_db.sudoers.find_one({"sudo": "sudo"})
-                    total_sudoers = len(sudo_data.get("sudoers", [])) if sudo_data else 0
-                except Exception:
-                    pass
+                total_users = total_chats = total_banned = total_sudoers = 0
+                if _sync_db:
+                    try:
+                        total_users = _sync_db.tgusersdb.count_documents({})
+                        total_chats = _sync_db.chats.count_documents({})
+                        total_banned = _sync_db.blockedusers.count_documents({})
+                        sudo_data = _sync_db.sudoers.find_one({"sudo": "sudo"})
+                        total_sudoers = len(sudo_data.get("sudoers", [])) if sudo_data else 0
+                    except Exception as db_error:
+                        LOGGER("VISHALMUSIC").warning(f"DB stats error: {db_error}")
 
-            return f"""<!DOCTYPE html>
+                return f"""<!DOCTYPE html>
 <html><head><title>Vishal Music Bot</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="refresh" content="30">
@@ -156,6 +157,9 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
 </div>
 <div class="f"><p>Auto-refreshes every 30s</p><p style="margin-top:8px"><a href="https://t.me/{config.BOT_USERNAME}">Open Bot</a> • <a href="https://t.me/ItsMeVishalBots">Developer</a></p></div>
 </div></body></html>"""
+            except Exception as e:
+                LOGGER("VISHALMUSIC").error(f"Flask home error: {e}")
+                return f"Error: {str(e)}", 500
 
         @fapp.route('/health')
         def health():
@@ -164,7 +168,7 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
         @fapp.route('/api/stats')
         def api_stats():
             if not _sync_db:
-                return jsonify({"error": "DB not connected"}), 500
+                return jsonify({"error": "DB not connected", "status": "error"}), 200
             try:
                 return jsonify({
                     "users": _sync_db.tgusersdb.count_documents({}),
@@ -174,7 +178,8 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
                     "status": "running"
                 })
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                LOGGER("VISHALMUSIC").error(f"Flask API stats error: {e}")
+                return jsonify({"error": str(e), "status": "error"}), 200
 
         port = int(os.environ.get("PORT", 3000))
         fapp.run(host="0.0.0.0", port=port)
