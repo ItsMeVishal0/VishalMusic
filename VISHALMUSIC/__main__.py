@@ -186,8 +186,8 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
 # ----------------------------------------------------------------------
 
 if __name__ == "__main__":
-    if os.environ.get("RENDER") or os.environ.get("PORT"):
-        keep_alive()
+    # Start Flask web server on port 3000 automatically (works on VPS/Local/Render)
+    keep_alive()
     asyncio.get_event_loop().run_until_complete(init())
 
 # ═══════════════════════════════════════════════════════════
