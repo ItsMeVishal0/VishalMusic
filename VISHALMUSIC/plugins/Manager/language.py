@@ -37,7 +37,7 @@ def languages_keyboard(_):
     for idx, code in enumerate(ordered_codes):
         if code not in languages_present:
             continue
-            row.append(
+        row.append(
             styled_button(
                 text=languages_present[code],
                 callback_data=f"languages:{code}",

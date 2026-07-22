@@ -90,11 +90,14 @@ async def handle_upvote(callback: CallbackQuery, chat_id: int, counter, _):
         votemode[chat_id][message_id] = required_upvotes
         try:
             stored = confirmer[chat_id][message_id]
-            current = db[chat_id][0]
+            current = db.get(chat_id, [])
+            if not current or not isinstance(current, list) or len(current) == 0:
+                return await callback.edit_message_text("ғᴀɪʟᴇᴅ.")
+            current = current[0]
         except Exception:
             return await callback.edit_message_text("ғᴀɪʟᴇᴅ.")
         try:
-            if current["vidid"] != stored["vidid"] or current["file"] != stored["file"]:
+            if current.get("vidid") != stored.get("vidid") or current.get("file") != stored.get("file"):
                 return await callback.edit_message_text(_["admin_35"])
         except Exception:
             return await callback.edit_message_text(_["admin_36"])
@@ -217,10 +220,12 @@ async def manage_callback(client, callback: CallbackQuery, _):
 
     elif command == "Shuffle":
         playlist = db.get(chat_id)
-        if not playlist:
+        if not playlist or not isinstance(playlist, list):
             return await callback.answer(_["admin_42"], show_alert=True)
         try:
-            popped = playlist.pop(0)
+            popped = playlist.pop(0) if len(playlist) > 0 else None
+            if popped is None:
+                return await callback.answer(_["admin_43"], show_alert=True)
         except Exception:
             return await callback.answer(_["admin_43"], show_alert=True)
         if not playlist:
@@ -256,16 +261,16 @@ async def _colored_reply_photo(callback, photo, caption, buttons, db_ref, chat_i
 
 async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: str, user_mention: str):
     playlist = db.get(chat_id)
-    if not playlist:
+    if not playlist or not isinstance(playlist, list):
         return await callback.answer(_["queue_2"], show_alert=True)
 
     if command == "Skip":
         text_msg = f"➻ sᴛʀᴇᴀᴍ sᴋɪᴩᴩᴇᴅ 🎄\n│ \n└ʙʏ : {user_mention} 🥀"
         try:
-            popped = playlist.pop(0)
+            popped = playlist.pop(0) if len(playlist) > 0 else None
             if popped:
                 await auto_clean(popped)
-            if not playlist:
+            if not playlist or len(playlist) == 0:
                 if await is_autoplay_on(chat_id):
                     try:
                         await VISHAL.stop_stream(chat_id)
@@ -275,9 +280,9 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                         from VISHALMUSIC.utils.stream.autoplay import auto_play_next
                         await auto_play_next(
                             chat_id,
-                            popped.get("chat_id", chat_id),
-                            popped.get("title", ""),
-                            popped.get("vidid", ""),
+                            popped.get("chat_id", chat_id) if popped else chat_id,
+                            popped.get("title", "") if popped else "",
+                            popped.get("vidid", "") if popped else "",
                         )
                         await callback.edit_message_text(text_msg)
                         return
@@ -304,24 +309,25 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
 
     await callback.answer()
 
-    if not playlist:
+    if not playlist or len(playlist) == 0:
         return await callback.answer(_["queue_2"], show_alert=True)
 
     current_track = playlist[0]
-    queued = current_track["file"]
-    title = current_track["title"].title()
-    user = current_track["by"]
-    duration = current_track["dur"]
-    streamtype = current_track["streamtype"]
-    videoid = current_track["vidid"]
+    queued = current_track.get("file")
+    title = (current_track.get("title", "")).title()
+    user = current_track.get("by", "")
+    duration = current_track.get("dur", "")
+    streamtype = current_track.get("streamtype", "")
+    videoid = current_track.get("vidid", "")
     status = True if str(streamtype) == "video" else None
 
-    db[chat_id][0]["played"] = 0
-    if current_track.get("old_dur"):
-        db[chat_id][0]["dur"] = current_track["old_dur"]
-        db[chat_id][0]["seconds"] = current_track["old_second"]
-        db[chat_id][0]["speed_path"] = None
-        db[chat_id][0]["speed"] = 1.0
+    if db.get(chat_id) and len(db[chat_id]) > 0:
+        db[chat_id][0]["played"] = 0
+        if current_track.get("old_dur"):
+            db[chat_id][0]["dur"] = current_track["old_dur"]
+            db[chat_id][0]["seconds"] = current_track.get("old_second", 0)
+            db[chat_id][0]["speed_path"] = None
+            db[chat_id][0]["speed"] = 1.0
 
     ap_status = await is_autoplay_on(chat_id)
 
@@ -352,9 +358,26 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
 
     elif "vid_" in queued:
         mystic = await callback.message.reply_text(_["call_7"], disable_web_page_preview=True)
-        try:
-            file_path, direct = await YouTube.download(videoid, mystic, videoid=True, video=status)
-        except Exception:
+        
+        # Retry logic for YouTube download failures
+        max_retries = 3
+        download_success = False
+        file_path = None
+        direct = False
+
+        for attempt in range(max_retries):
+            try:
+                file_path, direct = await YouTube.download(videoid, mystic, videoid=True, video=status)
+                if file_path:
+                    download_success = True
+                    break
+            except Exception:
+                if attempt < max_retries - 1:
+                    continue
+                else:
+                    return await mystic.edit_text(_["call_6"])
+
+        if not download_success or not file_path:
             return await mystic.edit_text(_["call_6"])
         try:
             image = await YouTube.thumbnail(videoid, True)
@@ -424,17 +447,21 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
 
 async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, user_mention: str):
     playing = db.get(chat_id)
-    if not playing:
+    if not playing or not isinstance(playing, list) or len(playing) == 0:
         return await callback.answer(_["queue_2"], show_alert=True)
-    duration_seconds = int(playing[0]["seconds"])
+    
+    current_track = playing[0]
+    duration_seconds = int(current_track.get("seconds", 0))
     if duration_seconds == 0:
         return await callback.answer(_["admin_22"], show_alert=True)
-    file_path = playing[0]["file"]
+    file_path = current_track.get("file")
+    if not file_path:
+        return await callback.answer(_["admin_22"], show_alert=True)
     if "index_" in file_path or "live_" in file_path:
         return await callback.answer(_["admin_22"], show_alert=True)
-    duration_played = int(playing[0]["played"])
+    duration_played = int(current_track.get("played", 0))
     duration_to_skip = 10 if int(command) in [1, 2] else 30
-    duration = playing[0]["dur"]
+    duration = current_track.get("dur", "")
     if int(command) in [1, 3]:
         if (duration_played - duration_to_skip) <= 10:
             bet = seconds_to_min(duration_played)
@@ -457,7 +484,7 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
     await callback.answer()
     mystic = await callback.message.reply_text(_["admin_24"])
     if "vid_" in file_path:
-        n, file_path = await YouTube.video(playing[0]["vidid"], True)
+        n, file_path = await YouTube.video(current_track.get("vidid", ""), True)
         if n == 0:
             return await mystic.edit_text(_["admin_22"])
     try:
@@ -466,14 +493,15 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
             file_path,
             seconds_to_min(to_seek),
             duration,
-            playing[0]["streamtype"],
+            current_track.get("streamtype", ""),
         )
     except Exception:
         return await mystic.edit_text(_["admin_26"])
-    if int(command) in [1, 3]:
-        db[chat_id][0]["played"] -= duration_to_skip
-    else:
-        db[chat_id][0]["played"] += duration_to_skip
+    if db.get(chat_id) and len(db[chat_id]) > 0:
+        if int(command) in [1, 3]:
+            db[chat_id][0]["played"] -= duration_to_skip
+        else:
+            db[chat_id][0]["played"] += duration_to_skip
     seek_message = _["admin_25"].format(seconds_to_min(to_seek))
     await mystic.edit_text(f"{seek_message}\n\nᴄʜᴀɴɢᴇs ᴅᴏɴᴇ ʙʏ : {user_mention} !")
 

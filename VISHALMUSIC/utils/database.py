@@ -211,24 +211,30 @@ async def is_autoend() -> bool:
     global _autoend_cache
     if _autoend_cache is not None:
         return _autoend_cache
-    chat_id = 1234
-    user = await autoenddb.find_one({"chat_id": chat_id})
-    _autoend_cache = bool(user)
-    return _autoend_cache
+    try:
+        user = await autoenddb.find_one({"chat_id": {"$exists": True}})
+        _autoend_cache = bool(user)
+        return _autoend_cache
+    except Exception:
+        return False
 
 
 async def autoend_on():
     global _autoend_cache
-    chat_id = 1234
-    await autoenddb.insert_one({"chat_id": chat_id})
-    _autoend_cache = True
+    try:
+        await autoenddb.insert_one({"chat_id": 1234})
+        _autoend_cache = True
+    except Exception:
+        pass
 
 
 async def autoend_off():
     global _autoend_cache
-    chat_id = 1234
-    await autoenddb.delete_one({"chat_id": chat_id})
-    _autoend_cache = False
+    try:
+        await autoenddb.delete_one({"chat_id": 1234})
+        _autoend_cache = False
+    except Exception:
+        pass
 
 
 async def get_loop(chat_id: int) -> int:

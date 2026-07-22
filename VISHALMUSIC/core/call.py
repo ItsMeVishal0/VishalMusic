@@ -8,6 +8,7 @@
 import asyncio
 import logging
 import os
+import traceback
 from datetime import datetime, timedelta
 from typing import Union
 
@@ -285,70 +286,75 @@ class Call:
         popped = None
         loop = await get_loop(chat_id)
         try:
+            # Check if check exists and has items before accessing
+            if not check or not isinstance(check, list):
+                return
             if loop == 0:
+                if len(check) == 0:
+                    return
                 popped = check.pop(0)
             else:
                 loop = loop - 1
                 await set_loop(chat_id, loop)
             await auto_clean(popped)
-            if not check:
-                    # Store popped data BEFORE _clear_() because _clear_() wipes db[chat_id]
-                    last_title = popped.get("title", "") if popped else ""
-                    last_vidid = popped.get("vidid", "") if popped else ""
-                    last_chat_id = popped.get("chat_id", chat_id) if popped else chat_id
-                    last_video = (popped.get("streamtype") == "video") if popped else False
-                    
-                    # _clear_() marks the chat inactive in DB (is_active_chat()=False).
-                    # This is intentional: stream() inside auto_play_next() checks
-                    # is_active_chat() to decide whether to "just queue" or to
-                    # actually download + join_call + play. We NEED it to be False
-                    # here so stream() takes the "start fresh" path and calls
-                    # join_call() → assistant.play() to start the new stream.
-                    # (If is_active_chat() were True, stream() would only add
-                    # the song to queue without playing it — nothing would start.)
-                    await _clear_(chat_id)
+            if not check or not isinstance(check, list) or len(check) == 0:
+                # Store popped data BEFORE _clear_() because _clear_() wipes db[chat_id]
+                last_title = popped.get("title", "") if popped else ""
+                last_vidid = popped.get("vidid", "") if popped else ""
+                last_chat_id = popped.get("chat_id", chat_id) if popped else chat_id
+                last_video = (popped.get("streamtype") == "video") if popped else False
 
+            # _clear_() marks the chat inactive in DB (is_active_chat()=False).
+            # This is intentional: stream() inside auto_play_next() checks
+            # is_active_chat() to decide whether to "just queue" or to
+            # actually download + join_call + play. We NEED it to be False
+            # here so stream() takes the "start fresh" path and calls
+            # join_call() → assistant.play() to start the new stream.
+            # (If is_active_chat() were True, stream() would only add
+            # the song to queue without playing it — nothing would start.)
+            await _clear_(chat_id)
+
+            autoplay_started = False
+            if last_title and await is_autoplay_on(chat_id):
+                try:
+                    from VISHALMUSIC.utils.stream.autoplay import auto_play_next
+                    from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
+
+                    autoplay_started = await auto_play_next(
+                        chat_id,
+                        last_chat_id,
+                        last_title,
+                        last_vidid,
+                        video=last_video,
+                    )
+
+                    # Verify the stream actually started.
+                    # auto_play_next() can return True even when stream()
+                    # silently failed — join_call() has @capture_internal_err
+                    # which swallows its internal AssistantErr and returns
+                    # None. stream() then still runs put_queue() and sends
+                    # a "now playing" photo, but nothing is actually playing.
+                    # A successful join_call() always calls add_active_chat(),
+                    # so is_active_chat()=False means the join silently failed.
+                    if autoplay_started and not await _is_chat_active(chat_id):
+                        autoplay_started = False
+
+                except Exception:
                     autoplay_started = False
-                    if last_title and await is_autoplay_on(chat_id):
-                        try:
-                            from VISHALMUSIC.utils.stream.autoplay import auto_play_next
-                            from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
 
-                            autoplay_started = await auto_play_next(
-                                chat_id,
-                                last_chat_id,
-                                last_title,
-                                last_vidid,
-                                video=last_video,
-                            )
-
-                            # Verify the stream actually started.
-                            # auto_play_next() can return True even when stream()
-                            # silently failed — join_call() has @capture_internal_err
-                            # which swallows its internal AssistantErr and returns
-                            # None. stream() then still runs put_queue() and sends
-                            # a "now playing" photo, but nothing is actually playing.
-                            # A successful join_call() always calls add_active_chat(),
-                            # so is_active_chat()=False means the join silently failed.
-                            if autoplay_started and not await _is_chat_active(chat_id):
-                                autoplay_started = False
-
-                        except Exception:
-                            autoplay_started = False
-
-                    # DON'T leave call if autoplay failed - assistant should stay in VC
-                    # Only leave if autoplay is disabled (not attempted)
-                    if not autoplay_started and not await is_autoplay_on(chat_id):
-                        if chat_id in self.active_calls:
-                            try:
-                                await client.leave_call(chat_id)
-                            except NoActiveGroupCall:
-                                pass
-                            except Exception:
-                                pass
-                            finally:
-                                self.active_calls.discard(chat_id)
-                    return
+            # DON'T leave call if autoplay failed - assistant should stay in VC
+            # Only leave if autoplay is disabled (not attempted)
+            if not autoplay_started and not await is_autoplay_on(chat_id):
+                if chat_id in self.active_calls:
+                    try:
+                        await client.leave_call(chat_id)
+                    except NoActiveGroupCall:
+                        pass
+                    except Exception:
+                        pass
+                    finally:
+                        self.active_calls.discard(chat_id)
+            return
         except:
             try:
                 await _clear_(chat_id)
@@ -356,20 +362,25 @@ class Call:
             except:
                 return
         else:
-            queued = check[0]["file"]
+            if not check or not isinstance(check, list) or len(check) == 0:
+                return
+            queued = check[0].get("file")
+            if not queued:
+                return
             language = await get_lang(chat_id)
             _ = get_string(language)
-            title = (check[0]["title"]).title()
-            user = check[0]["by"]
-            original_chat_id = check[0]["chat_id"]
-            streamtype = check[0]["streamtype"]
-            videoid = check[0]["vidid"]
-            db[chat_id][0]["played"] = 0
+            title = (check[0].get("title", "")).title()
+            user = check[0].get("by", "")
+            original_chat_id = check[0].get("chat_id", chat_id)
+            streamtype = check[0].get("streamtype", "")
+            videoid = check[0].get("vidid", "")
+            if db.get(chat_id) and len(db[chat_id]) > 0:
+                db[chat_id][0]["played"] = 0
 
-            exis = (check[0]).get("old_dur")
-            if exis:
+            exis = check[0].get("old_dur") if check and len(check) > 0 else None
+            if exis and db.get(chat_id) and len(db[chat_id]) > 0:
                 db[chat_id][0]["dur"] = exis
-                db[chat_id][0]["seconds"] = check[0]["old_second"]
+                db[chat_id][0]["seconds"] = check[0].get("old_second") if check and len(check) > 0 else 0
                 db[chat_id][0]["speed_path"] = None
                 db[chat_id][0]["speed"] = 1.0
 
@@ -398,14 +409,33 @@ class Call:
 
             elif "vid_" in queued:
                 mystic = await app.send_message(original_chat_id, _["call_7"])
-                try:
-                    file_path, direct = await YouTube.download(
-                        videoid,
-                        mystic,
-                        videoid=True,
-                        video=True if str(streamtype) == "video" else False,
-                    )
-                except:
+                
+                # Retry logic for YouTube download failures
+                max_retries = 3
+                download_success = False
+                file_path = None
+                direct = False
+
+                for attempt in range(max_retries):
+                    try:
+                        file_path, direct = await YouTube.download(
+                            videoid,
+                            mystic,
+                            videoid=True,
+                            video=True if str(streamtype) == "video" else False,
+                        )
+                        if file_path:
+                            download_success = True
+                            break
+                    except:
+                        if attempt < max_retries - 1:
+                            continue
+                        else:
+                            return await mystic.edit_text(
+                                _["call_6"], disable_web_page_preview=True
+                            )
+
+                if not download_success or not file_path:
                     return await mystic.edit_text(
                         _["call_6"], disable_web_page_preview=True
                     )
@@ -480,7 +510,7 @@ class Call:
                             reply_markup=button,
                         )
                     playlist = db.get(chat_id)
-                    if playlist and len(playlist) > 0:
+                    if playlist and isinstance(playlist, list) and len(playlist) > 0:
                         playlist[0]["mystic"] = run
                         playlist[0]["markup"] = "stream"
                         playlist[0]["base_caption"] = caption

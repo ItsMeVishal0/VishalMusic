@@ -43,10 +43,11 @@ class AppleAPI:
 
         results = VideosSearch(title_query, limit=1)
         data = await results.next()
-        if not data.get("result"):
+        result_list = data.get("result", [])
+        if not result_list or len(result_list) == 0:
             return False
 
-        r = data["result"][0]
+        r = result_list[0]
         track_details = {
             "title": r.get("title", ""),
             "link": r.get("link", ""),
@@ -61,6 +62,8 @@ class AppleAPI:
             url = self.base + url
 
         try:
+            if "playlist/" not in url:
+                return False
             playlist_id = url.split("playlist/")[1]
         except Exception:
             return False

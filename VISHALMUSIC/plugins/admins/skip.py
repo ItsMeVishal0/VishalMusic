@@ -47,7 +47,7 @@ async def skip(cli, message: Message, _, chat_id):
         if state.isnumeric():
             state = int(state)
             check = db.get(chat_id)
-            if check:
+            if check and isinstance(check, list):
                 count = len(check)
                 if count > 2:
                     count = int(count - 1)
@@ -55,12 +55,14 @@ async def skip(cli, message: Message, _, chat_id):
                         for x in range(state):
                             popped = None
                             try:
-                                popped = check.pop(0)
+                                popped = check.pop(0) if len(check) > 0 else None
+                                if popped is None:
+                                    return await message.reply_text(_["admin_12"])
                             except:
                                 return await message.reply_text(_["admin_12"])
                             if popped:
                                 await auto_clean(popped)
-                            if not check:
+                            if not check or len(check) == 0:
                                 try:
                                     await message.reply_text(
                                         text=_["admin_6"].format(
@@ -84,61 +86,70 @@ async def skip(cli, message: Message, _, chat_id):
     else:
         check = db.get(chat_id)
         popped = None
-        try:
-            popped = check.pop(0)
-            if popped:
-                await auto_clean(popped)
-            if not check:
-                if await is_autoplay_on(chat_id):
+        if check and isinstance(check, list) and len(check) > 0:
+            try:
+                popped = check.pop(0)
+                if popped:
+                    await auto_clean(popped)
+                if not check or len(check) == 0:
+                    if await is_autoplay_on(chat_id):
+                        try:
+                            await VISHAL.stop_stream(chat_id)
+                            from VISHALMUSIC.utils.database import remove_active_chat, remove_active_video_chat
+                            await remove_active_chat(chat_id)
+                            await remove_active_video_chat(chat_id)
+                            from VISHALMUSIC.utils.stream.autoplay import auto_play_next
+                            await auto_play_next(
+                                chat_id,
+                                popped.get("chat_id", chat_id),
+                                popped.get("title", ""),
+                                popped.get("vidid", ""),
+                            )
+                            return
+                        except Exception:
+                            pass
+                    await message.reply_text(
+                        text=_["admin_6"].format(
+                            message.from_user.mention, message.chat.title
+                        ),
+                        reply_markup=buttons_to_inline_markup(close_markup(_)),
+                    )
                     try:
-                        await VISHAL.stop_stream(chat_id)
-                        from VISHALMUSIC.utils.database import remove_active_chat, remove_active_video_chat
-                        await remove_active_chat(chat_id)
-                        await remove_active_video_chat(chat_id)
-                        from VISHALMUSIC.utils.stream.autoplay import auto_play_next
-                        await auto_play_next(
-                            chat_id,
-                            popped.get("chat_id", chat_id),
-                            popped.get("title", ""),
-                            popped.get("vidid", ""),
-                        )
+                        return await VISHAL.stop_stream(chat_id)
+                    except:
                         return
-                    except Exception:
-                        pass
-                await message.reply_text(
-                    text=_["admin_6"].format(
-                        message.from_user.mention, message.chat.title
-                    ),
-                    reply_markup=buttons_to_inline_markup(close_markup(_)),
-                )
+            except:
                 try:
+                    await message.reply_text(
+                        text=_["admin_6"].format(
+                            message.from_user.mention, message.chat.title
+                        ),
+                        reply_markup=buttons_to_inline_markup(close_markup(_)),
+                    )
                     return await VISHAL.stop_stream(chat_id)
                 except:
                     return
-        except:
-            try:
-                await message.reply_text(
-                    text=_["admin_6"].format(
-                        message.from_user.mention, message.chat.title
-                    ),
-                    reply_markup=buttons_to_inline_markup(close_markup(_)),
-                )
-                return await VISHAL.stop_stream(chat_id)
-            except:
-                return
-    queued = check[0]["file"]
-    title = (check[0]["title"]).title()
-    user = check[0]["by"]
-    streamtype = check[0]["streamtype"]
-    videoid = check[0]["vidid"]
-    status = True if str(streamtype) == "video" else None
-    db[chat_id][0]["played"] = 0
-    exis = (check[0]).get("old_dur")
-    if exis:
-        db[chat_id][0]["dur"] = exis
-        db[chat_id][0]["seconds"] = check[0]["old_second"]
-        db[chat_id][0]["speed_path"] = None
-        db[chat_id][0]["speed"] = 1.0
+        else:
+            return await message.reply_text(_["queue_2"])
+        
+        # Check if check has items before accessing
+        if not check or len(check) == 0:
+            return await message.reply_text(_["queue_2"])
+            
+        queued = check[0].get("file")
+        title = (check[0].get("title", "")).title()
+        user = check[0].get("by", "")
+        streamtype = check[0].get("streamtype", "")
+        videoid = check[0].get("vidid", "")
+        status = True if str(streamtype) == "video" else None
+        if db.get(chat_id) and len(db[chat_id]) > 0:
+            db[chat_id][0]["played"] = 0
+        exis = check[0].get("old_dur") if check and len(check) > 0 else None
+        if exis and db.get(chat_id) and len(db[chat_id]) > 0:
+            db[chat_id][0]["dur"] = exis
+            db[chat_id][0]["seconds"] = check[0].get("old_second", 0) if check and len(check) > 0 else 0
+            db[chat_id][0]["speed_path"] = None
+            db[chat_id][0]["speed"] = 1.0
     if "live_" in queued:
         n, link = await YouTube.video(videoid, True)
         if n == 0:
@@ -161,9 +172,26 @@ async def skip(cli, message: Message, _, chat_id):
         )
     elif "vid_" in queued:
         mystic = await message.reply_text(_["call_7"], disable_web_page_preview=True)
-        try:
-            file_path, direct = await YouTube.download(videoid, mystic, videoid=True, video=status)
-        except:
+        
+        # Retry logic for YouTube download failures
+        max_retries = 3
+        download_success = False
+        file_path = None
+        direct = False
+
+        for attempt in range(max_retries):
+            try:
+                file_path, direct = await YouTube.download(videoid, mystic, videoid=True, video=status)
+                if file_path:
+                    download_success = True
+                    break
+            except:
+                if attempt < max_retries - 1:
+                    continue
+                else:
+                    return await mystic.edit_text(_["call_6"])
+
+        if not download_success or not file_path:
             return await mystic.edit_text(_["call_6"])
         try:
             image = await YouTube.thumbnail(videoid, True)

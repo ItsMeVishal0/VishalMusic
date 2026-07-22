@@ -171,11 +171,24 @@ async def song_download_cb(client, cq, lang):
         title = re.sub(r"\s+", " ", re.sub(r"[^\w\s\-\.\(\)\[\]]+", " ", raw_title)).strip()[:200]
         duration_sec = time_to_seconds(info.get("duration_min")) if info.get("duration_min") else None
 
+        # Retry logic for YouTube download
+        max_retries = 3
+        download_success = False
+
         if stype == "audio":
-            file_path, _ = await YouTube.download(
-                yturl, mystic, songaudio=True, format_id=fmt_id, title=title
-            )
-            if not file_path:
+            for attempt in range(max_retries):
+                try:
+                    file_path, _ = await YouTube.download(
+                        yturl, mystic, songaudio=True, format_id=fmt_id, title=title
+                    )
+                    if file_path:
+                        download_success = True
+                        break
+                except Exception:
+                    if attempt < max_retries - 1:
+                        continue
+
+            if not download_success or not file_path:
                 raise RuntimeError("no audio file")
             await app.send_chat_action(cq.message.chat.id, ChatAction.UPLOAD_AUDIO)
             await cq.edit_message_media(
@@ -187,10 +200,19 @@ async def song_download_cb(client, cq, lang):
                 )
             )
         else:
-            file_path, _ = await YouTube.download(
-                yturl, mystic, songvideo=True, format_id=fmt_id, title=title
-            )
-            if not file_path:
+            for attempt in range(max_retries):
+                try:
+                    file_path, _ = await YouTube.download(
+                        yturl, mystic, songvideo=True, format_id=fmt_id, title=title
+                    )
+                    if file_path:
+                        download_success = True
+                        break
+                except Exception:
+                    if attempt < max_retries - 1:
+                        continue
+
+            if not download_success or not file_path:
                 raise RuntimeError("no video file")
             await app.send_chat_action(cq.message.chat.id, ChatAction.UPLOAD_VIDEO)
             w = getattr(getattr(cq.message, "photo", None), "width", None)

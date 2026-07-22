@@ -37,20 +37,23 @@ class SpotifyAPI:
         if not self.spotify:
             raise RuntimeError("Spotify credentials not configured")
         track = await asyncio.to_thread(self.spotify.track, link)
-        info = track["name"]
-        for artist in track["artists"]:
-            fetched = f' {artist["name"]}'
+        info = track.get("name", "")
+        for artist in track.get("artists", []):
+            fetched = f' {artist.get("name", "")}'
             if "Various Artists" not in fetched:
                 info += fetched
         results = VideosSearch(info, limit=1)
         data = await results.next()
-        r = data["result"][0]
+        result_list = data.get("result", [])
+        if not result_list or len(result_list) == 0:
+            raise RuntimeError("No YouTube results found for Spotify track")
+        r = result_list[0]
         track_details = {
-            "title": r["title"],
-            "link": r["link"],
-            "vidid": r["id"],
-            "duration_min": r["duration"],
-            "thumb": r["thumbnails"][0]["url"].split("?")[0],
+            "title": r.get("title", ""),
+            "link": r.get("link", ""),
+            "vidid": r.get("id", ""),
+            "duration_min": r.get("duration", ""),
+            "thumb": r.get("thumbnails", [{}])[0].get("url", "").split("?")[0],
         }
         return track_details, track_details["vidid"]
 
@@ -58,13 +61,13 @@ class SpotifyAPI:
         if not self.spotify:
             raise RuntimeError("Spotify credentials not configured")
         playlist = await asyncio.to_thread(self.spotify.playlist, url)
-        playlist_id = playlist["id"]
+        playlist_id = playlist.get("id", "")
         results = []
-        for item in playlist["tracks"]["items"]:
-            music_track = item["track"]
-            info = music_track["name"]
-            for artist in music_track["artists"]:
-                fetched = f' {artist["name"]}'
+        for item in playlist.get("tracks", {}).get("items", []):
+            music_track = item.get("track", {})
+            info = music_track.get("name", "")
+            for artist in music_track.get("artists", []):
+                fetched = f' {artist.get("name", "")}'
                 if "Various Artists" not in fetched:
                     info += fetched
             results.append(info)
@@ -74,12 +77,12 @@ class SpotifyAPI:
         if not self.spotify:
             raise RuntimeError("Spotify credentials not configured")
         album = await asyncio.to_thread(self.spotify.album, url)
-        album_id = album["id"]
+        album_id = album.get("id", "")
         results = []
-        for item in album["tracks"]["items"]:
-            info = item["name"]
-            for artist in item["artists"]:
-                fetched = f' {artist["name"]}'
+        for item in album.get("tracks", {}).get("items", []):
+            info = item.get("name", "")
+            for artist in item.get("artists", []):
+                fetched = f' {artist.get("name", "")}'
                 if "Various Artists" not in fetched:
                     info += fetched
             results.append(info)
@@ -89,13 +92,13 @@ class SpotifyAPI:
         if not self.spotify:
             raise RuntimeError("Spotify credentials not configured")
         artistinfo = await asyncio.to_thread(self.spotify.artist, url)
-        artist_id = artistinfo["id"]
+        artist_id = artistinfo.get("id", "")
         results = []
         artisttoptracks = await asyncio.to_thread(self.spotify.artist_top_tracks, url)
-        for item in artisttoptracks["tracks"]:
-            info = item["name"]
-            for artist in item["artists"]:
-                fetched = f' {artist["name"]}'
+        for item in artisttoptracks.get("tracks", []):
+            info = item.get("name", "")
+            for artist in item.get("artists", []):
+                fetched = f' {artist.get("name", "")}'
                 if "Various Artists" not in fetched:
                     info += fetched
             results.append(info)

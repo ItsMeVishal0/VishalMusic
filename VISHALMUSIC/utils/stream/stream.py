@@ -6,6 +6,7 @@
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
+import logging
 import os
 from random import randint
 from typing import Union
@@ -27,6 +28,8 @@ from VISHALMUSIC.utils.pastebin import VISHALBIN
 from VISHALMUSIC.utils.stream.queue import put_queue, put_queue_index
 from VISHALMUSIC.utils.thumbnails import get_thumb
 from VISHALMUSIC.utils.errors import capture_internal_err
+
+logger = logging.getLogger(__name__)
 
 
 def _store_mystic(chat_id, run, markup_type, caption=None):
@@ -140,14 +143,29 @@ async def stream(
                 if not forceplay:
                     db[chat_id] = []
                 thumb_task = asyncio.create_task(get_thumb(vidid))
-                try:
-                    file_path, direct = await YouTube.download(
-                        vidid, mystic, video=is_video, videoid=vidid
-                    )
-                except Exception:
-                    thumb_task.cancel()
-                    raise AssistantErr(_["play_14"])
-                if not file_path:
+
+                # Retry logic for YouTube download failures
+                max_retries = 3
+                download_success = False
+                file_path = None
+                direct = False
+
+                for attempt in range(max_retries):
+                    try:
+                        file_path, direct = await YouTube.download(
+                            vidid, mystic, video=is_video, videoid=vidid
+                        )
+                        if file_path:
+                            download_success = True
+                            break
+                    except Exception:
+                        if attempt < max_retries - 1:
+                            continue
+                        else:
+                            thumb_task.cancel()
+                            raise AssistantErr(_["play_14"])
+
+                if not download_success or not file_path:
                     thumb_task.cancel()
                     raise AssistantErr(_["play_14"])
 
@@ -222,14 +240,35 @@ async def stream(
 
         thumb_task = asyncio.create_task(get_thumb(vidid))
 
-        try:
-            file_path, direct = await YouTube.download(
-                vidid, mystic, video=is_video, videoid=vidid
-            )
-        except Exception:
-            thumb_task.cancel()
-            raise AssistantErr(_["play_14"])
-        if not file_path:
+        # Retry logic for YouTube download failures
+        max_retries = 3
+        retry_delay = 2  # seconds
+        download_success = False
+        file_path = None
+        direct = False
+
+        for attempt in range(max_retries):
+            try:
+                file_path, direct = await YouTube.download(
+                    vidid, mystic, video=is_video, videoid=vidid
+                )
+                if file_path:
+                    download_success = True
+                    logger.info(f"✅ YouTube download success on attempt {attempt+1}")
+                    break
+                else:
+                    logger.warning(f"⚠️ YouTube download attempt {attempt+1} returned None")
+            except Exception as e:
+                logger.error(f"❌ YouTube download attempt {attempt+1} error: {type(e).__name__}: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay)
+                    continue
+                else:
+                    thumb_task.cancel()
+                    raise AssistantErr(_["play_14"])
+
+        if not download_success or not file_path:
+            logger.error(f"❌ YouTube download failed after {max_retries} attempts")
             thumb_task.cancel()
             raise AssistantErr(_["play_14"])
 

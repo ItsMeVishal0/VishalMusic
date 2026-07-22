@@ -113,12 +113,15 @@ async def start_pm(client, message: Message, _):
             # Fallback to Pyrogram if Bot API fails
             if not result:
                 from pyrogram import enums
+                # Note: buttons_to_inline_markup loses colors (no style field in Pyrogram)
+                # For colored buttons, user must have valid BOT_TOKEN set in config
                 return await message.reply_photo(
                     photo=start_photo,
                     caption=_["help_1"].format(config.SUPPORT_CHAT),
                     parse_mode=enums.ParseMode.HTML,
                     reply_markup=buttons_to_inline_markup(keyboard),
                 )
+            return
             return
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
@@ -237,6 +240,8 @@ async def start_pm(client, message: Message, _):
         # Fallback to Pyrogram if Bot API fails
         if not result:
             from pyrogram import enums
+            # Note: buttons_to_inline_markup loses colors (no style field in Pyrogram)
+            # For colored buttons, user must have valid BOT_TOKEN set in config
             await message.reply_photo(
                 photo=start_photo,
                 caption=caption,
@@ -299,7 +304,9 @@ async def start_gp(client, message: Message, _):
     bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
     caption = _["start_1"].format(bot_mention, get_readable_time(uptime))
     
-    # Direct Pyrogram (Telegram natively handles colors!)
+    # Direct Pyrogram (Telegram natively handles colors via Bot API if BOT_TOKEN set!)
+    # Note: buttons_to_inline_markup loses colors (no style field in Pyrogram)
+    # For colored buttons, user must have valid BOT_TOKEN set in config
     await message.reply_photo(
         photo=start_photo,
         caption=caption,
@@ -347,11 +354,11 @@ async def welcome(client, message: Message):
 
                 out = start_panel(_)
                 
-                # User profile photo or fallback image for welcome
+                # Get user who joined's profile photo, fallback to config START_IMGS
                 welcome_photo = None
                 try:
-                    if message.from_user and message.from_user.photo:
-                        welcome_photo = await app.download_media(message.from_user.photo.big_file_id)
+                    if member and member.photo:
+                        welcome_photo = await app.download_media(member.photo.big_file_id)
                 except Exception:
                     pass
                 
@@ -362,7 +369,7 @@ async def welcome(client, message: Message):
                 await message.reply_photo(
                     photo=welcome_photo,
                     caption=_["start_3"].format(
-                        message.from_user.first_name,
+                        member.first_name,
                         app.mention,
                         message.chat.title,
                         app.mention,

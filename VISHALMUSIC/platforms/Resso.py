@@ -38,12 +38,18 @@ class RessoAPI:
         if des == "":
             return
         results = VideosSearch(title, limit=1)
-        for result in (await results.next())["result"]:
-            title = result["title"]
-            ytlink = result["link"]
-            vidid = result["id"]
-            duration_min = result["duration"]
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
+        search_result = await results.next()
+        result_list = search_result.get("result", [])
+        if not result_list or len(result_list) == 0:
+            return
+        result = result_list[0]
+        title = result.get("title", "")
+        ytlink = result.get("link", "")
+        vidid = result.get("id", "")
+        duration_min = result.get("duration", "")
+        thumbnails = result.get("thumbnails", [])
+        thumbnail = thumbnails[0].get("url", "") if thumbnails else ""
+        thumbnail = thumbnail.split("?")[0] if thumbnail else ""
         track_details = {
             "title": title,
             "link": ytlink,
