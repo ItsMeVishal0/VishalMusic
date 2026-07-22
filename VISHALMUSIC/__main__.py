@@ -176,7 +176,7 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
 
-        port = int(os.environ.get("PORT", 10000))
+        port = int(os.environ.get("PORT", 3000))
         fapp.run(host="0.0.0.0", port=port)
 
     t = Thread(target=run_flask)
