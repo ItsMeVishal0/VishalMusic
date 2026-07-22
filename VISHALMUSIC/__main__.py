@@ -110,7 +110,7 @@ def keep_alive():
                 uptime_str = f"{hours}h {minutes}m {seconds}s"
 
                 total_users = total_chats = total_banned = total_sudoers = 0
-                if _sync_db:
+                if _sync_db is not None:
                     try:
                         total_users = _sync_db.tgusersdb.count_documents({})
                         total_chats = _sync_db.chats.count_documents({})
@@ -167,7 +167,7 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
 
         @fapp.route('/api/stats')
         def api_stats():
-            if not _sync_db:
+            if _sync_db is None:
                 return jsonify({"error": "DB not connected", "status": "error"}), 200
             try:
                 return jsonify({
