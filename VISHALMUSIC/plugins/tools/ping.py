@@ -7,7 +7,7 @@ from VISHALMUSIC import app
 from VISHALMUSIC.core.call import VISHAL
 from VISHALMUSIC.utils import bot_sys_stats
 from VISHALMUSIC.utils.decorators.language import language
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, smart_edit_message_text as edit_message_text_colored
 from VISHALMUSIC.utils.inline import supp_markup
 from config import BANNED_USERS, PING_VID_URL
 

@@ -545,6 +545,11 @@ async def _now_playing_timer():
     message is edited twice in quick succession.
     """
     from VISHALMUSIC.utils.inline.play import UPDATE_INTERVAL, should_update_progress
+
+    # FIX: "message is not modified" spam se bachne ke liye — agar caption +
+    # buttons content pehle wale jaisa hi ho toh API call skip karo.
+    _last_sent = {}  # chat_id -> fingerprint
+
     while True:
         await asyncio.sleep(UPDATE_INTERVAL)
         active_chats = await get_active_chats()
@@ -594,6 +599,12 @@ async def _now_playing_timer():
                 )
 
                 from pyrogram import enums
+
+                # FIX: content same hai toh edit hi mat karo (not-modified spam)
+                fp = (new_caption, played_str, dur, ap_status, len(buttons or []))
+                if _last_sent.get(chat_id) == fp:
+                    continue
+                _last_sent[chat_id] = fp
 
                 if buttons:
                     # Try Bot API first (colored buttons persist)
