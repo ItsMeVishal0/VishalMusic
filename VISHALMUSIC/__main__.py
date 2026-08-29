@@ -24,6 +24,42 @@ from VISHALMUSIC.utils.cookie_handler import fetch_and_store_cookies
 from config import BANNED_USERS
 
 
+async def _cookie_refresh_loop() -> None:
+    """Periodically re-fetch YouTube cookies.
+
+    Cookies are fetched only once at startup; YouTube invalidates them over
+    time, after which every download silently fails (assistant joins the VC
+    but no song ever plays). Refreshing keeps the bot healthy on long uptime.
+    """
+    hours = float(os.environ.get("COOKIE_REFRESH_HOURS", "12"))
+    while True:
+        await asyncio.sleep(hours * 3600)
+        try:
+            await fetch_and_store_cookies()
+            LOGGER("VISHALMUSIC").info("ʏᴏᴜᴛᴜʙᴇ ᴄᴏᴏᴋɪᴇs ʀᴇꜰʀᴇꜱʜᴇᴅ ✔")
+        except Exception as e:
+            LOGGER("VISHALMUSIC").warning(f"⚠️ ᴄᴏᴏᴋɪᴇ ʀᴇꜰʀᴇꜱʜ ꜰᴀɪʟᴇᴅ: {e}")
+
+
+async def _auto_restart_loop(hours: float) -> None:
+    """Optional watchdog: restart the bot process every N hours.
+
+    Long-running bots degrade over time (stale pytgcalls calls, memory
+    growth, dropped sessions). A periodic restart is the standard fix.
+    Enable by setting AUTO_RESTART_HOURS in the environment (e.g. 24).
+    """
+    import sys
+
+    while True:
+        await asyncio.sleep(hours * 3600)
+        LOGGER("VISHALMUSIC").info(f"🔄 ᴀᴜᴛᴏ-ʀᴇꜱᴛᴀʀᴛ ᴀꜰᴛᴇʀ {hours}h ᴏꜰ ᴜᴘᴛɪᴍᴇ...")
+        try:
+            os.execv(sys.executable, [sys.executable, "-m", "VISHALMUSIC"])
+        except Exception as e:
+            LOGGER("VISHALMUSIC").error(f"❌ ᴀᴜᴛᴏ-ʀᴇꜱᴛᴀʀᴛ ꜰᴀɪʟᴇᴅ: {e}")
+            return
+
+
 async def init():
     if (
         not config.STRING1
@@ -56,24 +92,50 @@ async def init():
 
     await app.start()
     for all_module in ALL_MODULES:
-        importlib.import_module("VISHALMUSIC.plugins" + all_module)
+        try:
+            importlib.import_module("VISHALMUSIC.plugins" + all_module)
+        except Exception as e:
+            # One broken plugin (e.g. missing env key) must never kill the bot.
+            LOGGER("VISHALMUSIC.plugins").error(
+                f"❌ Failed to load module {all_module}: {e}\nBot continues without it."
+            )
 
     LOGGER("VISHALMUSIC.plugins").info("ᴍᴏᴅᴜʟᴇs ʟᴏᴀᴅᴇᴅ...")
 
     await userbot.start()
     await VISHAL.start()
 
-    try:
-        await VISHAL.stream_call("https://files.catbox.moe/euj0oc.mp4")
-    except NoActiveGroupCall:
-        LOGGER("VISHALMUSIC").error(
-            "ᴘʟᴇᴀsᴇ ᴛᴜʀɴ ᴏɴ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴏғ ʏᴏᴜʀ ʟᴏɢ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ.\n\nʙᴏᴛ sᴛᴏᴘᴘᴇᴅ..."
-        )
-        exit()
-    except:
-        pass
+    # Clone bots (CLONE_BOT=1) log group VC me test NAHI karte — wo shared
+    # assistant use karte hain aur log channel ke member nahi hote.
+    if os.environ.get("CLONE_BOT") != "1":
+        try:
+            await VISHAL.stream_call("https://files.catbox.moe/euj0oc.mp4")
+        except NoActiveGroupCall:
+            LOGGER("VISHALMUSIC").error(
+                "ᴘʟᴇᴀsᴇ ᴛᴜʀɴ ᴏɴ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴏғ ʏᴏᴜʀ ʟᴏɢ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ.\n\nʙᴏᴛ sᴛᴏᴘᴘᴇᴅ..."
+            )
+            exit()
+        except:
+            pass
 
     await VISHAL.decorators()
+
+    # Clone system: master restart par saare running clones wapas spawn karo.
+    try:
+        from VISHALMUSIC.plugins.tools.clone import resurrect_clones
+
+        await resurrect_clones()
+    except Exception as e:
+        LOGGER("VISHALMUSIC").warning(f"⚠️ ᴄʟᴏɴᴇ ʀᴇsᴜʀʀᴇᴄᴛɪᴏɴ sᴋɪᴘᴘᴇᴅ: {e}")
+
+    # Long-uptime health: refresh YouTube cookies periodically and optionally
+    # auto-restart the process so the bot never silently degrades.
+    asyncio.create_task(_cookie_refresh_loop())
+    auto_restart_hours = float(os.environ.get("AUTO_RESTART_HOURS", "0"))
+    if auto_restart_hours > 0:
+        asyncio.create_task(_auto_restart_loop(auto_restart_hours))
+        LOGGER("VISHALMUSIC").info(f"🔄 ᴀᴜᴛᴏ-ʀᴇꜱᴛᴀʀᴛ ᴇɴᴀʙʟᴇᴅ: ᴇᴠᴇʀʏ {auto_restart_hours}h")
+
     LOGGER("VISHALMUSIC").info("✅ Vishal music Bot Started Successfully!")
     await idle()
     await app.stop()

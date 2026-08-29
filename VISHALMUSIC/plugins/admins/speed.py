@@ -8,7 +8,12 @@ from VISHALMUSIC.misc import SUDOERS, db
 from VISHALMUSIC.utils import AdminRightsCheck
 from VISHALMUSIC.utils.database import is_active_chat, is_nonadmin_chat
 from VISHALMUSIC.utils.decorators.language import languageCB
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    smart_send_message as send_message_colored,
+    smart_edit_message_text as edit_message_text_colored,
+    edit_reply_markup_colored,
+)
 from VISHALMUSIC.utils.inline import close_markup, speed_markup
 
 checker = []
@@ -23,17 +28,17 @@ checker = []
 async def playback(cli, message: Message, _, chat_id):
     playing = db.get(chat_id)
     if not playing:
-        return await message.reply_text(_["queue_2"])
+        return await send_message_colored(chat_id=message.chat.id, text=_["queue_2"])
     duration_seconds = int(playing[0]["seconds"])
     if duration_seconds == 0:
-        return await message.reply_text(_["admin_27"])
+        return await send_message_colored(chat_id=message.chat.id, text=_["admin_27"])
     file_path = playing[0]["file"]
     if "downloads" not in file_path:
-        return await message.reply_text(_["admin_27"])
+        return await send_message_colored(chat_id=message.chat.id, text=_["admin_27"])
     upl = speed_markup(_, chat_id)
-    return await message.reply_text(
+    return await send_message_colored(chat_id=message.chat.id, 
         text=_["admin_28"].format(app.mention),
-        reply_markup=buttons_to_inline_markup(upl),
+        reply_markup=upl,
     )
 
 
@@ -104,10 +109,10 @@ async def manage_callback(client, CallbackQuery, _):
     except:
         if chat_id in checker:
             checker.remove(chat_id)
-        return await mystic.edit_text(text=_["admin_33"], reply_markup=buttons_to_inline_markup(close_markup(_)))
+        return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["admin_33"], reply_markup=close_markup(_))
     if chat_id in checker:
         checker.remove(chat_id)
-    await mystic.edit_text(
+    await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, 
         text=_["admin_34"].format(speed, CallbackQuery.from_user.mention),
-        reply_markup=buttons_to_inline_markup(close_markup(_)),
+        reply_markup=close_markup(_),
     )

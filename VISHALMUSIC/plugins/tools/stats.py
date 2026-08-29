@@ -3,9 +3,9 @@ from sys import version as pyver
 
 import psutil
 from pyrogram import __version__ as pyrover
-from pyrogram import filters
+from pyrogram import enums, filters
 from pyrogram.errors import MessageIdInvalid
-from pyrogram.types import InputMediaVideo, Message
+from pyrogram.types import InputMediaPhoto, InputMediaVideo, Message
 from pytgcalls.__version__ import __version__ as pytgver
 
 import config
@@ -19,9 +19,23 @@ from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
     smart_send_message as send_message_colored,
     smart_edit_message_text as edit_message_text_colored,
+    edit_message_media_colored,
 )
 from VISHALMUSIC.utils.inline.stats import back_stats_buttons, stats_buttons
 from config import BANNED_USERS
+
+
+def _stats_media_kind() -> str:
+    """STATS_VID_URL .jpg hai (photo), koi video URL ho toh video."""
+    url = config.STATS_VID_URL.lower()
+    return "video" if url.endswith((".mp4", ".mov", ".mkv", ".webm")) else "photo"
+
+
+def _stats_input_media(text: str):
+    """Pyrogram fallback ke liye sahi InputMedia type (photo/video)."""
+    if _stats_media_kind() == "video":
+        return InputMediaVideo(media=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML)
+    return InputMediaPhoto(media=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML)
 
 
 @app.on_message(filters.command(["stats", "gstats"]) & ~BANNED_USERS)
@@ -70,15 +84,20 @@ async def overall_stats(client, CallbackQuery, _):
         config.AUTO_LEAVING_ASSISTANT,
         config.DURATION_LIMIT_MIN,
     )
-    med = {"type": "video", "media": config.STATS_VID_URL, "caption": text}
+    med = {"type": _stats_media_kind(), "media": config.STATS_VID_URL, "caption": text}
     botapi_result = await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=upl)
     if not botapi_result:
         try:
-            await CallbackQuery.edit_message_media(media=InputMediaVideo(media=config.STATS_VID_URL, caption=text), reply_markup=buttons_to_inline_markup(upl))
+            await CallbackQuery.edit_message_media(media=_stats_input_media(text), reply_markup=buttons_to_inline_markup(upl))
         except MessageIdInvalid:
-            await CallbackQuery.message.reply_video(
-                video=config.STATS_VID_URL, caption=text, reply_markup=buttons_to_inline_markup(upl)
-            )
+            if _stats_media_kind() == "video":
+                await CallbackQuery.message.reply_video(
+                    video=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons_to_inline_markup(upl)
+                )
+            else:
+                await CallbackQuery.message.reply_photo(
+                    photo=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons_to_inline_markup(upl)
+                )
 
 
 @app.on_callback_query(filters.regex("bot_stats_sudo"))
@@ -135,12 +154,17 @@ async def bot_stats(client, CallbackQuery, _):
         call["collections"],
         call["objects"],
     )
-    med = {"type": "video", "media": config.STATS_VID_URL, "caption": text}
+    med = {"type": _stats_media_kind(), "media": config.STATS_VID_URL, "caption": text}
     botapi_result = await edit_message_media_colored(chat_id=CallbackQuery.message.chat.id, message_id=CallbackQuery.message.id, media=med, reply_markup=upl)
     if not botapi_result:
         try:
-            await CallbackQuery.edit_message_media(media=InputMediaVideo(media=config.STATS_VID_URL, caption=text), reply_markup=buttons_to_inline_markup(upl))
+            await CallbackQuery.edit_message_media(media=_stats_input_media(text), reply_markup=buttons_to_inline_markup(upl))
         except MessageIdInvalid:
-            await CallbackQuery.message.reply_video(
-                video=config.STATS_VID_URL, caption=text, reply_markup=buttons_to_inline_markup(upl)
-            )
+            if _stats_media_kind() == "video":
+                await CallbackQuery.message.reply_video(
+                    video=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons_to_inline_markup(upl)
+                )
+            else:
+                await CallbackQuery.message.reply_photo(
+                    photo=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons_to_inline_markup(upl)
+                )

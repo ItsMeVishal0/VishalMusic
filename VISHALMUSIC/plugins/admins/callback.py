@@ -117,7 +117,7 @@ async def handle_upvote(callback: CallbackQuery, chat_id: int, counter, _):
             style="primary",
         )]]
         await callback.answer(_["admin_40"], show_alert=True)
-        await callback.message.edit_reply_markup(reply_markup=buttons_to_inline_markup(markup))
+        await callback.message.edit_reply_markup(reply_markup=markup)
         return None, None
 
 
@@ -173,7 +173,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await VISHAL.pause_stream(chat_id)
         await callback.message.reply_text(
             text=_["admin_2"].format(user_mention),
-            reply_markup=buttons_to_inline_markup(close_markup(_)),
+            reply_markup=close_markup(_),
         )
 
     elif command == "Resume":
@@ -184,7 +184,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await VISHAL.resume_stream(chat_id)
         await callback.message.reply_text(
             text=_["admin_4"].format(user_mention),
-            reply_markup=buttons_to_inline_markup(close_markup(_)),
+            reply_markup=close_markup(_),
         )
 
     elif command in ["Stop", "End"]:
@@ -193,7 +193,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await set_loop(chat_id, 0)
         await callback.message.reply_text(
             text=_["admin_5"].format(user_mention),
-            reply_markup=buttons_to_inline_markup(close_markup(_)),
+            reply_markup=close_markup(_),
         )
         await callback.message.delete()
 
@@ -291,7 +291,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 await callback.edit_message_text(text_msg)
                 await callback.message.reply_text(
                     text=_["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=buttons_to_inline_markup(close_markup(_)),
+                    reply_markup=close_markup(_),
                 )
                 return await VISHAL.stop_stream(chat_id)
         except Exception:
@@ -299,7 +299,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 await callback.edit_message_text(text_msg)
                 await callback.message.reply_text(
                     text=_["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=buttons_to_inline_markup(close_markup(_)),
+                    reply_markup=close_markup(_),
                 )
                 return await VISHAL.stop_stream(chat_id)
             except Exception:
@@ -375,10 +375,10 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 if attempt < max_retries - 1:
                     continue
                 else:
-                    return await mystic.edit_text(_["call_6"])
+                    return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["call_6"])
 
         if not download_success or not file_path:
-            return await mystic.edit_text(_["call_6"])
+            return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["call_6"])
         try:
             image = await YouTube.thumbnail(videoid, True)
         except Exception:
@@ -386,7 +386,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
         try:
             await VISHAL.skip_stream(chat_id, file_path, video=status, image=image)
         except Exception:
-            return await mystic.edit_text(_["call_6"])
+            return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["call_6"])
         buttons = colored_stream_markup(_, chat_id, autoplay_status=ap_status)
         img = await get_thumb(videoid)
         await _colored_reply_photo(
@@ -486,7 +486,7 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
     if "vid_" in file_path:
         n, file_path = await YouTube.video(current_track.get("vidid", ""), True)
         if n == 0:
-            return await mystic.edit_text(_["admin_22"])
+            return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["admin_22"])
     try:
         await VISHAL.seek_stream(
             chat_id,
@@ -496,14 +496,14 @@ async def handle_seek(callback: CallbackQuery, _, chat_id: int, command: str, us
             current_track.get("streamtype", ""),
         )
     except Exception:
-        return await mystic.edit_text(_["admin_26"])
+        return await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=_["admin_26"])
     if db.get(chat_id) and len(db[chat_id]) > 0:
         if int(command) in [1, 3]:
             db[chat_id][0]["played"] -= duration_to_skip
         else:
             db[chat_id][0]["played"] += duration_to_skip
     seek_message = _["admin_25"].format(seconds_to_min(to_seek))
-    await mystic.edit_text(f"{seek_message}\n\nᴄʜᴀɴɢᴇs ᴅᴏɴᴇ ʙʏ : {user_mention} !")
+    await edit_message_text_colored(chat_id=mystic.chat.id, message_id=mystic.id, text=f"{seek_message}\n\nᴄʜᴀɴɢᴇs ᴅᴏɴᴇ ʙʏ : {user_mention} !")
 
 
 @app.on_callback_query(filters.regex("^close$") & ~BANNED_USERS)

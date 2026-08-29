@@ -315,46 +315,54 @@ class Call:
             await _clear_(chat_id)
 
             autoplay_started = False
-            if last_title and await is_autoplay_on(chat_id):
-                try:
-                    from VISHALMUSIC.utils.stream.autoplay import auto_play_next
-                    from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
+            # ── QUEUE FIX ──────────────────────────────────────────────
+            # Queue me aur songs hain toh autoplay/leave ko SKIP karke
+            # niche "else" branch me jao jo agla queued song play karta hai.
+            # Autoplay sirf tab chahiye jab queue KHAALI ho; VC leave sirf
+            # tab jab queue bhi khaali aur autoplay bhi ON na ho.
+            queue_remaining = check and isinstance(check, list) and len(check) > 0
 
-                    autoplay_started = await auto_play_next(
-                        chat_id,
-                        last_chat_id,
-                        last_title,
-                        last_vidid,
-                        video=last_video,
-                    )
+            if not queue_remaining:
+                if last_title and await is_autoplay_on(chat_id):
+                    try:
+                        from VISHALMUSIC.utils.stream.autoplay import auto_play_next
+                        from VISHALMUSIC.utils.database import is_active_chat as _is_chat_active
 
-                    # Verify the stream actually started.
-                    # auto_play_next() can return True even when stream()
-                    # silently failed — join_call() has @capture_internal_err
-                    # which swallows its internal AssistantErr and returns
-                    # None. stream() then still runs put_queue() and sends
-                    # a "now playing" photo, but nothing is actually playing.
-                    # A successful join_call() always calls add_active_chat(),
-                    # so is_active_chat()=False means the join silently failed.
-                    if autoplay_started and not await _is_chat_active(chat_id):
+                        autoplay_started = await auto_play_next(
+                            chat_id,
+                            last_chat_id,
+                            last_title,
+                            last_vidid,
+                            video=last_video,
+                        )
+
+                        # Verify the stream actually started.
+                        # auto_play_next() can return True even when stream()
+                        # silently failed — join_call() has @capture_internal_err
+                        # which swallows its internal AssistantErr and returns
+                        # None. stream() then still runs put_queue() and sends
+                        # a "now playing" photo, but nothing is actually playing.
+                        # A successful join_call() always calls add_active_chat(),
+                        # so is_active_chat()=False means the join silently failed.
+                        if autoplay_started and not await _is_chat_active(chat_id):
+                            autoplay_started = False
+
+                    except Exception:
                         autoplay_started = False
 
-                except Exception:
-                    autoplay_started = False
-
-            # DON'T leave call if autoplay failed - assistant should stay in VC
-            # Only leave if autoplay is disabled (not attempted)
-            if not autoplay_started and not await is_autoplay_on(chat_id):
-                if chat_id in self.active_calls:
-                    try:
-                        await client.leave_call(chat_id)
-                    except NoActiveGroupCall:
-                        pass
-                    except Exception:
-                        pass
-                    finally:
-                        self.active_calls.discard(chat_id)
-            return
+                # Queue khaali + autoplay ON nahi → tab hi VC leave
+                if not autoplay_started and not await is_autoplay_on(chat_id):
+                    if chat_id in self.active_calls:
+                        try:
+                            await client.leave_call(chat_id)
+                        except NoActiveGroupCall:
+                            pass
+                        except Exception:
+                            pass
+                        finally:
+                            self.active_calls.discard(chat_id)
+                return
+            # Queue me songs hain → "else" branch agla song play karega
         except:
             try:
                 await _clear_(chat_id)
@@ -367,6 +375,11 @@ class Call:
             queued = check[0].get("file")
             if not queued:
                 return
+            # ── QUEUE FIX: db restore ──
+            # _clear_() ne db[chat_id] = [] kar diya tha. Playing entry + baki
+            # queue wapas set karo taaki agla StreamEnded agla song play kare
+            # (chain continue ho). Beech me naye queued songs bhi preserve.
+            db[chat_id] = check + (db.get(chat_id) or [])
             language = await get_lang(chat_id)
             _ = get_string(language)
             title = (check[0].get("title", "")).title()

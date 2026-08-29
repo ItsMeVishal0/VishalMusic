@@ -12,7 +12,11 @@ from VISHALMUSIC.utils.database import (
     is_nonadmin_chat,
     is_skipmode,
 )
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    buttons_to_inline_markup,
+    smart_send_message as send_message_colored,
+)
 from config import SUPPORT_CHAT, adminlist, confirmer
 from strings import get_string
 

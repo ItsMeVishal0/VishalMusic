@@ -44,20 +44,22 @@ class VISHAL(Client):
                 ),
             )
         except (errors.ChannelInvalid, errors.PeerIdInvalid):
-            LOGGER(__name__).error("❌ Bot cannot access the log group/channel – add & promote it first!")
-            sys.exit()
+            # FIX: sys.exit() ki jagah warning — clone bots log channel ke
+            # admin nahi hote, isliye bot exit na ho (sirf log miss hoga).
+            LOGGER(__name__).warning("⚠️ Bot cannot access the log group/channel – continuing without it.")
+            return
         except Exception as exc:
-            LOGGER(__name__).error(f"❌ Bot has failed to access the log group.\nReason: {type(exc).__name__}")
-            sys.exit()
+            LOGGER(__name__).warning(f"⚠️ Bot failed to access the log group: {type(exc).__name__} – continuing.")
+            return
 
         try:
             member = await self.get_chat_member(config.LOGGER_ID, self.id)
             if member.status != ChatMemberStatus.ADMINISTRATOR:
-                LOGGER(__name__).error("❌ Promote the bot as admin in the log group/channel.")
-                sys.exit()
+                LOGGER(__name__).warning("⚠️ Bot is not admin in the log group/channel – continuing without it.")
+                return
         except Exception as e:
-            LOGGER(__name__).error(f"❌ Could not check admin status: {e}")
-            sys.exit()
+            LOGGER(__name__).warning(f"⚠️ Could not check log group admin status: {e} – continuing.")
+            return
 
         LOGGER(__name__).info(f"✅ Music Bot started as {self.name} (@{self.username})")
 

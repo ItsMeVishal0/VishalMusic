@@ -10,6 +10,7 @@ from typing import Dict, List, Union
 
 from VISHALMUSIC import userbot
 from VISHALMUSIC.core.mongo import mongodb
+from config import BOT_USERNAME
 
 authdb = mongodb.adminauth
 authuserdb = mongodb.authuser
@@ -492,10 +493,40 @@ async def maintenance_on():
 _served_users_cache = set()
 _served_chats_cache = set()
 
+# ── Clone system ──────────────────────────────────────────────
+# Har bot (master + clones) apne served users/chats ko apne namespace
+# wali collection me rakhta hai (tgusersdb_<bot_username> / chats_<bot_username>).
+# Sab clones SAME Mongo DB share karte hain, isliye master (MASTER_ID) saare
+# clones ke users/chats tak broadcast kar sakta hai, jabki clone owner sirf
+# apne namespace ka data dekhta hai.
+
+def _bot_ns() -> str:
+    # Username bot se AUTOMATIC — cloner ko BOT_USERNAME set karne ki
+    # zaroorat nahi. app.username runtime par milta hai (bot start hone
+    # ke baad), isliye fallback config.BOT_USERNAME hai.
+    try:
+        from VISHALMUSIC import app as _app
+
+        u = getattr(_app, "username", None)
+        if u:
+            return str(u).strip().lower()
+    except Exception:
+        pass
+    return (BOT_USERNAME or "vishalmusic").strip().lower()
+
+
+def _served_users_col():
+    return mongodb[f"tgusersdb_{_bot_ns()}"]
+
+
+def _served_chats_col():
+    return mongodb[f"chats_{_bot_ns()}"]
+
+
 async def is_served_user(user_id: int) -> bool:
     if user_id in _served_users_cache:
         return True
-    user = await usersdb.find_one({"user_id": user_id})
+    user = await _served_users_col().find_one({"user_id": user_id})
     if user:
         _served_users_cache.add(user_id)
         return True
@@ -504,7 +535,7 @@ async def is_served_user(user_id: int) -> bool:
 
 async def get_served_users() -> list:
     users_list = []
-    async for user in usersdb.find({"user_id": {"$gt": 0}}):
+    async for user in _served_users_col().find({"user_id": {"$gt": 0}}):
         users_list.append(user)
     return users_list
 
@@ -516,12 +547,12 @@ async def add_served_user(user_id: int):
     if is_served:
         return
     _served_users_cache.add(user_id)
-    return await usersdb.insert_one({"user_id": user_id})
+    return await _served_users_col().insert_one({"user_id": user_id})
 
 
 async def get_served_chats() -> list:
     chats_list = []
-    async for chat in chatsdb.find({"chat_id": {"$lt": 0}}):
+    async for chat in _served_chats_col().find({"chat_id": {"$lt": 0}}):
         chats_list.append(chat)
     return chats_list
 
@@ -529,7 +560,7 @@ async def get_served_chats() -> list:
 async def is_served_chat(chat_id: int) -> bool:
     if chat_id in _served_chats_cache:
         return True
-    chat = await chatsdb.find_one({"chat_id": chat_id})
+    chat = await _served_chats_col().find_one({"chat_id": chat_id})
     if chat:
         _served_chats_cache.add(chat_id)
         return True
@@ -543,12 +574,57 @@ async def add_served_chat(chat_id: int):
     if is_served:
         return
     _served_chats_cache.add(chat_id)
-    return await chatsdb.insert_one({"chat_id": chat_id})
+    return await _served_chats_col().insert_one({"chat_id": chat_id})
+
 
 # New function to remove served chat
 async def remove_served_chat(chat_id: int):
     if await is_served_chat(chat_id):
-        await chatsdb.delete_one({"chat_id": chat_id})
+        await _served_chats_col().delete_one({"chat_id": chat_id})
+
+
+# ── Auto-owner (clone system) ─────────────────────────────────
+# Jis user ne sabse pehle bot ko PRIVATE me /start kiya, wahi is bot ka
+# owner ban jata hai (per-bot namespace). Cloner ko OWNER_ID set karne
+# ki zaroorat nahi — bas token daalo, owner automatic mil jayega.
+
+async def get_owner_id() -> int:
+    col = mongodb[f"owner_{_bot_ns()}"]
+    doc = await col.find_one({})
+    if doc and doc.get("owner"):
+        return int(doc["owner"])
+    return 0
+
+
+async def set_owner_id(user_id: int) -> None:
+    col = mongodb[f"owner_{_bot_ns()}"]
+    doc = await col.find_one({})
+    if doc:
+        return await col.update_one({"_id": doc["_id"]}, {"$set": {"owner": int(user_id)}})
+    return await col.insert_one({"owner": int(user_id)})
+
+
+# ── Master (clone-master) helpers ─────────────────────────────
+async def get_served_users_all() -> list:
+    """Master broadcast: legacy collection + EVERY clone's users."""
+    users_list = []
+    async for coll in mongodb.list_collections():
+        name = coll["name"]
+        if name == "tgusersdb" or name.startswith("tgusersdb_"):
+            async for user in mongodb[name].find({"user_id": {"$gt": 0}}):
+                users_list.append(user)
+    return users_list
+
+
+async def get_served_chats_all() -> list:
+    """Master broadcast: legacy collection + EVERY clone's chats."""
+    chats_list = []
+    async for coll in mongodb.list_collections():
+        name = coll["name"]
+        if name == "chats" or name.startswith("chats_"):
+            async for chat in mongodb[name].find({"chat_id": {"$lt": 0}}):
+                chats_list.append(chat)
+    return chats_list
     
 
 _blacklist_cache = None

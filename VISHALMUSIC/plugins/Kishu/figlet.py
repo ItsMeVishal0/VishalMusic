@@ -3,7 +3,12 @@ from random import choice
 from pyrogram import filters
 from pyrogram.types import CallbackQuery
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    buttons_to_inline_markup,
+    send_message_colored,
+    edit_message_text_colored,
+)
 
 import base64
 
@@ -11,7 +16,8 @@ def figle(text: str):
     fonts = pyfiglet.FigletFont.getFonts()
     font = choice(fonts)
     figlet_text = pyfiglet.figlet_format(text, font=font)
-    encoded_text = base64.b64encode(text.encode()).decode()
+    # Keep callback_data under Telegram's 64-byte limit so the button stays tappable
+    encoded_text = base64.b64encode(text[:25].encode()).decode()
     buttons = [
         [
             styled_button(text="🌀 ᴄʜᴀɴɢᴇ", callback_data=f"figlet_{encoded_text}", style="primary"),

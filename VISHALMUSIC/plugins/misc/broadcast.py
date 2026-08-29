@@ -11,11 +11,13 @@ from VISHALMUSIC.utils.database import (
     get_authuser_names,
     get_client,
     get_served_chats,
+    get_served_chats_all,
     get_served_users,
+    get_served_users_all,
 )
 from VISHALMUSIC.utils.decorators.language import language
 from VISHALMUSIC.utils.formatters import alpha_to_int
-from config import adminlist
+from config import MASTER_ID, adminlist
 
 IS_BROADCASTING = False
 
@@ -51,7 +53,12 @@ async def braodcast_message(client, message, _):
         sent = 0
         pin = 0
         chats = []
-        schats = await get_served_chats()
+        # Clone system: MASTER reaches every clone's chats; clone owners
+        # only reach the chats of their own bot.
+        if message.from_user.id == MASTER_ID:
+            schats = await get_served_chats_all()
+        else:
+            schats = await get_served_chats()
         for chat in schats:
             chats.append(int(chat["chat_id"]))
         for i in chats:
@@ -90,7 +97,12 @@ async def braodcast_message(client, message, _):
     if "-user" in message.text:
         susr = 0
         served_users = []
-        susers = await get_served_users()
+        # Clone system: MASTER reaches every clone's users; clone owners
+        # only reach the users of their own bot.
+        if message.from_user.id == MASTER_ID:
+            susers = await get_served_users_all()
+        else:
+            susers = await get_served_users()
         for user in susers:
             served_users.append(int(user["user_id"]))
         for i in served_users:

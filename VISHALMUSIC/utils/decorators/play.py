@@ -5,6 +5,7 @@ from pyrogram.errors import (
     ChatAdminRequired,
     InviteHashExpired,
     InviteRequestSent,
+    PeerIdInvalid,
     UserAlreadyParticipant,
     UserNotParticipant,
 )
@@ -27,6 +28,7 @@ from VISHALMUSIC.utils.colored_buttons import (
     styled_button,
     buttons_to_inline_markup,
     smart_send_photo as send_photo_colored,
+    smart_send_message as send_message_colored,
 )
 
 links = {}
@@ -124,7 +126,12 @@ def PlayWrapper(command):
             userbot = await get_assistant(chat_id)
             try:
                 try:
-                    member = await app.get_chat_member(chat_id, userbot.id)
+                    try:
+                        member = await app.get_chat_member(chat_id, userbot.id)
+                    except PeerIdInvalid:
+                        # clone bot: assistant peer cache nahi hota — username se resolve
+                        await app.resolve_peer(userbot.username)
+                        member = await app.get_chat_member(chat_id, userbot.id)
                 except ChatAdminRequired:
                     return await message.reply_text(_["call_1"])
 

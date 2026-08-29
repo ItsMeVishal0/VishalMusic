@@ -43,9 +43,10 @@ from config import BANNED_USERS, OWNER_ID
 @language
 async def settings_mar(client, message: Message, _):
     buttons = setting_markup(_)
-    await message.reply_text(
-        _["setting_1"].format(app.mention, message.chat.id, message.chat.title),
-        reply_markup=buttons_to_inline_markup(buttons),
+    await send_message_colored(
+        chat_id=message.chat.id,
+        text=_["setting_1"].format(app.mention, message.chat.id, message.chat.title),
+        reply_markup=buttons,
     )
 
 # ─── SETTINGS CALLBACK (HELPER) ─────────────────────────────────────
@@ -76,8 +77,11 @@ async def settings_back_markup(client, callback: CallbackQuery, _):
         pass
 
     if callback.message.chat.type == ChatType.PRIVATE:
-        await app.resolve_peer(OWNER_ID)
-        buttons = private_panel(_)
+        try:
+            await app.resolve_peer(OWNER_ID)
+        except Exception:
+            pass
+        buttons = await private_panel(_)
         # Build proper HTML mentions (Pyrogram .mention breaks in edit path)
         user_mention = (
             f'<a href="tg://user?id={callback.from_user.id}">'
@@ -313,7 +317,7 @@ async def authusers_mar(client, callback: CallbackQuery, _):
             result = await edit_message_text_colored(callback.message.chat.id, callback.message.id, msg, reply_markup=upl)
             if not result:
                 from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-                await callback.message.edit_text(msg, reply_markup=buttons_to_inline_markup(upl))
+                await edit_message_text_colored(chat_id=callback.message.chat.id, message_id=callback.message.id, text=msg, reply_markup=upl)
             return
     try:
         await callback.answer(_["set_cb_3"], show_alert=True)

@@ -12,7 +12,12 @@ from VISHALMUSIC import app
 from VISHALMUSIC.core.call import VISHAL
 from VISHALMUSIC.utils.database import is_music_playing, music_on
 from VISHALMUSIC.utils.decorators import AdminRightsCheck
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    buttons_to_inline_markup,
+    smart_send_message as send_message_colored,
+    smart_edit_message_text as edit_message_text_colored,
+    edit_reply_markup_colored,
+)
 from VISHALMUSIC.utils.inline import close_markup
 from config import BANNED_USERS
 
@@ -21,12 +26,12 @@ from config import BANNED_USERS
 @AdminRightsCheck
 async def resume_com(cli, message: Message, _, chat_id):
     if await is_music_playing(chat_id):
-        return await message.reply_text(_["admin_3"])
+        return await send_message_colored(chat_id=message.chat.id, text=_["admin_3"])
     await music_on(chat_id)
     await VISHAL.resume_stream(chat_id)
-    await message.reply_text(
+    await send_message_colored(chat_id=message.chat.id, 
         text=_["admin_4"].format(message.from_user.mention),
-        reply_markup=buttons_to_inline_markup(close_markup(_))
+        reply_markup=close_markup(_)
     )
 
 # ═══════════════════════════════════════════════════════════

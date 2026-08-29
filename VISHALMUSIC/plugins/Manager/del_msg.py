@@ -24,7 +24,7 @@ from pyrogram.errors import (
 from VISHALMUSIC import app
 from VISHALMUSIC.logging import LOGGER as _LOGGER_FACTORY
 from VISHALMUSIC.misc import SUDOERS
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup, send_message_colored
 from VISHALMUSIC.utils.database import get_assistant
 from VISHALMUSIC.utils.permissions import is_owner_or_sudoer, mention
 

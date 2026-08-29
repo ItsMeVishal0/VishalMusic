@@ -9,7 +9,13 @@ from pyrogram.types import (
 )
 
 from VISHALMUSIC import app, YouTube
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    buttons_to_inline_markup,
+    send_message_colored,
+    send_photo_colored,
+    edit_reply_markup_colored,
+)
 from config import (
     BANNED_USERS,
     SONG_DOWNLOAD_DURATION,

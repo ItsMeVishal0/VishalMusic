@@ -22,8 +22,10 @@ from VISHALMUSIC.utils.database import (
     add_served_user,
     blacklisted_chats,
     get_lang,
+    get_owner_id,
     is_banned_user,
     is_on_off,
+    set_owner_id,
 )
 from VISHALMUSIC.utils.decorators.language import LanguageStart
 from VISHALMUSIC.utils.formatters import get_readable_time
@@ -73,6 +75,14 @@ async def delete_message_after_delay(message: Message, delay: int):
 async def start_pm(client, message: Message, _):
     try:
         await add_served_user(message.from_user.id)
+    except:
+        pass
+
+    # Clone system: pehla user jo PRIVATE me /start karega, wahi is bot ka
+    # owner ban jata hai (automatic — cloner ko OWNER_ID set nahi karna).
+    try:
+        if not await get_owner_id():
+            await set_owner_id(message.from_user.id)
     except:
         pass
     
@@ -222,12 +232,13 @@ async def start_pm(client, message: Message, _):
             start_photo = random.choice(config.START_IMGS)
         
         # Get buttons with colored support
-        out = private_panel(_)
+        out = await private_panel(_)
         
         # Build caption with proper HTML mention formatting
         user_mention = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
         bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
         caption = _["start_2"].format(user_mention, bot_mention)
+        caption += "\n\n➤ ᴜsᴇ /clone ʙᴏᴛ_ᴛᴏᴋᴇɴ ᴛᴏ ᴄʟᴏɴᴇ ᴍᴜsɪᴄ ʙᴏᴛ 🤖"
         
         # Try colored buttons first via Bot API
         result = await send_photo_colored(

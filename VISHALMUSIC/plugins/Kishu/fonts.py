@@ -5,8 +5,91 @@ from VISHALMUSIC.utils.colored_buttons import (
     styled_button, 
     buttons_to_inline_markup,
     send_message_colored,
-    edit_reply_markup_colored
+    edit_reply_markup_colored,
+    smart_edit_message_text as edit_message_text_colored
 )
+
+# ── Styled button lists (tap ke baad colors preserve karne ke liye rebuild) ──
+_FONT_BUTTONS_P1 = [
+    [
+        styled_button("𝚃𝚢𝚙𝚎𝚠𝚛𝚒𝚝𝚎𝚛", callback_data="style+typewriter", style="primary"),
+        styled_button("𝕆𝕦𝕥𝕝𝕚𝕟𝕖", callback_data="style+outline", style="primary"),
+        styled_button("𝐒𝐞𝐫𝐢𝐟", callback_data="style+serif", style="primary"),
+    ],
+    [
+        styled_button("𝑺𝒆𝒓𝒊𝒇", callback_data="style+bold_cool", style="primary"),
+        styled_button("𝑆𝑒𝑟𝑖𝑓", callback_data="style+cool", style="primary"),
+        styled_button("Sᴍᴀʟʟ Cᴀᴘs", callback_data="style+small_cap", style="primary"),
+    ],
+    [
+        styled_button("𝓈𝒸𝓇𝒾𝓅𝓉", callback_data="style+script", style="primary"),
+        styled_button("𝓼𝓬𝓻𝓲𝓹𝓽", callback_data="style+script_bolt", style="primary"),
+        styled_button("ᵗⁱⁿʸ", callback_data="style+tiny", style="primary"),
+    ],
+    [
+        styled_button("ᑕOᗰIᑕ", callback_data="style+comic", style="primary"),
+        styled_button("𝗦𝗮𝗻𝘀", callback_data="style+sans", style="primary"),
+        styled_button("𝙎𝙖𝙣𝙨", callback_data="style+slant_sans", style="primary"),
+    ],
+    [
+        styled_button("𝘚𝘢𝘯𝘴", callback_data="style+slant", style="primary"),
+        styled_button("𝖲𝖺𝗇𝗌", callback_data="style+sim", style="primary"),
+        styled_button("Ⓒ︎Ⓘ︎Ⓡ︎Ⓒ︎Ⓛ︎Ⓔ︎Ⓢ︎", callback_data="style+circles", style="primary"),
+    ],
+    [
+        styled_button("🅒︎🅘︎🅡︎🅒︎🅛︎🅔︎🅢︎", callback_data="style+circle_dark", style="primary"),
+        styled_button("𝔊𝔬𝔱𝔥𝔦𝔠", callback_data="style+gothic", style="primary"),
+        styled_button("𝕲𝖔𝖙𝖍𝖎𝖈", callback_data="style+gothic_bolt", style="primary"),
+    ],
+    [
+        styled_button("C͜͡l͜͡o͜͡u͜͡d͜͡s͜͡", callback_data="style+cloud", style="primary"),
+        styled_button("H̆̈ă̈p̆̈p̆̈y̆̈", callback_data="style+happy", style="primary"),
+        styled_button("S̑̈ȃ̈d̑̈", callback_data="style+sad", style="primary"),
+    ],
+    [styled_button("ᴄʟᴏsᴇ", callback_data="close_reply", style="danger"), styled_button("ɴᴇxᴛ ➻", callback_data="nxt", style="primary")],
+]
+
+_FONT_BUTTONS_P2 = [
+    [
+        styled_button("🇸 🇵 🇪 🇨 🇮 🇦 🇱 ", callback_data="style+special", style="primary"),
+        styled_button("🅂🅀🅄🄰🅁🄴🅂", callback_data="style+squares", style="primary"),
+        styled_button("🆂︎🆀︎🆄︎🅰︎🆁︎🅴︎🆂︎", callback_data="style+squares_bold", style="primary"),
+    ],
+    [
+        styled_button("ꪖꪀᦔꪖꪶꪊᥴ𝓲ꪖ", callback_data="style+andalucia", style="primary"),
+        styled_button("爪卂几ᘜ卂", callback_data="style+manga", style="primary"),
+        styled_button("S̾t̾i̾n̾k̾y̾", callback_data="style+stinky", style="primary"),
+    ],
+    [
+        styled_button("B̥ͦu̥ͦb̥ͦb̥ͦl̥ͦe̥ͦs̥ͦ", callback_data="style+bubbles", style="primary"),
+        styled_button("U͟n͟d͟e͟r͟l͟i͟n͟e͟", callback_data="style+underline", style="primary"),
+        styled_button("꒒ꍏꀷꌩꌃꀎꁅ", callback_data="style+ladybug", style="primary"),
+    ],
+    [
+        styled_button("R҉a҉y҉s҉", callback_data="style+rays", style="primary"),
+        styled_button("B҈i҈r҈d҈s҈", callback_data="style+birds", style="primary"),
+        styled_button("S̸l̸a̸s̸h̸", callback_data="style+slash", style="primary"),
+    ],
+    [
+        styled_button("s⃠t⃠o⃠p⃠", callback_data="style+stop", style="primary"),
+        styled_button("S̺͆k̺͆y̺͆l̺͆i̺͆n̺͆e̺͆", callback_data="style+skyline", style="primary"),
+        styled_button("A͎r͎r͎o͎w͎s͎", callback_data="style+arrows", style="primary"),
+    ],
+    [
+        styled_button("ዪሀክቿነ", callback_data="style+qvnes", style="primary"),
+        styled_button("S̶t̶r̶i̶k̶e̶", callback_data="style+strike", style="primary"),
+        styled_button("F༙r༙o༙z༙e༙n༙", callback_data="style+frozen", style="primary"),
+    ],
+    [styled_button("ᴄʟᴏsᴇ", callback_data="close_reply", style="danger"), styled_button("ʙᴀᴄᴋ", callback_data="nxt+0", style="primary")],
+]
+
+_PAGE2_STYLES = {"special", "squares", "squares_bold", "andalucia", "manga", "stinky",
+                 "bubbles", "underline", "ladybug", "rays", "birds", "slash", "stop",
+                 "skyline", "arrows", "qvnes", "strike", "frozen"}
+
+# ORIGINAL text har message ke liye store — taaki har style tap par asli
+# text re-style ho (stylized text par styles kaam nahi karte, unicode hai).
+_orig_texts = {}
 
 
 @app.on_message(filters.command(["font", "fonts"]))
@@ -20,49 +103,18 @@ async def style_buttons(c, m, cb=False):
         message = m
         text = m.text.split(" ", 1)[1]
 
-    buttons = [
-        [
-            styled_button("𝚃𝚢𝚙𝚎𝚠𝚛𝚒𝚝𝚎𝚛", callback_data="style+typewriter", style="primary"),
-            styled_button("𝕆𝕦𝕥𝕝𝕚𝕟𝕖", callback_data="style+outline", style="primary"),
-            styled_button("𝐒𝐞𝐫𝐢𝐟", callback_data="style+serif", style="primary"),
-        ],
-        [
-            styled_button("𝑺𝒆𝒓𝒊𝒇", callback_data="style+bold_cool", style="primary"),
-            styled_button("𝑆𝑒𝑟𝑖𝑓", callback_data="style+cool", style="primary"),
-            styled_button("Sᴍᴀʟʟ Cᴀᴘs", callback_data="style+small_cap", style="primary"),
-        ],
-        [
-            styled_button("𝓈𝒸𝓇𝒾𝓅𝓉", callback_data="style+script", style="primary"),
-            styled_button("𝓼𝓬𝓻𝓲𝓹𝓽", callback_data="style+script_bolt", style="primary"),
-            styled_button("ᵗⁱⁿʸ", callback_data="style+tiny", style="primary"),
-        ],
-        [
-            styled_button("ᑕOᗰIᑕ", callback_data="style+comic", style="primary"),
-            styled_button("𝗦𝗮𝗻𝘀", callback_data="style+sans", style="primary"),
-            styled_button("𝙎𝙖𝙣𝙨", callback_data="style+slant_sans", style="primary"),
-        ],
-        [
-            styled_button("𝘚𝘢𝘯𝘴", callback_data="style+slant", style="primary"),
-            styled_button("𝖲𝖺𝗇𝗌", callback_data="style+sim", style="primary"),
-            styled_button("Ⓒ︎Ⓘ︎Ⓡ︎Ⓒ︎Ⓛ︎Ⓔ︎Ⓢ︎", callback_data="style+circles", style="primary"),
-        ],
-        [
-            styled_button("🅒︎🅘︎🅡︎🅒︎🅛︎🅔︎🅢︎", callback_data="style+circle_dark", style="primary"),
-            styled_button("𝔊𝔬𝔱𝔥𝔦𝔠", callback_data="style+gothic", style="primary"),
-            styled_button("𝕲𝖔𝖙𝖍𝖎𝖈", callback_data="style+gothic_bolt", style="primary"),
-        ],
-        [
-            styled_button("C͜͡l͜͡o͜͡u͜͡d͜͡s͜͡", callback_data="style+cloud", style="primary"),
-            styled_button("H̆̈ă̈p̆̈p̆̈y̆̈", callback_data="style+happy", style="primary"),
-            styled_button("S̑̈ȃ̈d̑̈", callback_data="style+sad", style="primary"),
-        ],
-        [styled_button("ᴄʟᴏsᴇ", callback_data="close_reply", style="danger"), styled_button("ɴᴇxᴛ ➻", callback_data="nxt", style="primary")],
-    ]
+    buttons = _FONT_BUTTONS_P1
 
     if cb:
         await edit_reply_markup_colored(chat_id=m.message.chat.id, message_id=m.message.id, reply_markup=buttons)
     else:
-        await send_message_colored(chat_id=m.chat.id, text=f"`{text}`", reply_markup=buttons)
+        sent = await send_message_colored(chat_id=m.chat.id, text=f"`{text}`", reply_markup=buttons)
+        # Original text store karo (har style tap par isi se re-style hoga)
+        mid = sent.get("message_id") if isinstance(sent, dict) else getattr(sent, "id", None)
+        if mid:
+            if len(_orig_texts) > 500:
+                _orig_texts.clear()
+            _orig_texts[mid] = text
 
 
 
@@ -70,39 +122,7 @@ async def style_buttons(c, m, cb=False):
 async def nxt(c, m):
     await m.answer()
     if m.data == "nxt":
-        buttons = [
-            [
-                styled_button("🇸 🇵 🇪 🇨 🇮 🇦 🇱 ", callback_data="style+special", style="primary"),
-                styled_button("🅂🅀🅄🄰🅁🄴🅂", callback_data="style+squares", style="primary"),
-                styled_button("🆂︎🆀︎🆄︎🅰︎🆁︎🅴︎🆂︎", callback_data="style+squares_bold", style="primary"),
-            ],
-            [
-                styled_button("ꪖꪀᦔꪖꪶꪊᥴ𝓲ꪖ", callback_data="style+andalucia", style="primary"),
-                styled_button("爪卂几ᘜ卂", callback_data="style+manga", style="primary"),
-                styled_button("S̾t̾i̾n̾k̾y̾", callback_data="style+stinky", style="primary"),
-            ],
-            [
-                styled_button("B̥ͦu̥ͦb̥ͦb̥ͦl̥ͦe̥ͦs̥ͦ", callback_data="style+bubbles", style="primary"),
-                styled_button("U͟n͟d͟e͟r͟l͟i͟n͟e͟", callback_data="style+underline", style="primary"),
-                styled_button("꒒ꍏꀷꌩꌃꀎꁅ", callback_data="style+ladybug", style="primary"),
-            ],
-            [
-                styled_button("R҉a҉y҉s҉", callback_data="style+rays", style="primary"),
-                styled_button("B҈i҈r҈d҈s҈", callback_data="style+birds", style="primary"),
-                styled_button("S̸l̸a̸s̸h̸", callback_data="style+slash", style="primary"),
-            ],
-            [
-                styled_button("s⃠t⃠o⃠p⃠", callback_data="style+stop", style="primary"),
-                styled_button("S̺͆k̺͆y̺͆l̺͆i̺͆n̺͆e̺͆", callback_data="style+skyline", style="primary"),
-                styled_button("A͎r͎r͎o͎w͎s͎", callback_data="style+arrows", style="primary"),
-            ],
-            [
-                styled_button("ዪሀክቿነ", callback_data="style+qvnes", style="primary"),
-                styled_button("S̶t̶r̶i̶k̶e̶", callback_data="style+strike", style="primary"),
-                styled_button("F༙r༙o༙z༙e༙n༙", callback_data="style+frozen", style="primary"),
-            ],
-            [styled_button("ᴄʟᴏsᴇ", callback_data="close_reply", style="danger"), styled_button("ʙᴀᴄᴋ", callback_data="nxt+0", style="primary")],
-        ]
+        buttons = _FONT_BUTTONS_P2
         await edit_reply_markup_colored(chat_id=m.message.chat.id, message_id=m.message.id, reply_markup=buttons)
     else:
         await style_buttons(c, m, cb=True)
@@ -158,13 +178,24 @@ async def style(c, m):
     if not cls:
         return await m.message.reply("❌ Unknown style type.")
 
-    if not m.message.reply_to_message or not m.message.reply_to_message.text:
-        return await m.message.reply("❌ Please reply to a text message to stylize it.")
-
-    try:
-        text = m.message.reply_to_message.text.split(" ", 1)[1]
-    except IndexError:
-        text = m.message.reply_to_message.text
+    # FIX: ORIGINAL text use karo (stored) — stylized text par styles kaam
+    # nahi karte (unicode), isliye har tap asli text se re-style hota hai.
+    text = _orig_texts.get(m.message.id)
+    if text is None:
+        if m.message.reply_to_message and m.message.reply_to_message.text:
+            text = m.message.reply_to_message.text
+        elif m.message.text:
+            text = m.message.text.replace("`", "").strip()
+        else:
+            return await m.message.reply("❌ Please reply to a text message to stylize it.")
 
     stylized = cls(text)
-    await m.message.edit_text(stylized, reply_markup=m.message.reply_markup)
+    # FIX: plain edit se button colors drop ho jate the — colored edit karo
+    # aur wahi styled buttons rebuild karke bhejo (colors preserve).
+    buttons = _FONT_BUTTONS_P2 if style in _PAGE2_STYLES else _FONT_BUTTONS_P1
+    await edit_message_text_colored(
+        chat_id=m.message.chat.id,
+        message_id=m.message.id,
+        text=stylized,
+        reply_markup=buttons,
+    )

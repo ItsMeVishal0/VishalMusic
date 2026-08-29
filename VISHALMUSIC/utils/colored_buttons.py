@@ -77,8 +77,11 @@ async def _bot_api_call(method: str, payload: dict) -> Optional[dict]:
         logger.warning("⚠️ BOT_TOKEN not set! Colored buttons will NOT work.")
         return None
     
-    # Build URL dynamically to get fresh BOT_TOKEN
-    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/{method}"
+    # Build URL dynamically to get fresh BOT_TOKEN.
+    # Use the LOCAL Bot API server when configured — required for full
+    # colored-button "style" support on deployments without official API access.
+    api_base = (config.LOCAL_BOT_API_URL or "https://api.telegram.org").rstrip("/")
+    url = f"{api_base}/bot{config.BOT_TOKEN}/{method}"
     session = await _get_session()
     
     try:
@@ -199,10 +202,11 @@ async def send_message_colored(
         "text": text,
         "parse_mode": parse_mode,
         "disable_web_page_preview": disable_web_page_preview,
-        "reply_markup": {
+    }
+    if reply_markup:
+        payload["reply_markup"] = {
             "inline_keyboard": _build_inline_keyboard(reply_markup)
         }
-    }
     
     return await _bot_api_call("sendMessage", payload)
 
@@ -404,6 +408,9 @@ async def edit_message_media_colored(
     reply_markup: List[List[Dict]] = None
 ) -> Optional[Dict]:
     """Edit message media + buttons with COLORS via Bot API HTTP."""
+    # parse_mode missing = raw HTML shows as plain text. Always send HTML.
+    media = {**media}
+    media.setdefault("parse_mode", "HTML")
     payload = {
         "chat_id": chat_id,
         "message_id": message_id,
@@ -451,13 +458,17 @@ async def smart_send_message(
         logger.debug(f"smart_send_message Bot API path failed: {e}")
 
     # Pyrogram fallback (no colors but delivery guaranteed)
-    return await app.send_message(
-        chat_id=chat_id,
-        text=text,
-        parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
-        disable_web_page_preview=disable_web_page_preview,
-        reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
-    )
+    try:
+        return await app.send_message(
+            chat_id=chat_id,
+            text=text,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            disable_web_page_preview=disable_web_page_preview,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_send_message: Pyrogram fallback failed: {e}")
+        return None
 
 
 async def smart_send_photo(
@@ -487,13 +498,17 @@ async def smart_send_photo(
     except Exception as e:
         logger.debug(f"smart_send_photo Bot API path failed: {e}")
 
-    return await app.send_photo(
-        chat_id=chat_id,
-        photo=photo,
-        caption=caption,
-        parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
-        reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
-    )
+    try:
+        return await app.send_photo(
+            chat_id=chat_id,
+            photo=photo,
+            caption=caption,
+            parse_mode=enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+            reply_markup=buttons_to_inline_markup(reply_markup) if reply_markup else None,
+        )
+    except Exception as e:
+        logger.warning(f"smart_send_photo: Pyrogram fallback failed: {e}")
+        return None
 
 
 async def smart_edit_message_text(

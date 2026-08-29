@@ -11,7 +11,7 @@ from VISHALMUSIC.utils.formatters import (
     get_readable_time,
     seconds_to_min,
 )
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup, smart_edit_message_text as edit_message_text_colored
 
 
 class TeleAPI:
@@ -115,11 +115,13 @@ class TeleAPI:
                     low, high, check = int(lower[counter]), int(higher[counter]), int(checker[counter])
                     if low < percentage_i <= high and high == check:
                         try:
-                            await mystic.edit_text(
+                            await edit_message_text_colored(
+                                chat_id=mystic.chat.id,
+                                message_id=mystic.id,
                                 text=_["tg_1"].format(
                                     app.mention, total_size, completed_size, str(percentage)[:5], speed_h, eta
                                 ),
-                                reply_markup=buttons_to_inline_markup(upl),
+                                reply_markup=upl,
                             )
                             checker[counter] = 100
                         except Exception:

@@ -1,3 +1,4 @@
+import html
 import os
 from PIL import Image, ImageDraw, ImageFont
 from pyrogram import enums, filters
@@ -5,7 +6,7 @@ from pyrogram.types import ChatMemberUpdated
 from pyrogram.errors import TopicClosed
 from VISHALMUSIC import app
 from VISHALMUSIC.mongo.welcomedb import is_on, bump, cool, auto_on
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup, send_photo_colored
 
 BG_PATH = "VISHALMUSIC/assets/VISHAL/welcome.png"
 FALLBACK_PIC = "VISHALMUSIC/assets/upic.png"
@@ -51,65 +52,34 @@ def _circle(im, size=(835, 839)):
 
 
 def build_pic(av, fn, uid, un):
-    # Use the provided welcome.png as a reference for coordinates.
-    # The resolution of the image is quite large, so the coordinates
-    # need to be adjusted accordingly.
-
+    # Design coordinates are for the bundled 2880x1620 welcome.png.
+    # Scale them to the actual image so a swapped PNG still renders correctly.
     bg = Image.open(BG_PATH).convert("RGBA")
     draw = ImageDraw.Draw(bg)
 
-    # --- 1. Fix Avatar Position ---
-    # The circular frame is on the right side of the image.
-    # The original size for _circle is (835, 839). Let's use that for the avatar size.
-    AVATAR_SIZE = (835, 839)
-    # The circle starts approximately at (1887, 390) in your original code.
-    # Let's adjust it to roughly center it in the provided circular area on the right.
-    # If your actual BG_PATH image is the same size as the provided screenshot, these coordinates are likely for a *much* larger image.
-    # Assuming your BG_PATH image is very high resolution (e.g., 2560x1600 or higher), 
-    # and the circle in the image starts around 1887, 390.
-    
-    # **If your background image is the exact one in the screenshot (approx 1280x720), use these coordinates:**
-    # AVATAR_SIZE = (270, 270)
-    # AVATAR_POSITION = (820, 200) 
-    
-    # **We'll stick to your original large-scale coordinates, assuming your BG_PATH is a high-res version of the screenshot:**
-    AVATAR_POSITION = (1887, 390) # Keeping original as a guess for the high-res image
+    s = min(bg.width / 2880, bg.height / 1620)
+
+    AVATAR_SIZE = (round(835 * s), round(839 * s))
+    AVATAR_POSITION = (round(1887 * s), round(390 * s))
     avatar = _circle(Image.open(av), size=AVATAR_SIZE)
     bg.paste(avatar, AVATAR_POSITION, avatar)
 
+    font = ImageFont.truetype(FONT_PATH, max(16, round(65 * s)))
 
-    # --- 2. Fix Text Positions ---
-    font = ImageFont.truetype(FONT_PATH, 65)
-    
-    # Based on the screenshot:
-    # Name is on the first white bar.
-    # ID is on the second white bar.
-    # Username is on the third white bar.
-    
-    # **Approximate high-resolution coordinates (adjust as needed for your specific BG_PATH resolution):**
-    # The text should be placed *after* the labels ("Name :", "ID :", "Username :").
-    
-    # Name (First Bar) - Start after "Name : " label
-    NAME_X = 550  # X-coordinate adjusted to be after "Name :" label
-    NAME_Y = 720  # Y-coordinate for the first bar
+    NAME_X = round(550 * s)
+    NAME_Y = round(720 * s)
     draw.text((NAME_X, NAME_Y), fn, fill=(242, 242, 242), font=font)
-    
-    # ID (Second Bar) - Start after "ID : " label
-    ID_X = 350    # X-coordinate adjusted to be after "ID :" label
-    ID_Y = 1000   # Y-coordinate for the second bar
+
+    ID_X = round(350 * s)
+    ID_Y = round(1000 * s)
     draw.text((ID_X, ID_Y), str(uid), fill=(242, 242, 242), font=font)
-    
-    # Username (Third Bar) - Start after "Username : " label
-    USERNAME_X = 600 # X-coordinate adjusted to be after "Username :" label
-    USERNAME_Y = 1300 # Y-coordinate for the third bar
+
+    USERNAME_X = round(600 * s)
+    USERNAME_Y = round(1300 * s)
     draw.text((USERNAME_X, USERNAME_Y), un, fill=(242, 242, 242), font=font)
 
-    # Note: I've made educated guesses for the high-resolution coordinates. 
-    # If the text still doesn't appear correctly, you will need to manually adjust 
-    # NAME_X/Y, ID_X/Y, and USERNAME_X/Y based on the exact resolution of your 
-    # 'VISHALMUSIC/assets/vishal/welcome.png' file.
-
     path = f"downloads/welcome_{uid}.png"
+    os.makedirs("downloads", exist_ok=True)
     bg.save(path)
     return path
 
@@ -151,10 +121,10 @@ async def welcome(client, update: ChatMemberUpdated):
         img = build_pic(avatar, user.first_name, user.id, user.username or "No Username")
         members = await client.get_chat_members_count(cid)
         caption = CAPTION_TXT.format(
-            chat_title=update.chat.title,
+            chat_title=html.escape(str(update.chat.title)),
             mention=user.mention,
             uid=user.id,
-            uname=user.username or "No Username",
+            uname=html.escape(user.username or "No Username"),
             count=members
         )
         try:

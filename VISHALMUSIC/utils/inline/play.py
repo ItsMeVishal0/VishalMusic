@@ -45,11 +45,11 @@ def generate_progress_bar(played_sec, duration_sec):
 
     if filled > 0:
         if filled == bar_length:
-            return "𓂃" * (filled - 1) + "ꨄ"
+            return "━" * (filled - 1) + "♬"
         else:
-            return "𓂃" * (filled - 1) + "ꨄ" + "𓂃" * remaining
+            return "━" * (filled - 1) + "♬" + "━" * remaining
     else:
-        return "ꨄ" + "𓂃" * remaining
+        return "♬" + "━" * remaining
 
 
 # ═══════════════════════════════════════════════════════════

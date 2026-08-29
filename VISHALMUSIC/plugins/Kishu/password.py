@@ -1,8 +1,7 @@
 import random
 from pyrogram import Client, filters, enums
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
-from config import BOT_USERNAME
+from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup, edit_message_text_colored
 
 
 @app.on_message(filters.command(["genpassword", "genpw"]))
@@ -30,7 +29,7 @@ async def password(bot, message):
         f"<b>Pᴀꜱꜱᴡᴏʀᴅ:</b> <code>{generated_password}</code>"
     )
 
-    buttons = [[styled_button("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{BOT_USERNAME}?startgroup=true", style="success")]]
+    buttons = [[styled_button("𝗔𝗗𝗗 𝗠𝗘", url=f"https://t.me/{app.username}?startgroup=true", style="success")]]
 
     await edit_message_text_colored(
         chat_id=processing.chat.id,

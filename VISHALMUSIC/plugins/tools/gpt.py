@@ -1,4 +1,4 @@
-# ANNIEMUSIC/plugins/tools/gpt.py
+# VISHALMUSIC/plugins/tools/gpt.py
 import asyncio
 import os
 import aiohttp
@@ -13,11 +13,19 @@ from dotenv import load_dotenv  # ✅ Added for environment variables
 # 🧠 Load environment variables
 # -----------------------------
 load_dotenv()
-OPENROUTER_KEY = os.getenv("OPENROUTER_KEY")  # 👈 .env se load hoga
+
+# ── OpenRouter API Key ─────────────────────────────────────────
+# 👇 Option A (hardcoded): apni key yahan paste karo, env var ki zaroorat nahi
+#    Example: HARDCODED_OPENROUTER_KEY = "sk-or-v1-xxxxxxxxxxxxxxxx"
+HARDCODED_OPENROUTER_KEY = ""  # apni key .env ke OPENROUTER_KEY me daalo
+
+# Option B: ya phir hosting ke env vars me OPENROUTER_KEY set karo
+# env var ko priority di gayi hai (hardcoded sirf fallback hai)
+OPENROUTER_KEY = os.getenv("OPENROUTER_KEY") or HARDCODED_OPENROUTER_KEY
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-if not OPENROUTER_KEY:
-    raise Exception("❌ Missing OPENROUTER_KEY in .env file")
+# NOTE: no module-level raise here — a missing key must NOT crash the whole
+# bot at startup. Commands reply with a setup hint instead.
 
 # -----------------------------
 # 🔧 GPT API — OpenRouter
@@ -144,26 +152,35 @@ async def process_query(client: Client, message: Message, tts: bool = False, mod
 # -----------------------------
 @app.on_message(filters.command(["ai", "gpt", "bard", "gemini", "llama", "mistral"], prefixes=["/", ".", "-", "+", "?", "$"]))
 async def gpt_handler(client: Client, message: Message):
+    if not OPENROUTER_KEY:
+        return await message.reply_text(
+            "❌ AI ɪs ɴᴏᴛ ᴄᴏɴꜰɪɢᴜʀᴇᴅ.\n\n"
+            "Gᴇᴛ ᴀ ꜰʀᴇᴇ ᴋᴇʏ ᴀᴛ openrouter.ai/keys ᴀᴜʀ ᴜsᴇ "
+            "`VISHALMUSIC/plugins/tools/gpt.py` ᴋᴇ ᴛᴏᴘ ᴘᴀʀ "
+            "`HARDCODED_OPENROUTER_KEY` ᴍᴇ ᴘᴀsᴛᴇ ᴋᴀʀᴏ, "
+            "ᴘʜɪʀ ʙᴏᴛ ʀᴇsᴛᴀʀᴛ ᴋᴀʀᴏ."
+        )
+    # Current OpenRouter model IDs (old IDs like gpt-3.5-turbo are deprecated)
     model_map = {
-        "ai": "gpt-3.5-turbo",
-        "gpt": "gpt-3.5-turbo",
-        "bard": "google/gemini-flash-1.5",
-        "gemini": "google/gemini-pro",
-        "llama": "meta-llama/llama-3-8b-chat",
-        "mistral": "mistralai/mistral-7b-instruct",
+        "ai": "openrouter/free",
+        "gpt": "openai/gpt-4o-mini",
+        "bard": "google/gemini-3.7-flash",
+        "gemini": "google/gemini-3.7-flash",
+        "llama": "meta-llama/llama-4-maverick",
+        "mistral": "mistralai/mistral-medium-3-5",
     }
     cmd = message.command[0].lower()
-    model = model_map.get(cmd, "gpt-3.5-turbo")
+    model = model_map.get(cmd, "openrouter/free")
     try:
         await asyncio.wait_for(process_query(client, message, model=model), timeout=60)
     except asyncio.TimeoutError:
         await message.reply_text("⏳ Timeout. Try again with a shorter prompt.")
 
 # -----------------------------
-# ANNIE AI VOICE MODE
+# VISHAL AI VOICE MODE
 # -----------------------------
 @app.on_message(filters.command(["assis", "aivoice"], prefixes=["/", ".", "a", "A"]))
-async def annie_tts_handler(client: Client, message: Message):
+async def vishal_tts_handler(client: Client, message: Message):
     try:
         await asyncio.wait_for(process_query(client, message, tts=True), timeout=60)
     except asyncio.TimeoutError:

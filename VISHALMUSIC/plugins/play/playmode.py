@@ -2,7 +2,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup, send_message_colored
 from VISHALMUSIC.utils.database import get_playmode, get_playtype, is_nonadmin_chat
 from VISHALMUSIC.utils.decorators import language
 from VISHALMUSIC.utils.inline.settings import playmode_users_markup

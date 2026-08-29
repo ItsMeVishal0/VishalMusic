@@ -1,4 +1,4 @@
-# ANNIEMUSIC/plugins/tools/ai.py
+# VISHALMUSIC/plugins/tools/ai.py
 import os
 import base64
 import mimetypes
@@ -14,11 +14,19 @@ from dotenv import load_dotenv
 # 🔐 Load environment variables
 # -------------------------
 load_dotenv()
-OPENROUTER_KEY = os.getenv("OPENROUTER_KEY")
+
+# ── OpenRouter API Key ─────────────────────────────────────────
+# 👇 Option A (hardcoded): apni key yahan paste karo, env var ki zaroorat nahi
+#    Example: HARDCODED_OPENROUTER_KEY = "sk-or-v1-xxxxxxxxxxxxxxxx"
+HARDCODED_OPENROUTER_KEY = ""  # apni key .env ke OPENROUTER_KEY me daalo
+
+# Option B: ya phir hosting ke env vars me OPENROUTER_KEY set karo
+# env var ko priority di gayi hai (hardcoded sirf fallback hai)
+OPENROUTER_KEY = os.getenv("OPENROUTER_KEY") or HARDCODED_OPENROUTER_KEY
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-if not OPENROUTER_KEY:
-    raise ValueError("❌ OpenRouter key not found! Please set OPENROUTER_KEY in your .env file.")
+# NOTE: no module-level raise here — a missing key must NOT crash the whole
+# bot at startup. Commands reply with a setup hint instead.
 
 # ---------------------------
 # 🔧 Helper: fetch GPT response from OpenRouter
@@ -67,52 +75,23 @@ def get_prompt(message: Message) -> str | None:
 def format_response(model_name: str, content: str) -> str:
     return f"**🤖 Model:** `{model_name}`\n\n**🧠 Response:**\n{content}"
 
-# ---------------------------
-async def handle_text_model(message: Message, model_name: str):
-    prompt = get_prompt(message)
-    if not prompt:
-        return await message.reply_text("❌ Please provide a prompt after the command.")
-
-    await message._client.send_chat_action(message.chat.id, ChatAction.TYPING)
-    status = await message.reply_text("💬 Thinking...")
-
-    try:
-        content = await asyncio.wait_for(get_gpt_response(prompt), timeout=60)
-        if not content:
-            await status.edit_text("⚠️ No response from GPT.")
-        else:
-            await status.edit_text(format_response(model_name, content))
-    except Exception as e:
-        await status.edit_text(f"❌ {e}")
-
-# ---------------------------
-# Command Handlers
-# ---------------------------
-@app.on_message(filters.command("gpt"))
-async def gpt_handler(client: Client, message: Message):
-    await handle_text_model(message, "GPT")
-
-@app.on_message(filters.command("bard"))
-async def bard_handler(client: Client, message: Message):
-    await handle_text_model(message, "Bard")
-
-@app.on_message(filters.command("gemini"))
-async def gemini_handler(client: Client, message: Message):
-    await handle_text_model(message, "Gemini")
-
-@app.on_message(filters.command("llama"))
-async def llama_handler(client: Client, message: Message):
-    await handle_text_model(message, "LLaMA")
-
-@app.on_message(filters.command("mistral"))
-async def mistral_handler(client: Client, message: Message):
-    await handle_text_model(message, "Mistral")
+# NOTE: /gpt /bard /gemini /llama /mistral are handled in tools/gpt.py
+# (with up-to-date OpenRouter model IDs). This file only adds the unique
+# /geminivision command to avoid double replies.
 
 # ---------------------------
 # GeminiVision (image) handler — uses text fallback
 # ---------------------------
 @app.on_message(filters.command("geminivision"))
 async def geminivision_handler(client: Client, message: Message):
+    if not OPENROUTER_KEY:
+        return await message.reply_text(
+            "❌ AI ɪs ɴᴏᴛ ᴄᴏɴꜰɪɢᴜʀᴇᴅ.\n\n"
+            "Gᴇᴛ ᴀ ꜰʀᴇᴇ ᴋᴇʏ ᴀᴛ openrouter.ai/keys ᴀᴜʀ ᴜsᴇ "
+            "`VISHALMUSIC/plugins/tools/ai.py` ᴋᴇ ᴛᴏᴘ ᴘᴀʀ "
+            "`HARDCODED_OPENROUTER_KEY` ᴍᴇ ᴘᴀsᴛᴇ ᴋᴀʀᴏ, "
+            "ᴘʜɪʀ ʙᴏᴛ ʀᴇsᴛᴀʀᴛ ᴋᴀʀᴏ."
+        )
     if not (message.reply_to_message and (message.reply_to_message.photo or message.reply_to_message.document)):
         return await message.reply_text("🖼️ Please reply to an image with /geminivision and a prompt.")
 

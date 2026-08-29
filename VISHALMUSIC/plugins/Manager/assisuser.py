@@ -41,7 +41,12 @@ async def join_userbot(app, chat_id, chat_username=None):
     userbot = await get_assistant(chat_id)
 
     try:
-        member = await app.get_chat_member(chat_id, userbot.id)
+        try:
+            member = await app.get_chat_member(chat_id, userbot.id)
+        except PeerIdInvalid:
+            # clone bot: assistant peer cache nahi hota — username se resolve
+            await app.resolve_peer(userbot.username)
+            member = await app.get_chat_member(chat_id, userbot.id)
         if member.status == ChatMemberStatus.BANNED:
             try:
                 await app.unban_chat_member(chat_id, userbot.id)

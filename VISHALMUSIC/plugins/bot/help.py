@@ -199,7 +199,7 @@ async def action_pun_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
 @languageCB
 async def back_to_main_cb(client: Client, CallbackQuery: types.CallbackQuery, _):
     await CallbackQuery.answer()
-    out = private_panel(_)
+    out = await private_panel(_)
     # Build proper HTML mention (Pyrogram's .mention is HTML but breaks in edit path)
     user_mention = (
         f'<a href="tg://user?id={CallbackQuery.from_user.id}">'
