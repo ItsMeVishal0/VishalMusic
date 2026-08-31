@@ -700,8 +700,11 @@ log_3: ✦ ᴅɪsᴀʙʟᴇᴅ ʟᴏɢɢɪɴɢ.
 broad_1: ➻ sᴛᴀʀᴛᴇᴅ ʙʀᴏᴀᴅᴄᴀsᴛɪɴɢ...
 broad_2: '⌬ <b>ᴇxᴀᴍᴘʟᴇ :</b>
 
+  /broadcast ʜᴇʟʟᴏ
 
-  /broadcast [ᴍᴇssᴀɢᴇ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ]'
+  /broadcast ʜᴇʟʟᴏ -user -assistant -btn/SUPPORT/https://t.me/xyz
+
+  (ᴘʜᴏᴛᴏ ᴘᴀʀ ʀᴇᴘʟʏ) /broadcast ᴄᴀᴘᴛɪᴏɴ -btn/ʙᴜᴛᴛᴏɴ/https://t.me/abc'
 broad_3: ✦ ʙʀᴏᴀᴅᴄᴀsᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {0} ᴄʜᴀᴛs ᴡɪᴛʜ {1} ᴘɪɴs ғʀᴏᴍ ᴛʜᴇ ʙᴏᴛ.
 broad_4: ✦ ʙʀᴏᴀᴅᴄᴀsᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {0} ᴜsᴇʀs.
 broad_5: ⟡ sᴛᴀʀᴛɪɴɢ ᴀssɪsᴛᴀɴᴛ ʙʀᴏᴀᴅᴄᴀsᴛ...

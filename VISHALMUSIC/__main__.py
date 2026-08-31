@@ -105,28 +105,17 @@ async def init():
     await userbot.start()
     await VISHAL.start()
 
-    # Clone bots (CLONE_BOT=1) log group VC me test NAHI karte — wo shared
-    # assistant use karte hain aur log channel ke member nahi hote.
-    if os.environ.get("CLONE_BOT") != "1":
-        try:
-            await VISHAL.stream_call("https://files.catbox.moe/euj0oc.mp4")
-        except NoActiveGroupCall:
-            LOGGER("VISHALMUSIC").error(
-                "ᴘʟᴇᴀsᴇ ᴛᴜʀɴ ᴏɴ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴏғ ʏᴏᴜʀ ʟᴏɢ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ.\n\nʙᴏᴛ sᴛᴏᴘᴘᴇᴅ..."
-            )
-            exit()
-        except:
-            pass
+    try:
+        await VISHAL.stream_call("https://files.catbox.moe/euj0oc.mp4")
+    except NoActiveGroupCall:
+        LOGGER("VISHALMUSIC").error(
+            "ᴘʟᴇᴀsᴇ ᴛᴜʀɴ ᴏɴ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴏғ ʏᴏᴜʀ ʟᴏɢ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ.\n\nʙᴏᴛ sᴛᴏᴘᴘᴇᴅ..."
+        )
+        exit()
+    except:
+        pass
 
     await VISHAL.decorators()
-
-    # Clone system: master restart par saare running clones wapas spawn karo.
-    try:
-        from VISHALMUSIC.plugins.tools.clone import resurrect_clones
-
-        await resurrect_clones()
-    except Exception as e:
-        LOGGER("VISHALMUSIC").warning(f"⚠️ ᴄʟᴏɴᴇ ʀᴇsᴜʀʀᴇᴄᴛɪᴏɴ sᴋɪᴘᴘᴇᴅ: {e}")
 
     # Long-uptime health: refresh YouTube cookies periodically and optionally
     # auto-restart the process so the bot never silently degrades.

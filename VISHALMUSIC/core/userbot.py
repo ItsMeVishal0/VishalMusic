@@ -5,8 +5,6 @@
 #   Module : Assistant Userbot Client Manager
 # ═══════════════════════════════════════════════════════════
 
-import os
-
 from pyrogram import Client
 
 import config
@@ -24,11 +22,8 @@ GROUPS_TO_JOIN = [
 # Initialize userbots
 class Userbot:
     def __init__(self):
-        # Unique storage name per process (clone suffix) so master + clones
-        # never share/corrupt the same .session sqlite file.
-        _suffix = os.environ.get("ASSISTANT_CLIENT_SUFFIX", "")
         self.one = Client(
-            f"VishalAssis1{_suffix}",
+            "VishalAssis1",
             config.API_ID,
             config.API_HASH,
             session_string=str(config.STRING1),

@@ -9,6 +9,6 @@ __pycache__/
 *.pyc
 *.log
 log.txt
-clone_*.log
 unknown_errors.txt
 *.session
+cookies.txt

@@ -19,10 +19,6 @@ API_HASH = getenv("API_HASH", "6586f0276c7748e54684719bdd247d90")
 BOT_TOKEN = getenv("BOT_TOKEN")
 
 OWNER_ID = int(getenv("OWNER_ID", 7044783841))
-# Clone system: MASTER_ID = original/head owner. Master's broadcast reaches
-# ALL clones' users; clone owners only reach their own bot's users.
-# Cloners must NOT change MASTER_ID.
-MASTER_ID = int(getenv("MASTER_ID", 7044783841))
 OWNER_USERNAME = getenv("OWNER_USERNAME", "ItsMeVishalBots")
 BOT_USERNAME = getenv("BOT_USERNAME", "vaishaliTune_bot")
 BOT_NAME = getenv("BOT_NAME", "≽ ^⎚ 𝘃𝗮𝗶𝘀𝗵𝗮𝗹𝗶 𝘅 𝗺𝘂𝘀𝗶𝗰 ⎚^ ≼")
@@ -78,14 +74,7 @@ SPOTIFY_CLIENT_ID = getenv("SPOTIFY_CLIENT_ID", "22b6125bfe224587b722d6815002db2
 SPOTIFY_CLIENT_SECRET = getenv("SPOTIFY_CLIENT_SECRET", "c9c63c6fbf2f467c8bc68624851e9773")
 
 # ── Session strings (optional) ─────────────────────────────────────────────────
-# ── Assistant sessions (clone system) ─────────────────────────
-# Clone ko sirf BOT_TOKEN chahiye. Assistant (userbot) master ka hi
-# share hota hai: MASTER_STRING_SESSION yahan daalo, saare clones use
-# karenge. NOTE: ek account ek waqt me sirf EK voice chat me ho sakta
-# hai — do clones ek saath music nahi chala sakte. STRING2-5 khali
-# chhod do (optional extra assistants sirf master ke liye).
-MASTER_STRING_SESSION = getenv("MASTER_STRING_SESSION", "")
-STRING1 = getenv("STRING_SESSION", MASTER_STRING_SESSION)
+STRING1 = getenv("STRING_SESSION")
 STRING2 = getenv("STRING_SESSION2")
 STRING3 = getenv("STRING_SESSION3")
 STRING4 = getenv("STRING_SESSION4")

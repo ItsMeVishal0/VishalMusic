@@ -45,8 +45,7 @@ class VISHAL(Client):
                 ),
             )
         except (errors.ChannelInvalid, errors.PeerIdInvalid):
-            # FIX: sys.exit() ki jagah warning — clone bots log channel ke
-            # admin nahi hote, isliye bot exit na ho (sirf log miss hoga).
+            # Log group accessible na ho to bot exit na ho — sirf log miss hoga.
             LOGGER(__name__).warning("⚠️ Bot cannot access the log group/channel – continuing without it.")
             return
         except Exception as exc:

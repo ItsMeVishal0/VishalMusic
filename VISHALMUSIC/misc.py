@@ -39,15 +39,6 @@ def dbb():
 async def sudo():
     global SUDOERS
     SUDOERS.add(OWNER_ID)
-    # Clone system: auto-owner (first /start user) ko bhi sudo banao
-    try:
-        from VISHALMUSIC.utils.database import get_owner_id
-
-        auto_owner = await get_owner_id()
-        if auto_owner:
-            SUDOERS.add(int(auto_owner))
-    except Exception:
-        pass
     sudoersdb = mongodb.sudoers
     data = await sudoersdb.find_one({"sudo": "sudo"}) or {}
     sudoers = data.get("sudoers", [])

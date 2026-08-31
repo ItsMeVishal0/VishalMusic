@@ -87,11 +87,8 @@ async def _clear_(chat_id: int) -> None:
 
 class Call:
     def __init__(self):
-        # Unique storage name per process (clone suffix) so master + clones
-        # never share/corrupt the same .session sqlite file.
-        _suffix = os.environ.get("ASSISTANT_CLIENT_SUFFIX", "")
         self.userbot1 = Client(
-            f"VishalXAssis1{_suffix}", config.API_ID, config.API_HASH, session_string=config.STRING1, sleep_threshold=60
+            "VishalXAssis1", config.API_ID, config.API_HASH, session_string=config.STRING1, sleep_threshold=60
         ) if config.STRING1 else None
         self.one = PyTgCalls(self.userbot1) if self.userbot1 else None
 
