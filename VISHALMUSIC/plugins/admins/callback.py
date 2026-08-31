@@ -117,7 +117,11 @@ async def handle_upvote(callback: CallbackQuery, chat_id: int, counter, _):
             style="primary",
         )]]
         await callback.answer(_["admin_40"], show_alert=True)
-        await callback.message.edit_reply_markup(reply_markup=markup)
+        await edit_reply_markup_colored(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+            reply_markup=markup,
+        )
         return None, None
 
 
@@ -173,7 +177,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await VISHAL.pause_stream(chat_id)
         await callback.message.reply_text(
             text=_["admin_2"].format(user_mention),
-            reply_markup=close_markup(_),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
 
     elif command == "Resume":
@@ -184,7 +188,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await VISHAL.resume_stream(chat_id)
         await callback.message.reply_text(
             text=_["admin_4"].format(user_mention),
-            reply_markup=close_markup(_),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
 
     elif command in ["Stop", "End"]:
@@ -193,7 +197,7 @@ async def manage_callback(client, callback: CallbackQuery, _):
         await set_loop(chat_id, 0)
         await callback.message.reply_text(
             text=_["admin_5"].format(user_mention),
-            reply_markup=close_markup(_),
+            reply_markup=buttons_to_inline_markup(close_markup(_)),
         )
         await callback.message.delete()
 
@@ -291,7 +295,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 await callback.edit_message_text(text_msg)
                 await callback.message.reply_text(
                     text=_["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 return await VISHAL.stop_stream(chat_id)
         except Exception:
@@ -299,7 +303,7 @@ async def handle_skip_replay(callback: CallbackQuery, _, chat_id: int, command: 
                 await callback.edit_message_text(text_msg)
                 await callback.message.reply_text(
                     text=_["admin_6"].format(user_mention, callback.message.chat.title),
-                    reply_markup=close_markup(_),
+                    reply_markup=buttons_to_inline_markup(close_markup(_)),
                 )
                 return await VISHAL.stop_stream(chat_id)
             except Exception:

@@ -3,7 +3,10 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup, smart_send_message as send_message_colored
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    smart_send_media,
+)
 from config import SUPPORT_CHAT
 
 BUTTON = [[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT, style="primary")]]
@@ -50,11 +53,14 @@ async def handle_percentage_command(_, message: Message):
     text = TEMPLATES[command].format(mention=mention, percent=percent)
     media_url = MEDIA[command]
 
-    await app.send_document(
-        message.chat.id,
-        media_url,
+    await smart_send_media(
+        chat_id=message.chat.id,
+        method="sendDocument",
+        media_field="document",
+        media_value=media_url,
         caption=text,
-        reply_markup=buttons_to_inline_markup(BUTTON),
+        parse_mode="MARKDOWN",
+        reply_markup=BUTTON,
         reply_to_message_id=get_reply_id(message),
     )
 

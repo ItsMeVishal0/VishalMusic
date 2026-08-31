@@ -174,13 +174,11 @@ async def start_pm(client, message: Message, _):
             ]
             
             await m.delete()
-            from pyrogram import enums
-            await app.send_photo(
+            await send_photo_colored(
                 chat_id=message.chat.id,
                 photo=thumbnail,
                 caption=searched_text,
-                parse_mode=enums.ParseMode.HTML,
-                reply_markup=buttons_to_inline_markup(key),
+                reply_markup=key,
             )
             if await is_on_off(2):
                 username = f"@{message.from_user.username}" if message.from_user.username else "None"
@@ -307,22 +305,17 @@ async def start_gp(client, message: Message, _):
     if not start_photo:
         start_photo = random.choice(config.START_IMGS)
     
-    # Get buttons with Telegram native colored button support
-    from VISHALMUSIC.utils.colored_buttons import buttons_to_inline_markup
-    from pyrogram import enums
-    
     # Build caption with proper HTML mention
     bot_mention = f'<a href="tg://user?id={app.id}">{app.name}</a>'
     caption = _["start_1"].format(bot_mention, get_readable_time(uptime))
     
-    # Direct Pyrogram (Telegram natively handles colors via Bot API if BOT_TOKEN set!)
-    # Note: buttons_to_inline_markup loses colors (no style field in Pyrogram)
-    # For colored buttons, user must have valid BOT_TOKEN set in config
-    await message.reply_photo(
+    # Send via Bot API HTTP to keep primary/success/danger colors.
+    # smart_send_photo auto-falls back to Pyrogram if Bot API fails.
+    await send_photo_colored(
+        chat_id=message.chat.id,
         photo=start_photo,
         caption=caption,
-        parse_mode=enums.ParseMode.HTML,
-        reply_markup=buttons_to_inline_markup(out),
+        reply_markup=out,
     )
     
     return await add_served_chat(message.chat.id)
@@ -376,8 +369,10 @@ async def welcome(client, message: Message):
                 if not welcome_photo:
                     welcome_photo = random.choice(config.START_IMGS)
                 
-                from pyrogram import enums
-                await message.reply_photo(
+                # Send via Bot API HTTP to keep primary/success/danger colors.
+                # smart_send_photo auto-falls back to Pyrogram if Bot API fails.
+                await send_photo_colored(
+                    chat_id=message.chat.id,
                     photo=welcome_photo,
                     caption=_["start_3"].format(
                         member.first_name,
@@ -385,8 +380,7 @@ async def welcome(client, message: Message):
                         message.chat.title,
                         app.mention,
                     ),
-                    parse_mode=enums.ParseMode.HTML,
-                    reply_markup=buttons_to_inline_markup(out),
+                    reply_markup=out,
                 )
                 await add_served_chat(message.chat.id)
                 await message.stop_propagation()

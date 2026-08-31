@@ -33,6 +33,7 @@ from VISHALMUSIC.utils.inline import (
 )
 from VISHALMUSIC.utils.colored_buttons import (
     buttons_to_inline_markup,
+    edit_message_media_colored,
     smart_edit_message_text as edit_message_text_colored,
     smart_send_photo as send_photo_colored,
 )
@@ -772,12 +773,16 @@ async def slider_queries(client, CallbackQuery, _):
         )
 
         buttons = slider_markup(_, vidid, user_id, query, query_type, cplay, fplay)
-        med = InputMediaPhoto(
-            media=thumbnail,
-            caption=_["play_10"].format(title.title(), duration_min),
-        )
-        await CallbackQuery.edit_message_media(
-            media=med, reply_markup=buttons_to_inline_markup(buttons)
+        med = {
+            "type": "photo",
+            "media": thumbnail,
+            "caption": _["play_10"].format(title.title(), duration_min),
+        }
+        await edit_message_media_colored(
+            chat_id=CallbackQuery.message.chat.id,
+            message_id=CallbackQuery.message.id,
+            media=med,
+            reply_markup=buttons,
         )
         await CallbackQuery.answer(_["playcb_2"])
 

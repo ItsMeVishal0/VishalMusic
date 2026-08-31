@@ -72,6 +72,8 @@ def spawn_clone_process(token: str, username: str, port: int) -> int:
         "BOT_TOKEN": token,
         "CLONE_BOT": "1",
         "PORT": str(port),
+        # Unique assistant storage files per clone → no .session corruption
+        "ASSISTANT_CLIENT_SUFFIX": f"_{username}",
     }
     logf = open(f"clone_{username}.log", "a", encoding="utf-8")
     proc = subprocess.Popen(
@@ -129,10 +131,17 @@ async def clone_cmd(client: Client, message: Message, _):
     cmd = message.command
     if len(cmd) < 2:
         return await message.reply_text(
-            "Usᴇ : <code>/clone BOT_TOKEN</code>\n\n"
-            "1️⃣ BotFather se naya bot banao (@BotFather)\n"
-            "2️⃣ /newbot → token copy karo\n"
-            "3️⃣ Yahan /clone <token> bhejo — aapka clone bot turant ban jayega 🚀"
+            "  🤖 𝗖𝗟𝗢𝗡𝗘 𝗬𝗢𝗨𝗥 𝗕𝗢𝗧\n\n"
+            "⚡ 𝗨𝘀𝗲 : \"/clone BOT_TOKEN\"\n\n"
+            "🔹 🌺 Create a new bot using 𝗕𝗼𝘁𝗙𝗮𝘁𝗵𝗲𝗿\n"
+            "  ↳ 🤖 @BotFather\n\n"
+            "🔹 ❤️ Send \"/newbot\"\n"
+            "  ↳ 🔑 Copy your 𝗕𝗼𝘁 𝗧𝗼𝗸𝗲𝗻\n\n"
+            "🔹 💐Send \"/clone\" here\n"
+            "  ↳ 🚀 Your 𝗖𝗹𝗼𝗻𝗲 𝗕𝗼𝘁 will be created instantly!\n\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            "🗑️ 𝗧𝗼 𝗥𝗲𝗺𝗼𝘃𝗲 𝗬𝗼𝘂𝗿 𝗖𝗹𝗼𝗻𝗲\n"
+            "  ↳ \"/unclone\""
         )
 
     token = cmd[1].strip()

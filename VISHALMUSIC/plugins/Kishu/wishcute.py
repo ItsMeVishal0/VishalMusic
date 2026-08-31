@@ -1,8 +1,11 @@
-from pyrogram import Client, filters, enums
+from pyrogram import filters
 import random
 import requests
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    smart_send_media,
+)
 
 SUPPORT_CHAT = "ItsMeVishalSupport"
 SUPPORT_BTN = [[styled_button("ꜱᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{SUPPORT_CHAT}", style="primary")]]
@@ -31,11 +34,13 @@ async def wish(_, m):
         f"📊 ᴘᴏꜱꜱɪʙɪʟɪᴛʏ: {wish_count}%"
     )
 
-    await app.send_animation(
+    await smart_send_media(
         chat_id=m.chat.id,
-        animation=url,
+        method="sendAnimation",
+        media_field="animation",
+        media_value=url,
         caption=caption,
-        reply_markup=buttons_to_inline_markup(SUPPORT_BTN),
+        reply_markup=SUPPORT_BTN,
     )
 
 
@@ -47,11 +52,13 @@ async def cute(_, message):
 
     caption = f"🍑 {mention} ɪꜱ {percent}% ᴄᴜᴛᴇ ʙᴀʙʏ 🥀"
 
-    await app.send_document(
+    await smart_send_media(
         chat_id=message.chat.id,
-        document=CUTE_VIDEO,
+        method="sendDocument",
+        media_field="document",
+        media_value=CUTE_VIDEO,
         caption=caption,
-        parse_mode=enums.ParseMode.MARKDOWN,
-        reply_markup=buttons_to_inline_markup(SUPPORT_BTN),
+        parse_mode="MARKDOWN",
+        reply_markup=SUPPORT_BTN,
         reply_to_message_id=message.reply_to_message.message_id if message.reply_to_message else None,
     )

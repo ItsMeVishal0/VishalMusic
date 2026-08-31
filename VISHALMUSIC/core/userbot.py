@@ -5,6 +5,8 @@
 #   Module : Assistant Userbot Client Manager
 # ═══════════════════════════════════════════════════════════
 
+import os
+
 from pyrogram import Client
 
 import config
@@ -22,12 +24,16 @@ GROUPS_TO_JOIN = [
 # Initialize userbots
 class Userbot:
     def __init__(self):
+        # Unique storage name per process (clone suffix) so master + clones
+        # never share/corrupt the same .session sqlite file.
+        _suffix = os.environ.get("ASSISTANT_CLIENT_SUFFIX", "")
         self.one = Client(
-            "VishalAssis1",
+            f"VishalAssis1{_suffix}",
             config.API_ID,
             config.API_HASH,
             session_string=str(config.STRING1),
             no_updates=True,
+            sleep_threshold=60,
         )
         self.two = Client(
             "VishalAssis2",
@@ -35,6 +41,7 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING2),
             no_updates=True,
+            sleep_threshold=60,
         )
         self.three = Client(
             "VishalAssis3",
@@ -42,6 +49,7 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING3),
             no_updates=True,
+            sleep_threshold=60,
         )
         self.four = Client(
             "VishalAssis4",
@@ -49,6 +57,7 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING4),
             no_updates=True,
+            sleep_threshold=60,
         )
         self.five = Client(
             "VishalAssis5",
@@ -56,6 +65,7 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING5),
             no_updates=True,
+            sleep_threshold=60,
         )
 
     async def start_assistant(self, client: Client, index: int):

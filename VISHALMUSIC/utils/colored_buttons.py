@@ -35,6 +35,7 @@ Example Usage:
 import asyncio
 import json
 import logging
+import re
 from typing import Dict, List, Optional, Union
 
 import aiohttp
@@ -508,6 +509,73 @@ async def smart_send_photo(
         )
     except Exception as e:
         logger.warning(f"smart_send_photo: Pyrogram fallback failed: {e}")
+        return None
+
+
+def _camel_to_snake(name: str) -> str:
+    """Convert camelCase Bot API method to snake_case Pyrogram method."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+
+async def smart_send_media(
+    chat_id: Union[int, str],
+    method: str,
+    media_field: str,
+    media_value: str,
+    caption: Optional[str] = None,
+    reply_markup: Optional[List[List[Dict]]] = None,
+    parse_mode: str = "HTML",
+    reply_to_message_id: Optional[int] = None,
+):
+    """Send any media (URL or file_id) with colored buttons via Bot API.
+
+    Args:
+        method: Bot API method name, e.g. 'sendDocument', 'sendAnimation'.
+        media_field: field holding the media, e.g. 'document', 'animation'.
+        media_value: media URL or file_id.
+
+    Falls back to Pyrogram (no colors) if Bot API fails.
+    """
+    from VISHALMUSIC import app
+    from pyrogram import enums
+
+    payload = {"chat_id": chat_id, "parse_mode": parse_mode}
+    payload[media_field] = media_value
+
+    if caption:
+        payload["caption"] = caption
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    if reply_markup:
+        payload["reply_markup"] = {"inline_keyboard": _build_inline_keyboard(reply_markup)}
+
+    # Try Bot API first (colors)
+    try:
+        data = await _bot_api_call(method, payload)
+        if data and data.get("message_id"):
+            try:
+                return await app.get_messages(chat_id, data["message_id"])
+            except Exception:
+                return data
+    except Exception as e:
+        logger.debug(f"smart_send_media {method} Bot API path failed: {e}")
+
+    # Pyrogram fallback (no colors but delivery guaranteed)
+    try:
+        send_fn = getattr(app, _camel_to_snake(method))
+        kwargs = {
+            "chat_id": chat_id,
+            "caption": caption,
+            "parse_mode": enums.ParseMode.HTML if parse_mode == "HTML" else enums.ParseMode.MARKDOWN,
+        }
+        kwargs[media_field] = media_value
+        if reply_to_message_id:
+            kwargs["reply_to_message_id"] = reply_to_message_id
+        if reply_markup:
+            kwargs["reply_markup"] = buttons_to_inline_markup(reply_markup)
+        return await send_fn(**kwargs)
+    except Exception as e:
+        logger.warning(f"smart_send_media {method}: Pyrogram fallback failed: {e}")
         return None
 
 

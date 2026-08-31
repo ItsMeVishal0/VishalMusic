@@ -1,6 +1,6 @@
 import asyncio
 import random
-from pyrogram import filters
+from pyrogram import filters, enums
 from pyrogram.enums import ChatType
 from pyrogram.errors import FloodWait
 from VISHALMUSIC import app
@@ -46,6 +46,7 @@ async def mention_members(client, message, message_pool, stop_cmd):
                     chat_id,
                     f"[{member.user.first_name}](tg://user?id={member.user.id}) {random.choice(message_pool)}",
                     disable_web_page_preview=True,
+                    parse_mode=enums.ParseMode.MARKDOWN,
                 )
                 await asyncio.sleep(4)
             except FloodWait as e:

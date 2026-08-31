@@ -23,6 +23,7 @@ class VISHAL(Client):
             in_memory=True,
             workers=48,
             max_concurrent_transmissions=7,
+            sleep_threshold=60,
         )
         LOGGER(__name__).info("Bot client initialized.")
 

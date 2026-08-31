@@ -8,7 +8,10 @@ from pyrogram import raw, filters
 from pyrogram.errors import StickersetInvalid
 
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    smart_edit_message_text as edit_message_text_colored,
+)
 from config import BOT_USERNAME
 
 
@@ -97,9 +100,11 @@ async def pack_clone(client, message):
                 **_cs_kwargs(st.is_animated, st.is_video)
             )
         )
-        await proc.edit(
+        await edit_message_text_colored(
+            proc.chat.id,
+            proc.id,
             f"cloned {len(items)} stickers!",
-            reply_markup=buttons_to_inline_markup([[styled_button("view pack", url=f"https://t.me/addstickers/{short}", style="success")]])
+            reply_markup=[[styled_button("view pack", url=f"https://t.me/addstickers/{short}", style="success")]],
         )
     except StickersetInvalid:
         await proc.edit("invalid sticker set")

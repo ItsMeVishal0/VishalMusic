@@ -14,7 +14,11 @@ from typing import Optional
 
 from config import LOGGER_ID
 from VISHALMUSIC import app
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    buttons_to_inline_markup,
+    smart_send_photo,
+)
 
 BOT_INFO: Optional[types.User] = None
 BOT_ID: Optional[int] = None
@@ -45,6 +49,14 @@ async def _ensure_bot_info() -> None:
 async def safe_send_photo(chat_id, photo, caption, reply_markup=None, max_retries=3):
     for attempt in range(max_retries):
         try:
+            # Colored path: styled list -> Bot API HTTP (keeps colors)
+            if isinstance(reply_markup, list):
+                result = await smart_send_photo(
+                    chat_id=chat_id, photo=photo, caption=caption, reply_markup=reply_markup
+                )
+                if result:
+                    return result
+                reply_markup = buttons_to_inline_markup(reply_markup)
             return await app.send_photo(
                 chat_id=chat_id,
                 photo=photo,
@@ -104,9 +116,7 @@ async def join_watcher(_, message: Message):
 
             reply_markup = None
             if _is_valid_url(invite_link):
-                reply_markup = buttons_to_inline_markup(
-                    [[styled_button("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip(), style="primary")]]
-                )
+                reply_markup = [[styled_button("sᴇᴇ ɢʀᴏᴜᴘ 👀", url=invite_link.strip(), style="primary")]]
 
             await safe_send_photo(
                 LOGGER_ID,

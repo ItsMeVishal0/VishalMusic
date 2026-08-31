@@ -10,3 +10,5 @@ __pycache__/
 *.log
 log.txt
 clone_*.log
+unknown_errors.txt
+*.session

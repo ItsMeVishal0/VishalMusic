@@ -1,3 +1,5 @@
+import aiohttp
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -5,6 +7,20 @@ from nekosbest import Client as NekoClient
 from VISHALMUSIC import app
 
 neko_client = NekoClient()
+
+# Actions not available on the main API map to a visually similar reaction.
+ALIASES = {
+    "highfive": "wave",
+    "shoot": "punch",
+    "baka": "smug",
+    "nod": "smile",
+    "nope": "shrug",
+    "bored": "yawn",
+    "yeet": "shrug",
+    "think": "stare",
+    "peck": "kiss",
+    "lurk": "stare",
+}
 
 commands = {
     "punch": {"emoji": "💥", "text": "punched"},
@@ -48,12 +64,46 @@ def md_escape(text: str) -> str:
 
 
 async def get_animation(action: str):
+    # 1. nekos.best
     try:
         result = await neko_client.get_image(action)
-        return result.url
+        if result and getattr(result, "url", None):
+            return result.url
     except Exception as e:
         print(f"❌ NekoClient error: {e}")
-        return None
+
+    # 2. otakugifs.xyz — returns Tenor CDN URLs (reachable by Telegram)
+    try:
+        reaction = ALIASES.get(action, action)
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
+            async with session.get(
+                f"https://api.otakugifs.xyz/gif?reaction={reaction}"
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("url"):
+                        return data["url"]
+    except Exception as e:
+        print(f"❌ otakugifs error: {e}")
+
+    # 3. purrbot.site (covers feed + others)
+    try:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
+            async with session.get(
+                f"https://purrbot.site/api/img/sfw/{action}/gif"
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("link"):
+                        return data["link"]
+    except Exception as e:
+        print(f"❌ purrbot error: {e}")
+
+    return None
 
 
 @app.on_message(filters.command(list(commands.keys())) & ~filters.forwarded & ~filters.via_bot)

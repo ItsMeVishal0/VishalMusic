@@ -16,7 +16,10 @@ from pyrogram.errors import (
     FileReferenceExpired,
     RPCError,
 )
-from VISHALMUSIC.utils.colored_buttons import styled_button, buttons_to_inline_markup
+from VISHALMUSIC.utils.colored_buttons import (
+    styled_button,
+    smart_edit_message_text as edit_message_text_colored,
+)
 
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.files import resize_file_to_sticker_size
@@ -213,14 +216,14 @@ async def kang(client, message):
         count = len(sset.documents)
         kind_lbl = "ᴀɴɪᴍᴀᴛᴇᴅ" if is_anim else "ᴠɪᴅᴇᴏ" if is_vid else "sᴛᴀᴛɪᴄ"
 
-        await notify.edit(
+        await edit_message_text_colored(
+            notify.chat.id,
+            notify.id,
             f"➣ {'ᴄʀᴇᴀᴛᴇᴅ' if created else 'ᴀᴅᴅᴇᴅ ᴛᴏ'} ʏᴏᴜʀ {kind_lbl} ᴘᴀᴄᴋ!\n"
             f"ᴘᴀᴄᴋ: {title}\n"
             f"ᴄᴏᴜɴᴛ: {count}\n"
             f"ᴇᴍᴏᴊɪ: {emoji}",
-            reply_markup=buttons_to_inline_markup(
-                [[styled_button("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}", style="success")]]
-            )
+            reply_markup=[[styled_button("ᴏᴘᴇɴ ᴘᴀᴄᴋ", url=f"https://t.me/addstickers/{short}", style="success")]],
         )
 
     except FloodWait as e:
