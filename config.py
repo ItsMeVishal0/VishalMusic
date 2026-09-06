@@ -61,6 +61,8 @@ GIT_TOKEN = getenv("GIT_TOKEN")  # needed if repo is private
 # ── Support links ──────────────────────────────────────────────────────────
 SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/ItsMeVishalBots")
 SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/ItsMeVishalBots")
+# Link used by the /privacy command (set your own privacy-policy post/page)
+PRIVACY_LINK = getenv("PRIVACY_LINK", SUPPORT_CHAT)
 
 # ── Assistant auto-leave ───────────────────────────────────────────────────────
 AUTO_LEAVING_ASSISTANT = False

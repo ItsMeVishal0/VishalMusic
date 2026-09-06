@@ -40,37 +40,81 @@ def _extract_buttons(text: str):
     """
     if not text or "-btn" not in text:
         return (text or "").strip(), []
+
+    # Known broadcast flags act as boundaries so a -btn spec never eats them.
+    _FLAGS = r"(?:pinloud|pin|nobot|assistant|assistaint|user|photo|forward|wfchat|wfuser)"
+
+    def _url_ok(u: str) -> bool:
+        return bool(u) and u.startswith(("http://", "https://"))
+
+    def _parse_spec(s: str):
+        """Return (label, url) for one -btn spec, or None."""
+        s = s.strip()
+        if not s:
+            return None
+        # slash form: -btn/Label/URL   (URL may contain more slashes)
+        if s.startswith("/"):
+            parts = s[1:].split("/", 1)
+            if len(parts) == 2 and _url_ok(parts[1].strip()):
+                return parts[0].strip(), parts[1].strip()
+            return None
+        # quoted label first: -btn "Label|URL"  /  -btn "Label" URL  /  "Label"|URL
+        m = re.match(r'^\s*"([^"]+)"\s*\|?\s*', s)
+        if m:
+            label, url = None, None
+            quoted = m.group(1).strip()
+            rest = s[m.end():].strip()
+            # pipe may live INSIDE the quotes: "Label|URL"
+            lbl, sep, inurl = quoted.partition("|")
+            label = lbl.strip()
+            if sep and inurl.strip() and _url_ok(inurl.strip()):
+                url = inurl.strip()
+            # or the URL sits outside the quotes
+            elif rest:
+                if rest.startswith("|"):
+                    rest = rest[1:].strip()
+                url = rest.split(None, 1)[0].strip() if rest else None
+                if not _url_ok(url or ""):
+                    url = None
+            if label and _url_ok(url or ""):
+                return label, url
+            return None
+        # bare/raw: "Label|URL" or "Label | URL" (tolerate spaces around |)
+        if "|" in s:
+            label, _, url = s.partition("|")
+            label = label.strip().strip('"').strip()
+            url = url.strip().strip('"').strip()
+            if label and _url_ok(url):
+                return label, url
+            return None
+        # last try: "Label URL" separated by whitespace
+        sp = s.split(None, 1)
+        if len(sp) == 2 and _url_ok(sp[1].strip()):
+            return sp[0].strip().strip('"').strip(), sp[1].strip()
+        return None
+
     rows = []
-    cleaned = text
-    pattern = re.compile(
-        r'-btn\s+(?:"[^"]+"\s*)+'
-        r'|-btn/[^/\s]+/\S+'
-        r'|-btn\s+\S+\|\S+'
-    )
-    for seg in pattern.findall(text):
-        row = []
-        # 1) quoted: "Label|URL"
-        for q in re.findall(r'"([^"]+)"', seg):
-            label, _, url = q.partition("|")
-            if url.strip():
-                row.append(styled_button(label.strip(), url=url.strip(), style="primary"))
-        # 2) easy slash form: -btn/Label/URL (URL may contain slashes)
-        if not row and seg.startswith("-btn/"):
-            try:
-                _, label, url = seg.split("/", 2)
-                if url.strip():
-                    row.append(styled_button(label.strip(), url=url.strip(), style="primary"))
-            except ValueError:
-                pass
-        # 3) bare form: -btn Label|URL
-        if not row:
-            label, _, url = seg.partition("|")
-            label = label.replace("-btn", "").strip()
-            if url.strip():
-                row.append(styled_button(label, url=url.strip(), style="primary"))
-        if row:
-            rows.append(row)
-        cleaned = cleaned.replace(seg, "", 1)
+    cleaned = ""
+    rest = text
+    while True:
+        m = re.search(r"(^|\s)-btn\b", rest)
+        if not m:
+            cleaned += rest
+            break
+        cleaned += rest[: m.start()]  # keep text before the marker
+        rest = rest[m.end():]
+        # spec ends at the next -btn marker or at a known flag token
+        b = re.search(
+            r"\s(?=-btn\b)|(?:\s-)(?:" + _FLAGS + r")(?![\w])", rest
+        )
+        end = b.start() if b else len(rest)
+        spec = rest[:end]
+        rest = rest[end:]
+        parsed = _parse_spec(spec)
+        if parsed:
+            rows.append(
+                [styled_button(parsed[0], url=parsed[1], style="primary")]
+            )
     return cleaned.strip(), rows
 
 
@@ -78,6 +122,81 @@ def _extract_buttons(text: str):
 @language
 async def braodcast_message(client, message, _):
     global IS_BROADCASTING
+
+    # ── "With File" quick modes (ported from ShrutiMusic broadcast) ──────────
+    # /broadcast -wfchat   → reply-to photo/text, send FRESH to all served chats only
+    # /broadcast -wfuser   → reply-to photo/text, send FRESH to all served users only
+    # add -forward         → forward the original message instead of sending fresh
+    if "-wfchat" in message.text or "-wfuser" in message.text:
+        if not message.reply_to_message or not (
+            message.reply_to_message.photo or message.reply_to_message.text
+        ):
+            return await message.reply_text(
+                "Please reply to a text or image message for broadcasting."
+            )
+        reply = message.reply_to_message
+        is_photo = bool(reply.photo)
+        file_id = reply.photo.file_id if is_photo else None
+        text_content = reply.text or ""
+        caption = reply.caption or text_content
+        reply_markup = getattr(reply, "reply_markup", None)
+
+        IS_BROADCASTING = True
+        await message.reply_text(_["broad_1"])
+
+        targets = []
+        if "-wfchat" in message.text:
+            targets = [int(chat["chat_id"]) for chat in await get_served_chats()]
+        else:
+            targets = [int(user["user_id"]) for user in await get_served_users()]
+
+        sent = 0
+        for chat_id in targets:
+            try:
+                if "-forward" in message.text:
+                    await app.forward_messages(
+                        chat_id=chat_id,
+                        from_chat_id=reply.chat.id,
+                        message_ids=reply.id,
+                    )
+                elif is_photo:
+                    m = await smart_send_photo(
+                        chat_id=chat_id, photo=file_id, caption=caption or None,
+                        reply_markup=reply_markup,
+                    )
+                    if not m:
+                        m = await app.send_photo(
+                            chat_id, file_id, caption=caption or None,
+                            reply_markup=reply_markup,
+                        )
+                else:
+                    m = await smart_send_message(
+                        chat_id=chat_id, text=text_content,
+                        reply_markup=reply_markup,
+                    )
+                    if not m:
+                        m = await app.send_message(
+                            chat_id, text_content, reply_markup=reply_markup,
+                        )
+                sent += 1
+                await asyncio.sleep(0.2)
+            except FloodWait as fw:
+                flood_time = int(fw.value)
+                if flood_time > 200:
+                    continue
+                await asyncio.sleep(flood_time)
+            except Exception:
+                continue
+        kind = "chats" if "-wfchat" in message.text else "users"
+        try:
+            await message.reply_text(
+                f"Broadcast to {kind} completed! Sent to {sent} {kind}."
+            )
+        except Exception:
+            pass
+        IS_BROADCASTING = False
+        return
+
     if message.reply_to_message:
         x = message.reply_to_message.id
         y = message.chat.id

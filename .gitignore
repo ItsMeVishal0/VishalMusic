@@ -12,3 +12,11 @@ log.txt
 unknown_errors.txt
 *.session
 cookies.txt
+
+# runtime (not for repo)
+cache/
+cookies.txt
+bot.log
+.env
+downloads/
+*.log

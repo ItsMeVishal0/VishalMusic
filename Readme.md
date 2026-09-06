@@ -85,6 +85,58 @@
     </table>
   </div>
 
+  <!-- NEW FEATURES (Upgrade Pack) -->
+  <h2 align="center">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&duration=3000&pause=500&color=00BFFF&center=true&vCenter=true&width=500&height=40&lines=🎁+NEW+UPGRADE+PACK+🎁" />
+  </h2>
+
+  <div align="center">
+    <table>
+      <tr>
+        <td width="50%" valign="top">
+
+  ### 🔐 Force Subscription
+
+  - 🚫 `/fsub <channel>` - Ban-free join gate for your channel
+  - 🔔 Auto-mute users who don't join the channel
+  - 🎉 Auto-unmute when they join
+
+  </td>
+        <td width="50%" valign="top">
+
+  ### 🎙️ VC Logger
+
+  - 📢 `/vclogger on|off` - VC join/leave notifications
+  - 👋 Auto greeting when someone joins the voice chat
+  - ⚡ Restart-safe (state saved in MongoDB)
+
+  </td>
+      </tr>
+      <tr>
+        <td width="50%" valign="top">
+
+  ### 💝 LoveBirds Economy
+
+  - 💰 `/bal` - Check coin balance
+  - 🎁 `/gifts` + `/sendgift @user <emoji>` - Gift system
+  - 📖 `/story Name1 Name2` - Random love stories
+  - 🏆 `/top` - Richest users leaderboard
+  - ⭐ Earn coins just by chatting
+
+  </td>
+        <td width="50%" valign="top">
+
+  ### 🛡️ Extras
+
+  - 📜 `/privacy` - Privacy policy command
+  - 🤖 `/bots` - List all bots in group
+  - 📝 `/markdownhelp` - Formatting guide for welcomes
+
+  </td>
+      </tr>
+    </table>
+  </div>
+
   ---
 
   <!-- ANIMATED DEPLOY HEADING -->

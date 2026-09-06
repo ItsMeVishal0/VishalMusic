@@ -42,9 +42,9 @@ _formats_cache: Dict[str, Tuple[float, List[Dict], str]] = {}
 _formats_lock = asyncio.Lock()
 
 # ============ API CONFIGURATION ============
-SHRUTI_API_KEY = "ArtistbotshAUfCkB"
+VISHAL_API_KEY = "ArtistbotshAUfCkB"
 
-# API 1: Primary Shruti API (Direct Download)
+# API 1: Primary Vishal API (Direct Download)
 PRIMARY_API_URL = "https://music.artistbots.workers.dev"
 # Endpoint: /download?url={video_id}&type=audio&api_key={KEY}
 # Response: Direct file download
@@ -160,9 +160,9 @@ async def _exec_proc(*args: str) -> Tuple[bytes, bytes]:
 
 # Legacy sync alias removed â€” use _check_rate_limit_async() everywhere
 
-# ============ API 1: PRIMARY SHRUTI API (DIRECT DOWNLOAD) ============
+# ============ API 1: PRIMARY VISHAL API (DIRECT DOWNLOAD) ============
 async def download_song_primary_api(link: str) -> str:
-    """Primary Shruti API - Direct download with API key (shared session, 1 MB chunks)."""
+    """Primary Vishal API - Direct download with API key (shared session, 1 MB chunks)."""
     if not PRIMARY_API_URL:
         return None
     video_id = link.split('v=')[-1].split('&')[0] if 'v=' in link else link
@@ -178,7 +178,7 @@ async def download_song_primary_api(link: str) -> str:
 
     try:
         session = await _get_yt_session()
-        params = {"url": video_id, "type": "audio", "api_key": SHRUTI_API_KEY}
+        params = {"url": video_id, "type": "audio", "api_key": VISHAL_API_KEY}
         async with session.get(
             f"{PRIMARY_API_URL}/download",
             params=params,
@@ -198,7 +198,7 @@ async def download_song_primary_api(link: str) -> str:
 
 
 async def download_video_primary_api(link: str) -> str:
-    """Primary Shruti API - Video download with API key (shared session, 1 MB chunks)."""
+    """Primary Vishal API - Video download with API key (shared session, 1 MB chunks)."""
     if not PRIMARY_API_URL:
         return None
     video_id = link.split('v=')[-1].split('&')[0] if 'v=' in link else link
@@ -214,7 +214,7 @@ async def download_video_primary_api(link: str) -> str:
 
     try:
         session = await _get_yt_session()
-        params = {"url": video_id, "type": "video", "api_key": SHRUTI_API_KEY}
+        params = {"url": video_id, "type": "video", "api_key": VISHAL_API_KEY}
         async with session.get(
             f"{PRIMARY_API_URL}/download",
             params=params,

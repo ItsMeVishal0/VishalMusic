@@ -103,6 +103,16 @@ async def init():
     LOGGER("VISHALMUSIC.plugins").info("ᴍᴏᴅᴜʟᴇs ʟᴏᴀᴅᴇᴅ...")
 
     await userbot.start()
+
+    # ▶️ VC Logger: resume VC join/leave notifications for groups that enabled
+    # it (added in this upgrade pack). Runs only after the assistant is up.
+    try:
+        from VISHALMUSIC.plugins.tools.vclogger import load_vc_logger_status
+
+        asyncio.create_task(load_vc_logger_status())
+    except Exception as e:
+        LOGGER("VISHALMUSIC").warning(f"⚠️ ᴠᴄ ʟᴏɢɢᴇʀ ɪɴɪᴛ ғᴀɪʟᴇᴅ: {e}")
+
     await VISHAL.start()
 
     try:
