@@ -78,7 +78,7 @@ def autoplay_button(chat_id: int, status: bool) -> dict:
     return styled_button(
         "🔁 ᴀᴜᴛᴏᴘʟᴀʏ : ᴏғғ ❌",
         callback_data=f"AUTOPLAY_TOGGLE {chat_id}",
-        style="danger",
+        style="success",
     )
 
 
