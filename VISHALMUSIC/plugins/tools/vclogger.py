@@ -151,6 +151,7 @@ async def monitor_vc_chat(chat_id):
         return
 
     cached_peer = None
+    peer_fail_streak = 0
     while chat_id in active_vc_chats and await get_vc_logger_status(chat_id):
         try:
             if not cached_peer:
@@ -175,10 +176,29 @@ async def monitor_vc_chat(chat_id):
                     await asyncio.gather(*tasks, return_exceptions=True)
 
             vc_active_users[chat_id] = new_users
+            peer_fail_streak = 0
 
         except Exception as e:
             cached_peer = None
-            LOGGER.error(f"Error monitoring VC for chat {chat_id}: {e}")
+            err = str(e).upper()
+            # Transient on a fresh session: peer gets cached once the assistant
+            # sees the chat. Only give up after several consecutive failures.
+            if "PEER_ID_INVALID" in err or "PEER ID INVALID" in err or "ID NOT FOUND" in err:
+                peer_fail_streak += 1
+                if peer_fail_streak >= 5:
+                    LOGGER.warning(
+                        f"VC logger auto-disabled for chat {chat_id}: "
+                        f"peer never resolvable by assistant ({e})"
+                    )
+                    active_vc_chats.discard(chat_id)
+                    vc_active_users.pop(chat_id, None)
+                    try:
+                        await save_vc_logger_status(chat_id, False)
+                    except Exception:
+                        pass
+                    return
+            else:
+                LOGGER.error(f"Error monitoring VC for chat {chat_id}: {e}")
 
         await asyncio.sleep(8)
 

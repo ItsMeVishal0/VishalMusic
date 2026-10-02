@@ -27,3 +27,10 @@ services:
         value: https://api.shrutibots.site
       - key: VISHAL_API_KEY
         value: ShrutiBotsc7zkBuuYtyvKJas3omsr
+      # Keep-alive: set this to your service's public URL (e.g.
+      # https://vishal-music-bot.onrender.com) so the free instance does not
+      # spin down after 15 idle minutes. Leave blank to disable.
+      - key: KEEPALIVE_URL
+        sync: false
+      - key: KEEPALIVE_INTERVAL
+        value: "600"

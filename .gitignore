@@ -2,6 +2,12 @@
 .env
 *.env
 
+# Virtualenv — kabhi push mat karna (1.2GB+, build fail kar dega)
+.venv/
+venv/
+env/
+virtualenv/
+
 # Runtime junk
 downloads/
 cache/

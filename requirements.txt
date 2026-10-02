@@ -1,5 +1,5 @@
 aiofiles
-pyrogram
+kurigram==2.2.15
 urllib3
 aiohttp
 apscheduler

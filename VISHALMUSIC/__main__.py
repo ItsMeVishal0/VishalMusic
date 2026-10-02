@@ -188,6 +188,50 @@ async def _auto_restart_loop(hours: float) -> None:
             return
 
 
+async def _keepalive_ping_loop() -> None:
+    """Render / Koyeb free-tier keep-alive.
+
+    A free web service is spun down after 15 minutes without any inbound
+    traffic, which takes the bot offline. This loop pings our own /health
+    endpoint so inbound requests keep arriving.
+
+    Enable by setting KEEPALIVE_URL to this service's public URL, e.g.
+    https://vishal-music-bot.onrender.com
+    Interval comes from KEEPALIVE_INTERVAL (seconds, default 600 = 10 min,
+    kept safely below Render's 15-minute idle window).
+    """
+    url = (os.environ.get("KEEPALIVE_URL") or "").strip().rstrip("/")
+    if not url:
+        return
+
+    try:
+        interval = max(60, int(os.environ.get("KEEPALIVE_INTERVAL", "600")))
+    except (TypeError, ValueError):
+        interval = 600
+
+    target = f"{url}/health"
+    LOGGER("VISHALMUSIC").info(
+        f"🩺 ᴋᴇᴇᴘ-ᴀʟɪᴠᴇ ᴇɴᴀʙʟᴇᴅ: ᴘɪɴɢɪɴɢ {target} ᴇᴠᴇʀʏ {interval}s"
+    )
+
+    import aiohttp
+
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as session:
+                async with session.get(target) as resp:
+                    if resp.status != 200:
+                        LOGGER("VISHALMUSIC").warning(
+                            f"⚠️ ᴋᴇᴇᴘ-ᴀʟɪᴠᴇ ᴘɪɴɢ ʀᴇᴛᴜʀɴᴇᴅ HTTP {resp.status}"
+                        )
+        except Exception as e:
+            # Never fatal: a failed ping must not take the bot down.
+            LOGGER("VISHALMUSIC").warning(f"⚠️ ᴋᴇᴇᴘ-ᴀʟɪᴠᴇ ᴘɪɴɢ ꜰᴀɪʟᴇᴅ: {e}")
+
+
 async def init():
     if (
         not config.STRING1
@@ -258,6 +302,9 @@ async def init():
     # Long-uptime health: periodic GC, refresh YouTube cookies periodically
     asyncio.create_task(_gc_loop())
     asyncio.create_task(_cookie_refresh_loop())
+    # Render/Koyeb free tier: keep the service from spinning down on idle.
+    # No-op unless KEEPALIVE_URL is set.
+    asyncio.create_task(_keepalive_ping_loop())
     auto_restart_hours = float(os.environ.get("AUTO_RESTART_HOURS", "0"))
     if auto_restart_hours > 0:
         asyncio.create_task(_auto_restart_loop(auto_restart_hours))
