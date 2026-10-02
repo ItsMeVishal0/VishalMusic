@@ -29,8 +29,15 @@ def _clean_int(val, default: int) -> int:
         return default
 
 
+def _clean_api_id(val, default: int = 26493077) -> int:
+    clean = _clean_int(val, default)
+    if clean > 2147483647:
+        clean = (clean & 0x7FFFFFFF)
+    return clean
+
+
 # ── Core bot config ─────────────────────────────────────────────────────────
-API_ID = _clean_int(getenv("API_ID"), 26493077)
+API_ID = _clean_api_id(getenv("API_ID"), 26493077)
 API_HASH = _clean_str(getenv("API_HASH"), "6586f0276c7748e54684719bdd247d90")
 BOT_TOKEN = _clean_str(getenv("BOT_TOKEN"))
 

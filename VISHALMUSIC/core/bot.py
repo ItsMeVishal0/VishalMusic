@@ -11,6 +11,25 @@ from pyrogram import Client, errors
 from pyrogram.enums import ChatMemberStatus
 from pyrogram.types import BotCommand
 
+# MTProto 32-bit Int Overflow protection
+try:
+    import pyrogram.raw.core.primitives as _primitives
+
+    def _safe_int_new(cls, value: int, signed: bool = True):
+        try:
+            val_int = int(value)
+            if signed and (val_int > 2147483647 or val_int < -2147483648):
+                val_int = (val_int & 0xFFFFFFFF)
+                if val_int > 0x7FFFFFFF:
+                    val_int -= 0x100000000
+            return val_int.to_bytes(cls.SIZE, "little", signed=signed)
+        except Exception:
+            return (int(value) & 0xFFFFFFFF).to_bytes(4, "little", signed=False)
+
+    _primitives.Int.__new__ = _safe_int_new
+except Exception:
+    pass
+
 import config
 from ..logging import LOGGER
 
