@@ -4,6 +4,27 @@
 #   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
+# ── Pyrogram / PyTgCalls Compatibility Layer ────────────────
+import pyrogram.errors
+
+if not hasattr(pyrogram.errors, "GroupcallForbidden"):
+    _found = False
+    for _sub in ("bad_request_400", "forbidden_403"):
+        try:
+            import importlib
+            _mod = importlib.import_module(f"pyrogram.errors.exceptions.{_sub}")
+            if hasattr(_mod, "GroupcallForbidden"):
+                setattr(pyrogram.errors, "GroupcallForbidden", getattr(_mod, "GroupcallForbidden"))
+                _found = True
+                break
+        except Exception:
+            pass
+    if not _found:
+        class GroupcallForbidden(pyrogram.errors.RPCError):
+            """The group call is forbidden."""
+            ID = "GROUPCALL_FORBIDDEN"
+        setattr(pyrogram.errors, "GroupcallForbidden", GroupcallForbidden)
+
 from VISHALMUSIC.core.bot import VISHAL
 from VISHALMUSIC.core.dir import dirr
 from VISHALMUSIC.core.git import git
