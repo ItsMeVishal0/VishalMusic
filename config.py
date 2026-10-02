@@ -12,79 +12,91 @@ from pyrogram import filters
 # Load environment variables from .env file
 load_dotenv()
 
-# ── Core bot config ─────────────────────────────────────────────────────────
-API_ID = int(getenv("API_ID", 26493077))
-API_HASH = getenv("API_HASH", "6586f0276c7748e54684719bdd247d90")
-BOT_TOKEN = getenv("BOT_TOKEN")
 
-OWNER_ID = int(getenv("OWNER_ID", 7044783841))
-OWNER_USERNAME = getenv("OWNER_USERNAME", "ItsMeVishalBots")
-BOT_USERNAME = getenv("BOT_USERNAME", "vaishaliTune_bot")
-BOT_NAME = getenv("BOT_NAME", "≽ ^⎚ 𝘃𝗮𝗶𝘀𝗵𝗮𝗹𝗶 𝘅 𝗺𝘂𝘀𝗶𝗰 ⎚^ ≼")
-ASSUSERNAME = getenv("ASSUSERNAME", "≽ ^⎚ 𝗮𝘀𝘀𝗶𝘀𝘁𝗮𝗻𝘁 ⎚^ ≼")
+def _clean_str(val, default: str = "") -> str:
+    if val is None:
+        return default
+    return str(val).strip().strip('"').strip("'")
+
+
+def _clean_int(val, default: int) -> int:
+    if val is None:
+        return default
+    try:
+        clean = str(val).strip().strip('"').strip("'")
+        return int(clean)
+    except Exception:
+        return default
+
+
+# ── Core bot config ─────────────────────────────────────────────────────────
+API_ID = _clean_int(getenv("API_ID"), 26493077)
+API_HASH = _clean_str(getenv("API_HASH"), "6586f0276c7748e54684719bdd247d90")
+BOT_TOKEN = _clean_str(getenv("BOT_TOKEN"))
+
+OWNER_ID = _clean_int(getenv("OWNER_ID"), 7044783841)
+OWNER_USERNAME = _clean_str(getenv("OWNER_USERNAME"), "ItsMeVishalBots")
+BOT_USERNAME = _clean_str(getenv("BOT_USERNAME"), "vaishaliTune_bot")
+BOT_NAME = _clean_str(getenv("BOT_NAME"), "≽ ^⎚ 𝘃𝗮𝗶𝘀𝗵𝗮𝗹𝗶 𝘅 𝗺𝘂𝘀𝗶𝗰 ⎚^ ≼")
+ASSUSERNAME = _clean_str(getenv("ASSUSERNAME"), "≽ ^⎚ 𝗮𝘀𝘀𝗶𝘀𝘁𝗮𝗻𝘁 ⎚^ ≼")
 
 # ── Database & logging ────────────────────────────────────────────────────────
-MONGO_DB_URI = getenv("MONGO_DB_URI")
-LOGGER_ID = int(getenv("LOGGER_ID", -1002425220992))
+MONGO_DB_URI = _clean_str(getenv("MONGO_DB_URI"))
+LOGGER_ID = _clean_int(getenv("LOGGER_ID"), -1002425220992)
 
 # ── Limits (durations in min/sec; sizes in bytes) ──────────────────────────────
-DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 300))
-SONG_DOWNLOAD_DURATION = int(getenv("SONG_DOWNLOAD_DURATION", "1200"))
-SONG_DOWNLOAD_DURATION_LIMIT = int(getenv("SONG_DOWNLOAD_DURATION_LIMIT", "1800"))
-TG_AUDIO_FILESIZE_LIMIT = int(getenv("TG_AUDIO_FILESIZE_LIMIT", "3221225472"))  # 3 GB
-TG_VIDEO_FILESIZE_LIMIT = int(getenv("TG_VIDEO_FILESIZE_LIMIT", "3221225472"))  # 3 GB
-PLAYLIST_FETCH_LIMIT = int(getenv("PLAYLIST_FETCH_LIMIT", "30"))
+DURATION_LIMIT_MIN = _clean_int(getenv("DURATION_LIMIT"), 300)
+SONG_DOWNLOAD_DURATION = _clean_int(getenv("SONG_DOWNLOAD_DURATION"), 1200)
+SONG_DOWNLOAD_DURATION_LIMIT = _clean_int(getenv("SONG_DOWNLOAD_DURATION_LIMIT"), 1800)
+TG_AUDIO_FILESIZE_LIMIT = _clean_int(getenv("TG_AUDIO_FILESIZE_LIMIT"), 3221225472)  # 3 GB
+TG_VIDEO_FILESIZE_LIMIT = _clean_int(getenv("TG_VIDEO_FILESIZE_LIMIT"), 3221225472)  # 3 GB
+PLAYLIST_FETCH_LIMIT = _clean_int(getenv("PLAYLIST_FETCH_LIMIT"), 30)
 
 # ── External APIs ──────────────────────────────────────────────────────────
-COOKIE_URL = getenv("COOKIE_URL", "https://pastebin.com/RurxsvMF")
-API_URL = getenv("API_URL")        # optional
-API_KEY = getenv("API_KEY")        # optional 
-DEEP_API = getenv("DEEP_API")      # optional
+COOKIE_URL = _clean_str(getenv("COOKIE_URL"), "https://pastebin.com/RurxsvMF")
+API_URL = _clean_str(getenv("API_URL"))        # optional
+API_KEY = _clean_str(getenv("API_KEY"))        # optional 
+DEEP_API = _clean_str(getenv("DEEP_API"))      # optional
 
 # ── YouTube Download APIs & Keys ───────────────────────────────────────────
-VISHAL_API_KEY = getenv("VISHAL_API_KEY", "ShrutiBotsc7zkBuuYtyvKJas3omsr")
-PRIMARY_API_URL = getenv("PRIMARY_API_URL", "https://api.shrutibots.site")
-FALLBACK_API_URL = getenv("FALLBACK_API_URL", "http://13.212.126.0:2020")
+VISHAL_API_KEY = _clean_str(getenv("VISHAL_API_KEY"), "ShrutiBotsc7zkBuuYtyvKJas3omsr")
+PRIMARY_API_URL = _clean_str(getenv("PRIMARY_API_URL"), "https://api.shrutibots.site")
+FALLBACK_API_URL = _clean_str(getenv("FALLBACK_API_URL"), "http://13.212.126.0:2020")
 
 # ── Telegram Bot API (Local Server for colored buttons support) ───────────────
-# If you run a local Telegram Bot API server, set this to its URL.
-# Example: http://localhost:8081  or  http://127.0.0.1:8081
-# Without this, button color (style) fields will be ignored by Telegram.
-# Setup guide: https://github.com/tdlib/telegram-bot-api
-LOCAL_BOT_API_URL = getenv("LOCAL_BOT_API_URL", "").rstrip("/")
+LOCAL_BOT_API_URL = _clean_str(getenv("LOCAL_BOT_API_URL"), "").rstrip("/")
 
 # ── Hosting / deployment ───────────────────────────────────────────────────────
-HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
-HEROKU_API_KEY = getenv("HEROKU_API_KEY")
+HEROKU_APP_NAME = _clean_str(getenv("HEROKU_APP_NAME"))
+HEROKU_API_KEY = _clean_str(getenv("HEROKU_API_KEY"))
 
 # ── Git / updates ──────────────────────────────────────────────────────────
-UPSTREAM_REPO = getenv("UPSTREAM_REPO", "https://github.com/ItsMeVishal0/VishalMusic.git")
-UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
-GIT_TOKEN = getenv("GIT_TOKEN")  # needed if repo is private
+UPSTREAM_REPO = _clean_str(getenv("UPSTREAM_REPO"), "https://github.com/ItsMeVishal0/VishalMusic.git")
+UPSTREAM_BRANCH = _clean_str(getenv("UPSTREAM_BRANCH"), "main")
+GIT_TOKEN = _clean_str(getenv("GIT_TOKEN"))  # needed if repo is private
 
 # ── Support links ──────────────────────────────────────────────────────────
-SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/ItsMeVishalBots")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/ItsMeVishalBots")
-# Link used by the /privacy command (set your own privacy-policy post/page)
-PRIVACY_LINK = getenv("PRIVACY_LINK", SUPPORT_CHAT)
+SUPPORT_CHANNEL = _clean_str(getenv("SUPPORT_CHANNEL"), "https://t.me/ItsMeVishalBots")
+SUPPORT_CHAT = _clean_str(getenv("SUPPORT_CHAT"), "https://t.me/ItsMeVishalBots")
+PRIVACY_LINK = _clean_str(getenv("PRIVACY_LINK"), SUPPORT_CHAT)
 
 # ── Assistant auto-leave ───────────────────────────────────────────────────────
 AUTO_LEAVING_ASSISTANT = False
-AUTO_LEAVE_ASSISTANT_TIME = int(getenv("ASSISTANT_LEAVE_TIME", "3600"))
+AUTO_LEAVE_ASSISTANT_TIME = _clean_int(getenv("ASSISTANT_LEAVE_TIME"), 3600)
 
 # ── Debug ──────────────────────────────────────────────────────────
 DEBUG_IGNORE_LOG = True
 
 # ── Spotify (optional) ─────────────────────────────────────────────────────
-SPOTIFY_CLIENT_ID = getenv("SPOTIFY_CLIENT_ID", "22b6125bfe224587b722d6815002db2b")
-SPOTIFY_CLIENT_SECRET = getenv("SPOTIFY_CLIENT_SECRET", "c9c63c6fbf2f467c8bc68624851e9773")
+SPOTIFY_CLIENT_ID = _clean_str(getenv("SPOTIFY_CLIENT_ID"), "22b6125bfe224587b722d6815002db2b")
+SPOTIFY_CLIENT_SECRET = _clean_str(getenv("SPOTIFY_CLIENT_SECRET"), "c9c63c6fbf2f467c8bc68624851e9773")
 
 # ── Session strings (optional) ─────────────────────────────────────────────────
-STRING1 = getenv("STRING_SESSION")
-STRING2 = getenv("STRING_SESSION2")
-STRING3 = getenv("STRING_SESSION3")
-STRING4 = getenv("STRING_SESSION4")
-STRING5 = getenv("STRING_SESSION5")
+STRING1 = _clean_str(getenv("STRING_SESSION"))
+STRING2 = _clean_str(getenv("STRING_SESSION2"))
+STRING3 = _clean_str(getenv("STRING_SESSION3"))
+STRING4 = _clean_str(getenv("STRING_SESSION4"))
+STRING5 = _clean_str(getenv("STRING_SESSION5"))
 
 # ── Media assets ──────────────────────────────────────────────────────────
 START_IMGS = [
