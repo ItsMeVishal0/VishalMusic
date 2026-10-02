@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 import asyncio
 from datetime import datetime
 from pyrogram import filters
@@ -48,3 +54,8 @@ async def check_bots_command(client, message):
 
     if userbot.one.is_connected:
         await userbot.one.stop()
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Bot Configuration & Environment Variables
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import re
@@ -41,6 +40,11 @@ COOKIE_URL = getenv("COOKIE_URL", "https://pastebin.com/RurxsvMF")
 API_URL = getenv("API_URL")        # optional
 API_KEY = getenv("API_KEY")        # optional 
 DEEP_API = getenv("DEEP_API")      # optional
+
+# ── YouTube Download APIs & Keys ───────────────────────────────────────────
+VISHAL_API_KEY = getenv("VISHAL_API_KEY", "ShrutiBotsc7zkBuuYtyvKJas3omsr")
+PRIMARY_API_URL = getenv("PRIMARY_API_URL", "https://api.shrutibots.site")
+FALLBACK_API_URL = getenv("FALLBACK_API_URL", "http://13.212.126.0:2020")
 
 # ── Telegram Bot API (Local Server for colored buttons support) ───────────────
 # If you run a local Telegram Bot API server, set this to its URL.
@@ -162,6 +166,6 @@ print("""
 """)
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

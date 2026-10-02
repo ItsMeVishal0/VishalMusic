@@ -47,9 +47,19 @@
       "value": ""
     },
     "COOKIE_URL": {
-      "description": "Direct raw link (from Batbin or Pastebin) to your YouTube cookies.txt file for better download support.",
-      "required": true,
-      "value": ""
+      "description": "(Optional) Direct raw link to your YouTube cookies.txt file for better download support.",
+      "required": false,
+      "value": "https://pastebin.com/RurxsvMF"
+    },
+    "PRIMARY_API_URL": {
+      "description": "Primary YouTube download API endpoint URL.",
+      "required": false,
+      "value": "https://api.shrutibots.site"
+    },
+    "VISHAL_API_KEY": {
+      "description": "API Key for the primary YouTube download API.",
+      "required": false,
+      "value": "ShrutiBotsc7zkBuuYtyvKJas3omsr"
     },
     "API_URL": {
       "description": "(Optional) URL of a custom API server used for music downloads or other services.",
@@ -87,6 +97,5 @@
     {
       "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
     }
-  ],
-  "stack": "container"
+  ]
 }

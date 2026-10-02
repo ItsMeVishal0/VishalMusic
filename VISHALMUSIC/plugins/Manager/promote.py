@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 """
 -------------------------------------------------------------------------
 Promotion and demotion commands with edge‑case handling and time‑bound promotions.
@@ -252,3 +258,8 @@ async def tempadmin_command(client, message: Message):
             pass
 
     asyncio.create_task(_auto_demote())
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

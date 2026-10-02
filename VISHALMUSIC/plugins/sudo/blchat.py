@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from pyrogram import filters
 from pyrogram.types import Message
 
@@ -59,3 +65,8 @@ async def all_chats(client, message: Message, _):
         await message.reply_text(_["black_8"].format(app.mention))
     else:
         await message.reply_text(text)
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

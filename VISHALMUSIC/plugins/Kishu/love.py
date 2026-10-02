@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from pyrogram import filters
 import random
 from VISHALMUSIC import app
@@ -39,3 +45,8 @@ async def love_command(client, message):
         response = "Please enter two names after /love command.\nExample: `/love Alice Bob`"
 
     await app.send_message(message.chat.id, response)
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 import asyncio
 import random
 from pyrogram import filters, enums
@@ -157,3 +163,8 @@ async def cancel_tag(client, message):
     spam_chats.discard(chat_id)
     active_tags.pop(chat_id, None)
     await message.reply_text("✅ sᴇssɪᴏɴ sᴛᴏᴘᴘᴇᴅ.")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

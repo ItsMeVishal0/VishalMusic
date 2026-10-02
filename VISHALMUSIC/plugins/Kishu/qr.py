@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from pyrogram import filters
 from pyrogram.types import Message
 from VISHALMUSIC import app
@@ -30,3 +36,8 @@ async def qr_handler(client, message: Message):
         await message.reply_photo(qr_image, caption="📷 Here's your QR Code")
     else:
         await message.reply_text("❌ Please provide the text for the QR code.\n\nExample: `/qr https://github.com/`")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

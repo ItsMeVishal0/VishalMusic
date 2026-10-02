@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Spotify Track, Album & Playlist Handler
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import re
@@ -105,6 +104,6 @@ class SpotifyAPI:
         return results, artist_id
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

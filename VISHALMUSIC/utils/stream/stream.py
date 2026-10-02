@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Stream Handler (Colored Buttons)
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
@@ -586,8 +585,7 @@ async def stream(
             )
             await mystic.delete()
 
-
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

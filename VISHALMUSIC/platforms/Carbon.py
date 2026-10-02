@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Carbon Code Screenshot Generator
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import random
@@ -106,6 +105,6 @@ class CarbonAPI:
         raise UnableToFetchCarbon(f"Network error: {last_exc!r}")
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

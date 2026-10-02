@@ -1,14 +1,14 @@
 services:
   - type: web
     name: vishal-music-bot
-    runtime: python
+    env: docker
     plan: free
-    buildCommand: "pip install -U pip && pip install -r requirements.txt"
-    startCommand: "python3 -m VISHALMUSIC"
     healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: PORT
+        value: "3000"
       - key: API_ID
         sync: false
       - key: API_HASH
@@ -23,3 +23,7 @@ services:
         sync: false
       - key: LOGGER_ID
         sync: false
+      - key: PRIMARY_API_URL
+        value: https://api.shrutibots.site
+      - key: VISHAL_API_KEY
+        value: ShrutiBotsc7zkBuuYtyvKJas3omsr

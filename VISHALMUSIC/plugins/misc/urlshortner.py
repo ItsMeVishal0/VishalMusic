@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatAction, ParseMode
@@ -66,3 +72,8 @@ async def unshort_url(bot: Client, message: Message):
     except Exception as e:
         print(f"Unshortener error: {e}")
         await message.reply_text("❌ Failed to unshorten the link. It may be broken or invalid.")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

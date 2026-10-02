@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 """
 -------------------------------------------------------------------------
 Mass/group administration commands with owner‑only confirmation:
@@ -194,3 +200,8 @@ async def _do_unpinall(client, chat_id: int):
         await client.send_message(chat_id, "Unpinned all messages.")
     except Exception as e:
         await client.send_message(chat_id, f"Failed to unpin messages:\n{e}")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

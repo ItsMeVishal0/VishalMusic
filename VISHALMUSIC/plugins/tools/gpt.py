@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 # VISHALMUSIC/plugins/tools/gpt.py
 import asyncio
 import os
@@ -185,3 +191,8 @@ async def vishal_tts_handler(client: Client, message: Message):
         await asyncio.wait_for(process_query(client, message, tts=True), timeout=60)
     except asyncio.TimeoutError:
         await message.reply_text("⏳ Timeout. Try again with a shorter prompt.")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

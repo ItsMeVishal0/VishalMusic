@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Voice Chat Call Handler & Stream Manager
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
@@ -88,27 +87,27 @@ async def _clear_(chat_id: int) -> None:
 class Call:
     def __init__(self):
         self.userbot1 = Client(
-            "VishalXAssis1", config.API_ID, config.API_HASH, session_string=config.STRING1, sleep_threshold=60
+            "VishalXAssis1", config.API_ID, config.API_HASH, session_string=config.STRING1, in_memory=True, sleep_threshold=60
         ) if config.STRING1 else None
         self.one = PyTgCalls(self.userbot1) if self.userbot1 else None
 
         self.userbot2 = Client(
-            "VishalXAssis2", config.API_ID, config.API_HASH, session_string=config.STRING2, sleep_threshold=60
+            "VishalXAssis2", config.API_ID, config.API_HASH, session_string=config.STRING2, in_memory=True, sleep_threshold=60
         ) if config.STRING2 else None
         self.two = PyTgCalls(self.userbot2) if self.userbot2 else None
 
         self.userbot3 = Client(
-            "VishalXAssis3", config.API_ID, config.API_HASH, session_string=config.STRING3, sleep_threshold=60
+            "VishalXAssis3", config.API_ID, config.API_HASH, session_string=config.STRING3, in_memory=True, sleep_threshold=60
         ) if config.STRING3 else None
         self.three = PyTgCalls(self.userbot3) if self.userbot3 else None
 
         self.userbot4 = Client(
-            "VishalXAssis4", config.API_ID, config.API_HASH, session_string=config.STRING4, sleep_threshold=60
+            "VishalXAssis4", config.API_ID, config.API_HASH, session_string=config.STRING4, in_memory=True, sleep_threshold=60
         ) if config.STRING4 else None
         self.four = PyTgCalls(self.userbot4) if self.userbot4 else None
 
         self.userbot5 = Client(
-            "VishalXAssis5", config.API_ID, config.API_HASH, session_string=config.STRING5, sleep_threshold=60
+            "VishalXAssis5", config.API_ID, config.API_HASH, session_string=config.STRING5, in_memory=True, sleep_threshold=60
         ) if config.STRING5 else None
         self.five = PyTgCalls(self.userbot5) if self.userbot5 else None
 
@@ -613,6 +612,6 @@ class Call:
 VISHAL = Call()
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

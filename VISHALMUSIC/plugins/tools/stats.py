@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 import platform
 from sys import version as pyver
 
@@ -168,3 +174,8 @@ async def bot_stats(client, CallbackQuery, _):
                 await CallbackQuery.message.reply_photo(
                     photo=config.STATS_VID_URL, caption=text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons_to_inline_markup(upl)
                 )
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

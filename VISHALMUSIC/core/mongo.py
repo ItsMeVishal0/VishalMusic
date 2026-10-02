@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : MongoDB Database Connection
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,7 +11,14 @@ from ..logging import LOGGER
 LOGGER(__name__).info("Connecting to your Mongo Database...")
 
 try:
-    _mongo_async_ = AsyncIOMotorClient(MONGO_DB_URI, serverSelectionTimeoutMS=5000)
+    _mongo_async_ = AsyncIOMotorClient(
+        MONGO_DB_URI,
+        serverSelectionTimeoutMS=5000,
+        maxPoolSize=15,
+        minPoolSize=1,
+        maxIdleTimeMS=45000,
+        waitQueueTimeoutMS=5000,
+    )
     mongodb = _mongo_async_.Vishal
     LOGGER(__name__).info("Connected to your Mongo Database.")
 except Exception as e:
@@ -20,6 +26,6 @@ except Exception as e:
     exit()
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

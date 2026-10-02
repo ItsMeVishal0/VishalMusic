@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Assistant Userbot Client Manager
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 from pyrogram import Client
@@ -28,6 +27,8 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING1),
             no_updates=True,
+            in_memory=True,
+            workers=2,
             sleep_threshold=60,
         )
         self.two = Client(
@@ -36,6 +37,8 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING2),
             no_updates=True,
+            in_memory=True,
+            workers=2,
             sleep_threshold=60,
         )
         self.three = Client(
@@ -44,6 +47,8 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING3),
             no_updates=True,
+            in_memory=True,
+            workers=2,
             sleep_threshold=60,
         )
         self.four = Client(
@@ -52,6 +57,8 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING4),
             no_updates=True,
+            in_memory=True,
+            workers=2,
             sleep_threshold=60,
         )
         self.five = Client(
@@ -60,6 +67,8 @@ class Userbot:
             config.API_HASH,
             session_string=str(config.STRING5),
             no_updates=True,
+            in_memory=True,
+            workers=2,
             sleep_threshold=60,
         )
 
@@ -74,34 +83,39 @@ class Userbot:
         if not string_attr:
             return
 
-        try:
-            await client.start()
-            for group in GROUPS_TO_JOIN:
-                try:
-                    await client.join_chat(group)
-                except Exception:
-                    pass
-
-            assistants.append(index)
-
+        while True:
             try:
-                await client.send_message(
-                    config.LOGGER_ID, f"Vishal's Assistant {index} Started"
-                )
+                await client.start()
+                break
+            except errors.FloodWait as e:
+                LOGGER(__name__).warning(f"⚠️ Assistant {index} FloodWait. Waiting {e.value}s...")
+                await asyncio.sleep(e.value + 1)
+            except Exception as e:
+                LOGGER(__name__).error(f"❌ Failed to start Assistant {index}: {e}")
+                return
+
+        for group in GROUPS_TO_JOIN:
+            try:
+                await client.join_chat(group)
             except Exception:
-                LOGGER(__name__).error(
-                    f"Assistant {index} can't access the log group. Check permissions!"
-                )
-                exit()
+                pass
 
-            me = await client.get_me()
-            client.id, client.name, client.username = me.id, me.first_name, me.username
-            assistantids.append(me.id)
+        assistants.append(index)
 
-            LOGGER(__name__).info(f"Assistant {index} Started as {client.name}")
+        try:
+            await client.send_message(
+                config.LOGGER_ID, f"Vishal's Assistant {index} Started"
+            )
+        except Exception:
+            LOGGER(__name__).warning(
+                f"Assistant {index} cannot access the log group – continuing."
+            )
 
-        except Exception as e:
-            LOGGER(__name__).error(f"Failed to start Assistant {index}: {e}")
+        me = await client.get_me()
+        client.id, client.name, client.username = me.id, me.first_name, me.username
+        assistantids.append(me.id)
+
+        LOGGER(__name__).info(f"Assistant {index} Started as {client.name}")
 
     async def start(self):
         LOGGER(__name__).info("Starting Vishal's Assistants...")
@@ -128,6 +142,6 @@ class Userbot:
             LOGGER(__name__).error(f"Error while stopping assistants: {e}")
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

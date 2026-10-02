@@ -1,8 +1,7 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : YouTube Search, Download & Streaming
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
@@ -33,6 +32,7 @@ from VISHALMUSIC.utils.tuning import (
     YOUTUBE_META_TTL,
 )
 from VISHALMUSIC import LOGGER
+from config import VISHAL_API_KEY, PRIMARY_API_URL, FALLBACK_API_URL
 
 _module_logger = LOGGER(__name__)
 
@@ -42,17 +42,7 @@ _formats_cache: Dict[str, Tuple[float, List[Dict], str]] = {}
 _formats_lock = asyncio.Lock()
 
 # ============ API CONFIGURATION ============
-VISHAL_API_KEY = "ArtistbotshAUfCkB"
-
-# API 1: Primary Vishal API (Direct Download)
-PRIMARY_API_URL = "https://music.artistbots.workers.dev"
-# Endpoint: /download?url={video_id}&type=audio&api_key={KEY}
-# Response: Direct file download
-
-# API 2: Legacy/Fallback API (Token Based)
-FALLBACK_API_URL = "http://13.212.126.0:2020"
-# Endpoint 1: /download?url={video_id}&type=audio -> returns {"download_token": "xxx"}
-# Endpoint 2: /stream/{video_id}?type=audio with header X-Download-Token
+# VISHAL_API_KEY, PRIMARY_API_URL, and FALLBACK_API_URL are now loaded from config.py / .env
 
 # API URLs loaded status
 PRIMARY_API_LOADED = False
@@ -96,31 +86,49 @@ async def _get_yt_session() -> aiohttp.ClientSession:
 
 
 async def load_apis():
-    """Load and verify APIs â€” only checks non-empty URLs."""
+    """Load and verify APIs with clear logging."""
     global PRIMARY_API_LOADED, FALLBACK_API_LOADED
     logger = LOGGER("VISHALMUSIC.platforms.Youtube.py")
 
+    logger.info("┌──────────────────────────────────────────────┐")
+    logger.info("│       🔍 YOUTUBE API STATUS CHECK            │")
+    logger.info("└──────────────────────────────────────────────┘")
+
     if PRIMARY_API_URL:
         try:
+            start_t = time.time()
             session = await _get_yt_session()
             async with session.get(f"{PRIMARY_API_URL}/", timeout=aiohttp.ClientTimeout(total=8)) as response:
+                latency = round((time.time() - start_t) * 1000)
                 if response.status == 200:
                     PRIMARY_API_LOADED = True
-                    logger.info(f"âœ… PRIMARY API loaded: {PRIMARY_API_URL}")
+                    logger.info(f"✅ PRIMARY API Online [{latency}ms]: {PRIMARY_API_URL}")
                 else:
-                    logger.warning(f"âš ï¸ Primary API status {response.status}")
+                    logger.warning(f"⚠️ PRIMARY API Error [Status {response.status}]: {PRIMARY_API_URL}")
         except Exception as e:
-            logger.warning(f"âš ï¸ Primary API unreachable: {e}")
+            logger.warning(f"❌ PRIMARY API Unreachable ({PRIMARY_API_URL}): {e}")
+    else:
+        logger.info("ℹ️ PRIMARY API: Not Configured")
 
-    if FALLBACK_API_URL:  # only check when a URL is actually configured
+    if FALLBACK_API_URL:
         try:
+            start_t = time.time()
             session = await _get_yt_session()
             async with session.get(f"{FALLBACK_API_URL}/", timeout=aiohttp.ClientTimeout(total=8)) as response:
+                latency = round((time.time() - start_t) * 1000)
                 if response.status == 200:
                     FALLBACK_API_LOADED = True
-                    logger.info(f"âœ… FALLBACK API loaded: {FALLBACK_API_URL}")
+                    logger.info(f"✅ FALLBACK API Online [{latency}ms]: {FALLBACK_API_URL}")
+                else:
+                    logger.warning(f"⚠️ FALLBACK API Error [Status {response.status}]: {FALLBACK_API_URL}")
         except Exception as e:
-            logger.warning(f"âš ï¸ Fallback API unreachable: {e}")
+            logger.warning(f"❌ FALLBACK API Unreachable ({FALLBACK_API_URL}): {e}")
+    else:
+        logger.info("ℹ️ FALLBACK API: Not Configured")
+
+    key_display = f"{VISHAL_API_KEY[:4]}***{VISHAL_API_KEY[-3:]}" if VISHAL_API_KEY and len(VISHAL_API_KEY) > 7 else ("Configured" if VISHAL_API_KEY else "Not Set")
+    logger.info(f"🔑 API Key: {key_display}")
+    logger.info("────────────────────────────────────────────────")
 
     return PRIMARY_API_LOADED, FALLBACK_API_LOADED
 
@@ -185,6 +193,7 @@ async def download_song_primary_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=120),
         ) as response:
             if response.status != 200:
+                _module_logger.warning(f"⚠️ Primary API audio download failed with HTTP {response.status} for {video_id}")
                 return None
             async with aiofiles.open(file_path, "wb") as f:
                 async for chunk in response.content.iter_chunked(1 << 20):  # 1 MB
@@ -193,7 +202,8 @@ async def download_song_primary_api(link: str) -> str:
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             return file_path
         return None
-    except Exception:
+    except Exception as e:
+        _module_logger.warning(f"⚠️ Primary API error: {e}")
         return None
 
 
@@ -221,6 +231,7 @@ async def download_video_primary_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=180),
         ) as response:
             if response.status != 200:
+                _module_logger.warning(f"⚠️ Primary API video download failed with HTTP {response.status} for {video_id}")
                 return None
             async with aiofiles.open(file_path, "wb") as f:
                 async for chunk in response.content.iter_chunked(1 << 20):  # 1 MB
@@ -229,7 +240,8 @@ async def download_video_primary_api(link: str) -> str:
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             return file_path
         return None
-    except Exception:
+    except Exception as e:
+        _module_logger.warning(f"⚠️ Primary API video error: {e}")
         return None
 
 
@@ -257,6 +269,7 @@ async def download_song_fallback_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
             if response.status != 200:
+                _module_logger.warning(f"⚠️ Fallback API token failed with HTTP {response.status}")
                 return None
             data = await response.json()
             download_token = data.get("download_token")
@@ -270,13 +283,15 @@ async def download_song_fallback_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=300),
         ) as file_response:
             if file_response.status != 200:
+                _module_logger.warning(f"⚠️ Fallback API stream failed with HTTP {file_response.status}")
                 return None
             async with aiofiles.open(file_path, "wb") as f:
                 async for chunk in file_response.content.iter_chunked(1 << 20):
                     await f.write(chunk)
 
         return file_path if os.path.exists(file_path) and os.path.getsize(file_path) > 0 else None
-    except Exception:
+    except Exception as e:
+        _module_logger.warning(f"⚠️ Fallback API error: {e}")
         return None
 
 
@@ -303,6 +318,7 @@ async def download_video_fallback_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
             if response.status != 200:
+                _module_logger.warning(f"⚠️ Fallback API video token failed with HTTP {response.status}")
                 return None
             data = await response.json()
             download_token = data.get("download_token")
@@ -316,13 +332,15 @@ async def download_video_fallback_api(link: str) -> str:
             timeout=aiohttp.ClientTimeout(total=600),
         ) as file_response:
             if file_response.status != 200:
+                _module_logger.warning(f"⚠️ Fallback API video stream failed with HTTP {file_response.status}")
                 return None
             async with aiofiles.open(file_path, "wb") as f:
                 async for chunk in file_response.content.iter_chunked(1 << 20):
                     await f.write(chunk)
 
         return file_path if os.path.exists(file_path) and os.path.getsize(file_path) > 0 else None
-    except Exception:
+    except Exception as e:
+        _module_logger.warning(f"⚠️ Fallback API video error: {e}")
         return None
 
 
@@ -917,6 +935,6 @@ class YouTubeAPI:
 YouTube = YouTubeAPI()
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

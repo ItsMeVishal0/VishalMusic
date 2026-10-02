@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from pyrogram import filters
 from VISHALMUSIC import app
 from VISHALMUSIC.utils.admin_filters import admin_filter
@@ -13,3 +19,8 @@ async def id_cmd(_, message):
         await message.reply_text(txt)
     else:
         await message.reply_text(f"Your ID: `{message.from_user.id}`\nChat ID: `{message.chat.id}`")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

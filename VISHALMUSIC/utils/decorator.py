@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 from functools import wraps
 from typing import Callable, Awaitable, Any
 
@@ -126,3 +132,8 @@ user_can_ban = _user_priv_required("can_restrict_members", "restrict users")
 user_can_del = _user_priv_required("can_delete_messages", "delete messages")
 user_can_change_info = _user_priv_required("can_change_info", "change group info")
 user_can_promote = _user_priv_required("can_promote_members", "promote users")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════

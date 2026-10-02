@@ -1,12 +1,13 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Bot Startup, Flask Dashboard & Main Loop
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
 
 import asyncio
+import gc
 import importlib
+import logging
 import os
 import time
 from threading import Thread
@@ -22,6 +23,13 @@ from VISHALMUSIC.plugins import ALL_MODULES
 from VISHALMUSIC.utils.database import get_banned_users, get_gbanned
 from VISHALMUSIC.utils.cookie_handler import fetch_and_store_cookies
 from config import BANNED_USERS
+
+
+async def _gc_loop() -> None:
+    """Periodic garbage collection loop to keep RAM footprint low and clean memory leaks."""
+    while True:
+        await asyncio.sleep(600)  # Every 10 mins
+        gc.collect()
 
 
 async def _cookie_refresh_loop() -> None:
@@ -127,8 +135,8 @@ async def init():
 
     await VISHAL.decorators()
 
-    # Long-uptime health: refresh YouTube cookies periodically and optionally
-    # auto-restart the process so the bot never silently degrades.
+    # Long-uptime health: periodic GC, refresh YouTube cookies periodically
+    asyncio.create_task(_gc_loop())
     asyncio.create_task(_cookie_refresh_loop())
     auto_restart_hours = float(os.environ.get("AUTO_RESTART_HOURS", "0"))
     if auto_restart_hours > 0:
@@ -153,9 +161,17 @@ def keep_alive():
 
     def run_flask():
         fapp = Flask(__name__)
+        logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
         try:
-            _sync_mongo = MongoClient(config.MONGO_DB_URI, serverSelectionTimeoutMS=3000)
+            _sync_mongo = MongoClient(
+                config.MONGO_DB_URI,
+                serverSelectionTimeoutMS=2000,
+                connectTimeoutMS=2000,
+                maxPoolSize=2,
+                minPoolSize=0,
+                maxIdleTimeMS=20000,
+            )
             _sync_db = _sync_mongo.Vishal
         except Exception:
             _sync_db = None
@@ -257,6 +273,6 @@ if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(init())
 
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

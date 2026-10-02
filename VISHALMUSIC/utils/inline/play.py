@@ -1,9 +1,9 @@
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
-#   GitHub : github.com/ItsMeVishal0/VishalMusic
-#   Developer : @ItsMeVishalBots | Telegram
-#   Module : Inline Play Buttons (ALL COLORED via Bot API 9.4)
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
 # ═══════════════════════════════════════════════════════════
+
 #
 # Every button here returns a styled_button DICT with a "style"
 # field so the Bot API 9.4 renders them in color.
@@ -235,8 +235,7 @@ def stream_markup_timer(_, chat_id, played, dur, autoplay_status: bool = False):
 colored_stream_markup = stream_markup
 colored_stream_markup_timer = stream_markup_timer
 
-
 # ═══════════════════════════════════════════════════════════
-#        😎  VISHAL MUSIC BOT  😎
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
 #   github.com/ItsMeVishal0/VishalMusic
 # ═══════════════════════════════════════════════════════════

@@ -1,3 +1,9 @@
+# ═══════════════════════════════════════════════════════════
+#        🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   GɪᴛHᴜʙ : github.com/ItsMeVishal0/VishalMusic
+#   Dᴇᴠʟᴏᴘᴇʀ : @ItsMeVishalBots | Telegram
+# ═══════════════════════════════════════════════════════════
+
 """
 -------------------------------------------------------------------------
 Single-user moderation commands with complete edge-case handling.
@@ -363,3 +369,8 @@ async def tban_cmd(client, message: Message):
         await message.reply_text("I need ban permissions.")
     except UserAdminInvalid:
         await message.reply_text("I cannot ban an admin.")
+
+# ═══════════════════════════════════════════════════════════
+#         🌺 Vɪsʜᴀʟ Mᴜsɪᴄ 🌺
+#   github.com/ItsMeVishal0/VishalMusic
+# ═══════════════════════════════════════════════════════════
