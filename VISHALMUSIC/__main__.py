@@ -12,6 +12,17 @@ import os
 import time
 from threading import Thread
 
+import config
+from VISHALMUSIC import LOGGER, app, userbot
+from VISHALMUSIC.core.call import VISHAL
+from VISHALMUSIC.misc import sudo
+from VISHALMUSIC.plugins import ALL_MODULES
+from VISHALMUSIC.utils.database import get_banned_users, get_gbanned
+from VISHALMUSIC.utils.cookie_handler import fetch_and_store_cookies
+from config import BANNED_USERS
+from pyrogram import idle
+from pytgcalls.exceptions import NoActiveGroupCall
+
 # ----------------------🔹 Render / Web Flask Dashboard 🔹----------------------
 def keep_alive():
     try:
@@ -58,6 +69,10 @@ def keep_alive():
                     except Exception as db_error:
                         LOGGER("VISHALMUSIC").warning(f"DB stats error: {db_error}")
 
+                bot_name = getattr(config, "BOT_NAME", "Vishal Music Bot")
+                owner_username = getattr(config, "OWNER_USERNAME", "ItsMeVishalBots")
+                bot_username = getattr(config, "BOT_USERNAME", "vaishaliTune_bot")
+
                 return f"""<!DOCTYPE html>
 <html><head><title>Vishal Music Bot</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -89,14 +104,14 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
 </div>
 <div class="ib">
 <div class="ir"><span class="k">⏱️ Uptime</span><span class="vl">{uptime_str}</span></div>
-<div class="ir"><span class="k">🤖 Bot Name</span><span class="vl">{config.BOT_NAME}</span></div>
-<div class="ir"><span class="k">👤 Owner</span><span class="vl">@{config.OWNER_USERNAME}</span></div>
+<div class="ir"><span class="k">🤖 Bot Name</span><span class="vl">{bot_name}</span></div>
+<div class="ir"><span class="k">👤 Owner</span><span class="vl">@{owner_username}</span></div>
 <div class="ir"><span class="k">🌍 Languages</span><span class="vl">15 Supported</span></div>
 </div>
-<div class="f"><p>Auto-refreshes every 30s</p><p style="margin-top:8px"><a href="https://t.me/{config.BOT_USERNAME}">Open Bot</a> • <a href="https://t.me/ItsMeVishalBots">Developer</a></p></div>
+<div class="f"><p>Auto-refreshes every 30s</p><p style="margin-top:8px"><a href="https://t.me/{bot_username}">Open Bot</a> • <a href="https://t.me/ItsMeVishalBots">Developer</a></p></div>
 </div></body></html>"""
             except Exception as e:
-                LOGGER("VISHALMUSIC").error(f"Flask home error: {e}")
+                logging.getLogger("VISHALMUSIC").error(f"Flask home error: {e}")
                 return f"Error: {str(e)}", 500
 
         @fapp.route('/health')
@@ -116,7 +131,7 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
                     "status": "running"
                 })
             except Exception as e:
-                LOGGER("VISHALMUSIC").error(f"Flask API stats error: {e}")
+                logging.getLogger("VISHALMUSIC").error(f"Flask API stats error: {e}")
                 return jsonify({"error": str(e), "status": "error"}), 200
 
         port = int(os.environ.get("PORT", 3000))
@@ -128,18 +143,6 @@ body{{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f0c2
 
 # Start Flask Web server immediately for Render port binding
 keep_alive()
-
-from pyrogram import idle
-from pytgcalls.exceptions import NoActiveGroupCall
-
-import config
-from VISHALMUSIC import LOGGER, app, userbot
-from VISHALMUSIC.core.call import VISHAL
-from VISHALMUSIC.misc import sudo
-from VISHALMUSIC.plugins import ALL_MODULES
-from VISHALMUSIC.utils.database import get_banned_users, get_gbanned
-from VISHALMUSIC.utils.cookie_handler import fetch_and_store_cookies
-from config import BANNED_USERS
 
 
 async def _gc_loop() -> None:
